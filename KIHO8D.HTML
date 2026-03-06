@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIHO - SolveIt 8D Manager</title>
+    <!-- Script de vérification de chargement -->
+    <script>
+        window.onload = function() {
+            setTimeout(function() {
+                if (!window.tailwind) {
+                    document.getElementById('loading-message').innerHTML = "<div style='color:red; padding:20px; text-align:center;'>⚠️ <strong>Erreur :</strong> Les styles graphiques (Tailwind CSS) n'ont pas pu charger.<br>Si vous êtes sur un réseau d'entreprise, les CDN externes sont peut-être bloqués.<br>Veuillez télécharger le fichier et l'ouvrir en local.</div>";
+                }
+            }, 3000);
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; overflow: hidden; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .step-active { border-bottom: 4px solid #2563eb; opacity: 1; background: white; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .logo-container {
+            width: 46px; height: 46px; border-radius: 9999px; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            background-color: white; border: 2px solid rgba(255,255,255,0.2);
+        }
+        .logo-container img { width: 100%; height: 100%; object-fit: cover; }
+
+        .why-branch { position: relative; padding-left: 2rem; margin-top: 1rem; border-left: 2px solid #e2e8f0; }
+        .why-node { position: relative; margin-bottom: 1rem; }
+        .why-node::before { content: ''; position: absolute; left: -2rem; top: 1.5rem; width: 2rem; height: 2px; background-color: #e2e8f0; }
+
+        .cause-chip { cursor: pointer; transition: all 0.2s; user-select: none; border-width: 2px; }
+        .cause-chip-selected { background-color: #eff6ff; border-color: #3b82f6; color: #1e40af; transform: translateY(-2px); box-shadow: 0 4px 12px -2px rgba(59, 130, 246, 0.2); }
+        
+        /* Styles pour le drag & drop */
+        .cause-chip[draggable="true"] { cursor: grab; }
+        .cause-chip[draggable="true"]:active { cursor: grabbing; }
+        .drop-zone-active { border-color: #3b82f6 !important; background-color: #eff6ff !important; border-style: dashed !important; transform: scale(1.02); }
+
+        .custom-checkbox input:checked + div { background-color: #2563eb; border-color: #2563eb; }
+        .custom-checkbox input:checked + div svg { display: block; }
+
+        .fishbone-spine { height: 4px; background-color: #94a3b8; width: 100%; position: absolute; top: 50%; left: 0; z-index: 0; transform: translateY(-50%); }
+        .fish-connector-up { position: absolute; bottom: -2rem; left: 50%; width: 2px; height: 2rem; background-color: #cbd5e1; transform: translateX(-50%) rotate(-30deg); transform-origin: bottom center; }
+        .fish-connector-down { position: absolute; top: -2rem; left: 50%; width: 2px; height: 2rem; background-color: #cbd5e1; transform: translateX(-50%) rotate(30deg); transform-origin: top center; }
+        .fish-category-box { position: relative; z-index: 10; }
+
+        #main-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        #print-area { display: none; }
+        @media print {
+            @page { size: A3 landscape; margin: 5mm; }
+            body { background: white; overflow: visible; height: auto; }
+            #app, #toast-container, #reset-modal { display: none !important; }
+            #print-area { display: block !important; width: 100%; height: 100%; }
+            .print-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; }
+            .print-box { border: 2px solid #334155; border-radius: 8px; overflow: hidden; page-break-inside: avoid; }
+            .print-header { background-color: #e2e8f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 4px 8px; font-weight: 900; text-transform: uppercase; font-size: 10pt; border-bottom: 2px solid #334155; }
+            .print-content { padding: 8px; font-size: 9pt; }
+            .print-row { display: flex; border-bottom: 1px solid #cbd5e1; padding: 2px 0; }
+            .print-row:last-child { border-bottom: none; }
+        }
+        
+        /* Fallback loading style */
+        #loading-message { font-family: sans-serif; color: #64748b; padding: 2rem; text-align: center; }
+    </style>
+</head>
+<body class="bg-slate-200 text-slate-900 h-screen w-screen overflow-hidden">
+
+    <div id="app" class="w-full h-full flex items-center justify-center relative">
+        <!-- Main Card -->
+        <div id="main-card" class="bg-white flex flex-col overflow-hidden relative text-sm sm:text-base w-full h-full">
+            
+            <!-- Header -->
+            <header class="bg-white border-b border-slate-200 px-6 py-4 text-slate-900 flex items-center justify-between z-40 shrink-0">
+                <div class="flex items-center gap-4">
+                    <div class="logo-container shadow-lg bg-blue-600 border-none" style="border-radius: 0.5rem;">
+                        <img id="app-logo" src="logo blanc.png" alt="KIHO Logo" onerror="this.style.display='none'; document.getElementById('logo-fallback').classList.remove('hidden');">
+                        <div id="logo-fallback" class="hidden text-white"><i data-lucide="check-circle-2"></i></div>
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-xl font-black tracking-tight leading-none italic text-slate-900">KIHO <span class="text-blue-600 not-italic">8D</span></h1>
+                        <span class="text-[10px] font-bold text-slate-500 tracking-tight mt-1">solution proposée par les équipe du programme kiho, concepteur : ablancourt david</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="relative">
+                        <button onclick="toggleMenu()" class="p-2 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all text-slate-600">
+                            <i data-lucide="menu" id="menu-icon"></i>
+                        </button>
+                        <div id="main-menu" class="hidden absolute right-0 mt-4 w-64 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 shadow-xl z-50">
+                            <button onclick="resetData()" class="w-full p-4 flex items-center gap-4 hover:bg-red-50 border-b text-left text-red-600 font-bold"><i data-lucide="trash-2" class="text-red-500"></i> Nouvelle Analyse (Effacer)</button>
+                            <button onclick="printReport()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left text-slate-900"><i data-lucide="printer" class="text-slate-600"></i> Imprimer (PDF/A3)</button>
+                            <button onclick="exportJSON()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left"><i data-lucide="download" class="text-blue-500"></i> Sauvegarder (.json)</button>
+                            <label class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b cursor-pointer text-left block"><i data-lucide="upload" class="text-purple-500 inline-block"></i> Charger Projet<input type="file" class="hidden" onchange="importJSON(event)"></label>
+                            <button onclick="exportCSV()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 text-left"><i data-lucide="file-spreadsheet" class="text-green-500"></i> Excel (CSV)</button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Navigation Étapes -->
+            <div id="stepper" class="flex w-full overflow-x-auto bg-slate-50 border-b scrollbar-hide snap-x no-scrollbar shrink-0"></div>
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 bg-white relative" id="main-content">
+                <div id="loading-message">
+                    <div class="animate-pulse flex flex-col items-center gap-4">
+                        <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span class="font-bold">Initialisation de l'application KIHO...</span>
+                        <span class="text-xs font-normal">Si ce message persiste, vérifiez que JavaScript est activé.</span>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="p-4 md:p-6 bg-slate-50 border-t flex items-center justify-between shrink-0">
+                <button onclick="prevStep()" class="flex items-center gap-2 p-3 rounded-2xl font-bold text-slate-400 hover:text-slate-900 transition-colors">
+                    <i data-lucide="chevron-left"></i> Précédent
+                </button>
+                <div class="hidden sm:flex gap-1.5" id="progress-dots"></div>
+                <button onclick="nextStep()" id="next-btn" class="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">
+                    Suivant <i data-lucide="chevron-right"></i>
+                </button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toast-container" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[30000] flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- MODAL CONFIRMATION RESET -->
+    <div id="reset-modal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-[20000] backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl w-[400px] max-w-[90%] fade-in border border-slate-100">
+            <div class="flex items-center gap-3 mb-4 text-red-600">
+                <div class="p-3 bg-red-100 rounded-full">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-lg font-black uppercase">Effacer les données</h3>
+            </div>
+            <p class="text-sm text-slate-600 mb-6 font-medium leading-relaxed">
+                Êtes-vous sûr de vouloir tout effacer et recommencer une nouvelle analyse ? <br><br>
+                <span class="text-red-500 font-bold bg-red-50 p-2 rounded-lg block">Toutes les données actuelles non sauvegardées seront perdues.</span>
+            </p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeResetModal()" class="px-5 py-2.5 text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold transition-colors">Annuler</button>
+                <button onclick="executeResetData()" class="px-5 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-xl font-bold shadow-lg shadow-red-200 transition-colors flex items-center gap-2">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Effacer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE BIENVENUE (Info Sauvegarde) -->
+    <div id="welcome-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[50000] backdrop-blur-sm fade-in">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-[450px] max-w-[90%] border border-slate-100 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+            <div class="flex items-center gap-4 mb-6">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl shadow-inner border border-blue-100">
+                    <i data-lucide="shield-check" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 tracking-tight">Bienvenue !</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Confidentialité & Sauvegarde</p>
+                </div>
+            </div>
+            <div class="space-y-4 text-sm text-slate-600 font-medium">
+                <p>
+                    Afin de garantir la stricte confidentialité de vos analyses industrielles, <strong>cette application ne transfère aucune donnée sur Internet.</strong> Tout votre travail reste confiné localement sur votre ordinateur.
+                </p>
+                <div class="p-4 bg-orange-50 rounded-2xl border border-orange-200 text-orange-900 shadow-sm">
+                    <div class="flex items-center gap-2 mb-2 font-black text-orange-600 uppercase tracking-wider text-xs">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-orange-500"></i> Attention
+                    </div>
+                    <p class="leading-relaxed">Pour ne pas perdre votre analyse à la fermeture de cette page, vous devez impérativement l'exporter via le menu <i data-lucide="menu" class="w-4 h-4 inline align-middle mx-1 text-slate-400"></i> en haut à droite :</p>
+                    <div class="mt-3 flex gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-orange-200 shadow-sm text-xs font-bold"><i data-lucide="download" class="w-3.5 h-3.5 text-blue-500"></i> Sauvegarder (.json)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8">
+                <button onclick="closeWelcomeModal()" class="w-full px-6 py-3.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95 flex justify-center items-center gap-2">
+                    <i data-lucide="check" class="w-5 h-5"></i> J'ai compris
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZONE D'IMPRESSION (Invisible à l'écran) -->
+    <div id="print-area"></div>
+
+    <script>
+        // --- 1. CONFIGURATION & DONNÉES ---
+        let currentStep = 0; 
+        let currentAnalysisIndex = 0; 
+
+        const steps = [
+            { id: 0, title: "Lancement", icon: "flag", color: "text-slate-700" },
+            { id: 1, title: "Protéger", icon: "alert-circle", color: "text-orange-500" },
+            { id: 2, title: "Définir", icon: "search", color: "text-blue-500" },
+            { id: 3, title: "Rechercher", icon: "brain-circuit", color: "text-purple-500" },
+            { id: 4, title: "Cibler", icon: "target", color: "text-red-500" },
+            { id: 5, title: "Analyser", icon: "zoom-in", color: "text-indigo-500" },
+            { id: 6, title: "Agir", icon: "list-todo", color: "text-green-500" },
+            { id: 7, title: "Standards", icon: "shield-check", color: "text-emerald-500" },
+            { id: 8, title: "Bilan", icon: "award", color: "text-yellow-500" }
+        ];
+
+        const ACTION_STATUSES = [
+            { id: 'attente', label: 'En attente', color: 'bg-slate-100 text-slate-600 border-slate-200' },
+            { id: 'encours', label: 'En cours', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+            { id: 'realise', label: 'Réalisé', color: 'bg-green-100 text-green-700 border-green-200' },
+            { id: 'boucle', label: 'Bouclé', color: 'bg-purple-100 text-purple-700 border-purple-200' }
+        ];
+
+        const QQOQCCP_GUIDE = {
+            qui: "<strong>Questions :</strong> Qui a détecté ? Qui est touché ? Qui a la compétence ?<br><strong>Intérêt :</strong> Identifier les acteurs concernés et les ressources pour l'enquête.",
+            quoi: "<strong>Questions :</strong> Quel est le problème ? Quelle est la description du défaut ?<br><strong>Intérêt :</strong> Définir l'objet exact de l'écart sans ambiguïté.",
+            ou: "<strong>Questions :</strong> Où le défaut est-il apparu (Ligne, Machine) ? Où sur la pièce ?<br><strong>Intérêt :</strong> Délimiter le périmètre géographique et physique.",
+            quand: "<strong>Questions :</strong> Date/Heure d'apparition ? Fréquence ? Depuis quand ?<br><strong>Intérêt :</strong> Identifier le début de la crise et la récurrence.",
+            comment: "<strong>Questions :</strong> Dans quelles conditions ? Comment le défaut se manifeste ?<br><strong>Intérêt :</strong> Comprendre le mode d'apparition et le contexte.",
+            combien: "<strong>Questions :</strong> Combien de pièces ? Quel coût ? Quel taux ?<br><strong>Intérêt :</strong> Mesurer l'ampleur et la gravité pour prioriser.",
+            pourquoi: "<strong>Questions :</strong> Pourquoi est-ce inacceptable ? Quel standard n'est pas respecté ?<br><strong>Intérêt :</strong> Justifier l'ouverture du 8D par un écart au standard."
+        };
+
+        // --- PRE-REMPLISSAGE DES DONNÉES DE DÉMONSTRATION ---
+        let formData = {
+            resolutionTitle: "Chute de la ponctualité - Ligne 4 (Réseau Bus'Innov)",
+            startDate: "2026-02-15",
+            participants: "Marc Dupont (Directeur Exploitation)\nSophie Martin (Responsable Planning)\nLuc Bernard (Conducteur Référent)\nAlice Tremblay (Responsable Maintenance)",
+            measuresList: [
+                { id: "mes_1", description: "Mise en place d'un bus de réserve 'tiroir' à l'arrêt République", who: "Sophie Martin", date: "2026-02-16" },
+                { id: "mes_2", description: "Message d'alerte prévention aux usagers via l'application mobile", who: "Service Com.", date: "2026-02-15" }
+            ], 
+            qqoqccp: { 
+                qui: "Conducteurs de la Ligne 4, Clients réguliers (plaintes +40% au service client).", 
+                quoi: "Retards moyens constatés de 12 minutes par rapport à la grille horaire théorique.", 
+                ou: "Principalement sur le tronçon hyper-centre : arrêts 'Gare SNCF' à 'Centre Hospitalier'.", 
+                quand: "Jours ouvrables (Lundi-Vendredi) en heure de pointe matinale (07h30 - 09h00). Depuis mi-janvier 2026.", 
+                comment: "Saturation des véhicules, temps d'arrêt très longs, formation de 'trains de bus' (plusieurs bus se suivent).", 
+                combien: "85% des bus de la Ligne 4 sont hors tolérance (retard > 3 min). Impact sur environ 2500 voyageurs/jour.", 
+                pourquoi: "Dégradation brutale du service perçu par les usagers, fort risque de pénalités financières par l'AOM." 
+            },
+            problemStatement: "Depuis la mi-janvier 2026, suite à la mise en place du nouveau réseau d'hiver, la ligne 4 subit des retards systématiques de 12 minutes en moyenne entre 7h30 et 9h00 sur le tronçon Gare-Hôpital. Cela touche 85% des passages et génère une très forte insatisfaction client.",
+            objectives: "Ramener le taux de ponctualité matinale de la Ligne 4 à un minimum de 95% (tolérance retard < 3 min) d'ici la fin du mois de mars 2026.", 
+            ishikawa: { 
+                "Main d'œuvre": [
+                    { id: "c_mo1", text: "Temps de relève au dépôt plus long que prévu" },
+                    { id: "c_mo2", text: "Conducteurs peu familiarisés avec le nouveau tracé de janvier" }
+                ], 
+                "Matériel": [
+                    { id: "c_mat1", text: "Lenteur d'ouverture/fermeture des portes sur les nouveaux bus articulés (modèle GX430)" },
+                    { id: "c_mat2", text: "Système billettique trop lent lors du scan simultané de plusieurs cartes abonnés" }
+                ], 
+                "Matière": [
+                    { id: "c_matr1", text: "Manque de monnaie pour rendre l'appoint (ralentit drastiquement la vente à bord)" }
+                ], 
+                "Méthode": [
+                    { id: "c_meth1", text: "Temps de parcours théorique (feuille de route) fortement sous-évalué en heure de pointe" },
+                    { id: "c_meth2", text: "Procédure d'encaissement complexe pour le nouveau titre 'Dépannage bord'" }
+                ], 
+                "Milieu": [
+                    { id: "c_mil1", text: "Travaux d'assainissement inopinés sur l'Avenue de Gaulle (réduction de voie)" },
+                    { id: "c_mil2", text: "Forte affluence concentrée à l'arrêt Université créant un effet 'goulot d'étranglement'" }
+                ], 
+                "Mesure": [
+                    { id: "c_mes1", text: "Le Système d'Aide à l'Exploitation (SAE) remonte parfois de fausses avances" }
+                ] 
+            },
+            customFamilies: [
+                {
+                    id: "f_1",
+                    name: "Planning et Temps de Parcours",
+                    causes: [
+                        { id: "c_meth1", text: "Temps de parcours théorique (feuille de route) fortement sous-évalué en heure de pointe" },
+                        { id: "c_mo1", text: "Temps de relève au dépôt plus long que prévu" }
+                    ]
+                },
+                {
+                    id: "f_2",
+                    name: "Matériel Roulant & Temps d'arrêt en station",
+                    causes: [
+                        { id: "c_mat1", text: "Lenteur d'ouverture/fermeture des portes sur les nouveaux bus articulés (modèle GX430)" },
+                        { id: "c_mat2", text: "Système billettique trop lent lors du scan simultané de plusieurs cartes abonnés" },
+                        { id: "c_matr1", text: "Manque de monnaie pour rendre l'appoint (ralentit drastiquement la vente à bord)" }
+                    ]
+                }
+            ],
+            tempSelectionIds: [], 
+            analyses: [
+                {
+                    familyId: "f_1",
+                    familyName: "Planning et Temps de Parcours",
+                    tree: {
+                        id: "root_1", text: "Temps de parcours théorique (feuille de route) fortement sous-évalué en heure de pointe",
+                        children: [
+                            {
+                                id: "w_1_1", text: "La feuille de route alloue 35 minutes au lieu des 45 nécessaires en pointe matinale",
+                                children: [
+                                    {
+                                        id: "w_1_2", text: "Les temps alloués ont été calculés par le logiciel de Graphicage sur la base d'une vitesse moyenne d'heure creuse",
+                                        children: [
+                                            {
+                                                id: "w_1_3", text: "Le paramétrage des 'coefficients de congestion' (profil horaire) a été oublié lors de la migration logicielle de décembre",
+                                                children: []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    familyId: "f_2",
+                    familyName: "Matériel Roulant & Temps d'arrêt en station",
+                    tree: {
+                        id: "root_2", text: "Lenteur d'ouverture/fermeture des portes sur les nouveaux bus articulés (modèle GX430)",
+                        children: [
+                            {
+                                id: "w_2_1", text: "Les portes pneumatiques mettent 4 secondes de plus à se refermer que sur nos bus standards",
+                                children: [
+                                    {
+                                        id: "w_2_2", text: "Le compresseur d'air du bus perd trop de pression en raison d'arrêts hyper rapprochés (tous les 300m)",
+                                        children: [
+                                            {
+                                                id: "w_2_3", text: "Ce modèle spécifique (GX430) n'est techniquement pas conçu pour un usage hyper-centre avec des sollicitations de portes aussi fréquentes",
+                                                children: []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ], 
+            selectedRootIds: ["w_1_3", "w_2_3"], 
+            actions: [
+                {
+                    id: "act_1",
+                    task: "Recalibrer et injecter les coefficients de congestion matinale dans le logiciel HASTUS",
+                    who: "Sophie Martin",
+                    when: "2026-03-01",
+                    linkedRootId: "w_1_3",
+                    linkedRootText: "Le paramétrage des 'coefficients de congestion' (profil horaire) a été oublié lors de la migration logicielle de décembre",
+                    status: "realise",
+                    standardization: "Mettre à jour la procédure de recette informatique (IT-PR-45) : intégrer un contrôle croisé et obligatoire des tables de congestion avant chaque validation de service."
+                },
+                {
+                    id: "act_2",
+                    task: "Réaffecter les bus articulés GX430 sur la Ligne 1 (Express/Périurbain) et basculer les bus standards sur la Ligne 4",
+                    who: "Marc Dupont & Atelier",
+                    when: "2026-03-05",
+                    linkedRootId: "w_2_3",
+                    linkedRootText: "Ce modèle spécifique (GX430) n'est techniquement pas conçu pour un usage hyper-centre avec des sollicitations de portes aussi fréquentes",
+                    status: "boucle",
+                    standardization: "Création d'une Matrice d'Affectation Matériel (Doc Exploitation v2) interdisant strictement l'usage des véhicules à portes pneumatiques lourdes sur les lignes de l'hyper-centre."
+                },
+                {
+                    id: "act_3",
+                    task: "Lancer une campagne 'Achat de titre sur mobile' pour réduire les flux de vente de tickets à bord par le conducteur",
+                    who: "Service Marketing",
+                    when: "2026-03-15",
+                    linkedRootId: null,
+                    linkedRootText: "",
+                    status: "encours",
+                    standardization: ""
+                }
+            ], 
+            effectiveness: "Les ajustements de Graphicage et le changement d'affectation du matériel roulant ont été effectifs au 5 mars. \n\nLe suivi des données SAE du 6 au 20 mars indique une ponctualité remontée à 96.2% (Objectif initial : >95%). Les temps d'arrêts en station ont baissé de 25% grâce au changement de bus. Les plaintes clients ont diminué de 80%. Le problème est considéré comme clos et résolu.",
+            standards: "", 
+            lessonsLearned: "- Ne jamais déployer un nouveau module logiciel (graphicage) sans vérifier les abaques de temps de parcours sur le terrain (Gemba).\n- L'achat et l'affectation de nouveaux véhicules ne doivent pas se faire uniquement sur un critère de capacité (nombre de places), mais aussi sur l'adaptation technique au profil de la ligne (mécanique des portes).", 
+            improvements: "Mise en place d'une 'Commission Ponctualité' bi-mensuelle regroupant 2 conducteurs référents, 1 régulateur du PC et le service Planning pour ajuster les marges de régularité de manière plus agile avant les blocages complets de réseau.", 
+            checklist: { informed: true, applicable: true, congratulated: true }
+        };
+
+        // --- TOAST NOTIFICATIONS MANAGER ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const bgColor = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-slate-800';
+            toast.className = `${bgColor} text-white px-6 py-3 rounded-2xl shadow-2xl font-bold text-sm flex items-center gap-3 fade-in transition-all duration-300`;
+            
+            let icon = 'info';
+            if(type === 'error') icon = 'alert-circle';
+            if(type === 'success') icon = 'check-circle';
+            
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> ${message}`;
+            container.appendChild(toast);
+            if (window.lucide) lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- 2. OUTILS TECHNIQUES ---
+        function generateId(prefix = 'id') { return prefix + '_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(); }
+
+        // --- 3. FONCTIONS PRINCIPALES (UI & LOGIQUE) ---
+
+        function renderContent() {
+            const container = document.getElementById('main-content');
+            if(!container) return;
+            container.innerHTML = '';
+            const step = steps.find(s => s.id === currentStep);
+            
+            const header = `
+                <div class="flex justify-between items-center mb-6 fade-in">
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-xl md:text-2xl font-black text-slate-800 flex items-center gap-3">
+                            <i data-lucide="${step.icon}" class="${step.color}"></i> ${step.title}
+                        </h2>
+                    </div>
+                </div>
+            `;
+
+            let content = '';
+            switch(currentStep) {
+                case 0:
+                    content = `
+                        <div class="space-y-6">
+                            <div class="p-5 bg-slate-50 border-l-4 border-slate-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-slate-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="info" class="w-3 h-3"></i> Bienvenue dans KIHO 8D</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Constituer une équipe compétente et définir les bases du projet. Une bonne préparation et une équipe pluridisciplinaire sont les clés d'une résolution efficace.</p></div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-4">
+                                    <div><label class="text-[10px] font-black uppercase text-slate-400 ml-2">Titre de la Résolution</label><input class="w-full p-4 border-2 border-slate-100 rounded-2xl outline-none text-sm font-bold focus:border-blue-500 transition-colors" value="${formData.resolutionTitle}" oninput="formData.resolutionTitle = this.value" placeholder="Ex: Rayures sur Capot Modèle X..."></div>
+                                    <div><label class="text-[10px] font-black uppercase text-slate-400 ml-2">Date de début</label><input type="date" class="w-full p-4 border-2 border-slate-100 rounded-2xl outline-none text-sm focus:border-blue-500 transition-colors" value="${formData.startDate}" oninput="formData.startDate = this.value"></div>
+                                    <div><label class="text-[10px] font-black uppercase text-slate-400 ml-2">Participants</label><textarea class="w-full h-32 p-4 border-2 border-slate-100 rounded-2xl outline-none text-sm mt-1 focus:border-blue-500 transition-colors" oninput="formData.participants = this.value" placeholder="Listez les membres de l'équipe...">${formData.participants}</textarea></div>
+                                </div>
+                                <div class="bg-blue-50 p-6 rounded-[2.5rem] border border-blue-100 text-blue-900"><h3 class="font-black text-lg mb-4 flex items-center gap-2"><i data-lucide="book-open" class="w-5 h-5"></i> Consignes Générales</h3><ul class="space-y-3 text-sm list-disc pl-5 marker:text-blue-500"><li><strong>Soyez factuel :</strong> Basez-vous sur des données concrètes.</li><li><strong>Travaillez en équipe :</strong> Le 8D est collectif.</li><li><strong>Ne sautez pas d'étapes :</strong> Suivez la méthode.</li><li><strong>Allez sur le terrain (Gemba).</strong></li></ul></div>
+                            </div>
+                        </div>`;
+                    break;
+                case 1:
+                    content = `
+                        <div class="space-y-6">
+                            <div class="p-5 bg-orange-50 border-l-4 border-orange-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-orange-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="shield-alert" class="w-3 h-3"></i> Protéger (Mesures Conservatoires)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Protéger immédiatement le client (interne ou externe) contre les effets indésirables du problème, en attendant d'en trouver et d'éliminer la cause racine. Ces mesures sont temporaires (ex: tri, mur qualité).</p></div>
+                            <div class="p-6 bg-slate-900 rounded-[2.5rem] text-white">
+                                <h3 class="text-xs font-black uppercase text-orange-400 mb-4 tracking-widest">Nouvelle Mesure</h3>
+                                <div class="grid grid-cols-1 gap-2"><input id="mes-desc" class="p-3 bg-slate-800 border-none rounded-xl text-sm" placeholder="Description de la mesure..."><div class="flex gap-2"><input id="mes-who" class="flex-1 p-3 bg-slate-800 border-none rounded-xl text-sm" placeholder="Qui ?"><input id="mes-when" type="date" class="flex-1 p-3 bg-slate-800 border-none rounded-xl text-sm"></div><button onclick="addMeasure()" class="w-full py-3 bg-orange-500 text-slate-900 font-bold rounded-xl mt-2 hover:bg-orange-400 shadow-lg">Ajouter</button></div>
+                            </div>
+                            <div class="space-y-3">${formData.measuresList.length === 0 ? '<div class="text-center p-10 text-slate-400 italic">Aucune mesure définie.</div>' : formData.measuresList.map((m, i) => `<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border border-slate-200 rounded-2xl shadow-sm"><div class="flex-1"><div class="font-bold text-sm text-slate-800 mb-1">${m.description}</div><div class="text-[10px] text-slate-400 uppercase font-black">${m.who} | ${m.date || 'Non daté'}</div></div><button onclick="removeMeasure(${i})" class="p-2 text-red-400 hover:text-red-600 ml-auto sm:ml-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('')}</div>
+                        </div>`;
+                    break;
+                case 2:
+                    content = `
+                        <div class="space-y-6">
+                            <div class="p-5 bg-blue-50 border-l-4 border-blue-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-blue-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="search" class="w-3 h-3"></i> Définir (Problème)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Décrire le problème de manière factuelle et précise (QQOQCCP). Un problème bien défini est un problème à moitié résolu. Évitez les suppositions à ce stade, concentrez-vous sur l'observation de l'écart.</p></div>
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div class="p-5 bg-slate-50 rounded-[2rem] border border-slate-200 shadow-sm space-y-3">
+                                    <h3 class="text-xs font-black uppercase text-blue-600 mb-3 flex items-center gap-2 ml-1"><i data-lucide="list-checks" class="w-4 h-4"></i> QQOQCCP</h3>
+                                    ${Object.keys(formData.qqoqccp).map(k => `<div class="space-y-1 group relative"><div class="flex items-center gap-1 ml-2"><label class="text-[9px] font-black uppercase text-slate-400">${k}</label><i data-lucide="help-circle" class="w-3 h-3 text-slate-300 cursor-help"></i><div class="hidden group-hover:block absolute bottom-full left-0 mb-2 w-64 p-2 bg-slate-800 text-white text-[10px] rounded-lg shadow-xl z-10 pointer-events-none">${QQOQCCP_GUIDE[k]}</div></div><textarea class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-200 outline-none transition-all shadow-sm resize-y" rows="2" oninput="formData.qqoqccp['${k}'] = this.value" placeholder="...">${formData.qqoqccp[k].replace(/"/g, '&quot;')}</textarea></div>`).join('')}
+                                </div>
+
+                                <div class="flex flex-col gap-5">
+                                    <div class="flex-1 flex flex-col">
+                                        <label class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-1 flex items-center gap-1.5"><i data-lucide="target" class="w-3 h-3"></i> Problématique</label>
+                                        <textarea class="w-full flex-1 min-h-[160px] p-5 border-2 border-slate-100 rounded-[2rem] outline-none text-sm focus:border-blue-300 resize-none shadow-sm transition-all bg-white" oninput="formData.problemStatement = this.value" placeholder="Faites une phrase de synthèse décrivant précisément le problème...">${formData.problemStatement}</textarea>
+                                    </div>
+                                    <div class="flex-1 flex flex-col">
+                                        <label class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-1 flex items-center gap-1.5"><i data-lucide="flag" class="w-3 h-3"></i> Objectifs</label>
+                                        <textarea class="w-full flex-1 min-h-[160px] p-5 border-2 border-slate-100 rounded-[2rem] outline-none text-sm focus:border-blue-300 resize-none shadow-sm transition-all bg-white" oninput="formData.objectives = this.value" placeholder="Objectif(s) à atteindre (soyez SMART : Spécifique, Mesurable, Atteignable, Réaliste, Temporel)...">${formData.objectives || ''}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    break;
+                case 3:
+                    const categoriesTop = ["Main d'œuvre", "Matériel", "Matière"];
+                    const categoriesBottom = ["Milieu", "Méthode", "Mesure"];
+                    const renderCategoryBox = (catName, isTop) => {
+                        const causes = formData.ishikawa[catName] || [];
+                        const catIdSafe = catName.replace(/'/g, "\\'");
+                        const inputId = `add-input-${catName.replace(/[^a-zA-Z0-9]/g, '')}`;
+                        return `<div class="flex-1 min-w-[180px] p-2 fish-category-box"><div class="bg-purple-50 rounded-xl border border-purple-200 shadow-sm flex flex-col relative h-full"><div class="${isTop ? 'fish-connector-up' : 'fish-connector-down'}"></div><div class="p-2 bg-purple-100 rounded-t-xl border-b border-purple-200 text-center"><span class="text-[10px] font-black text-purple-700 uppercase tracking-widest block truncate" title="${catName}">${catName}</span></div><div class="space-y-1 p-2 flex-1 max-h-[150px] overflow-y-auto scrollbar-hide">${causes.length === 0 ? '<div class="text-[9px] text-purple-300 italic text-center py-2">Aucune cause</div>' : causes.map((c, i) => `<div class="bg-white p-1.5 rounded-lg text-[10px] flex justify-between items-center shadow-sm border border-purple-100 group"><span class="flex-1 pr-1 truncate" title="${c.text}">${c.text}</span><button onclick="removeIshikawaItem('${catIdSafe}', ${i})" class="text-red-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="x" class="w-3 h-3"></i></button></div>`).join('')}</div><div class="p-1 border-t border-purple-100 bg-white rounded-b-xl"><input type="text" id="${inputId}" class="w-full text-[10px] p-1 outline-none text-center bg-transparent" placeholder="+ Ajouter..." onkeydown="if(event.key === 'Enter') { addIshikawaItemManual('${catIdSafe}', '${inputId}') }"></div></div></div>`;
+                    };
+                    content = `<div class="fade-in"><div class="p-5 bg-purple-50 border-l-4 border-purple-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-purple-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="brain-circuit" class="w-3 h-3"></i> Rechercher (Ishikawa)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Identifier toutes les causes possibles et imaginables (brainstorming) qui pourraient expliquer le problème. Utilisez les 6M (Matière, Matériel, etc.) pour balayer large et n'oublier aucune piste potentielle.</p></div><div class="overflow-x-auto pb-6"><div class="min-w-[800px] relative py-10 px-4"><div class="fishbone-spine"></div><div class="flex items-center"><div class="flex-1 flex flex-col gap-16 relative z-10 mr-4"><div class="flex gap-4">${categoriesTop.map(cat => renderCategoryBox(cat, true)).join('')}</div><div class="flex gap-4">${categoriesBottom.map(cat => renderCategoryBox(cat, false)).join('')}</div></div><div class="w-64 h-32 bg-purple-600 text-white rounded-[4rem_1rem_1rem_4rem] border-4 border-purple-800 shadow-xl flex flex-col items-center justify-center p-6 text-center relative z-20 shrink-0"><div class="absolute -left-3 top-1/2 -translate-y-1/2 w-4 h-4 bg-purple-800 rounded-full"></div><span class="text-[10px] font-black uppercase text-purple-200 mb-1">Problématique</span><div class="text-xs font-bold leading-tight line-clamp-4">${formData.problemStatement || "À définir à l'étape 2"}</div></div></div></div><div class="md:hidden text-center text-[10px] text-slate-400 mt-2 italic"><i data-lucide="move-horizontal" class="w-3 h-3 inline"></i> Faites défiler horizontalement</div></div></div>`;
+                    break;
+                case 4:
+                    const available = getAvailableCauses();
+                    content = `<div class="space-y-8 fade-in"><div class="p-5 bg-red-50 border-l-4 border-red-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-red-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="target" class="w-3 h-3"></i> Cibler (Regroupement)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Trier et regrouper les causes similaires pour structurer l'analyse. Cela permet de simplifier la recherche et de focaliser les efforts d'investigation sur les familles de causes les plus pertinentes.</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="space-y-4"><div class="flex flex-col gap-2 mb-4"><h3 class="text-xs font-black uppercase text-slate-400">Causes à trier</h3>${formData.tempSelectionIds.length > 0 ? `<div class="flex gap-2 p-2 bg-blue-50 rounded-xl animate-fade-in border border-blue-100"><input id="group-name-input" class="flex-1 p-2 text-xs rounded-lg border border-blue-200 focus:outline-none" placeholder="Nom du groupe..."><button onclick="groupSelection()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700">VALIDER</button></div>` : '<p class="text-[10px] text-slate-400 italic">Glissez une cause ou cliquez pour grouper.</p>'}</div><div class="space-y-2 max-h-[500px] overflow-y-auto pr-2 scrollbar-hide">${available.length === 0 ? '<div class="p-8 border-2 border-dashed rounded-3xl text-center text-slate-300 italic">Vide.</div>' : available.map(c => `<div draggable="true" ondragstart="dragCause(event, '${c.id}')" onclick="toggleCauseSelection('${c.id}')" class="cause-chip p-4 bg-white border-2 rounded-2xl text-xs ${formData.tempSelectionIds.includes(c.id) ? 'cause-chip-selected' : 'border-slate-100 text-slate-600 hover:border-slate-300'}">${c.text}</div>`).join('')}</div></div><div class="space-y-4"><h3 class="text-xs font-black uppercase text-red-600 flex items-center gap-2 h-10"><i data-lucide="layers"></i> Groupes</h3><div class="space-y-4">${formData.customFamilies.length === 0 ? '<div class="p-8 border-2 border-dashed rounded-[2rem] text-center text-slate-300 italic text-xs uppercase font-black">Aucun groupe</div>' : formData.customFamilies.map((f, idx) => `<div ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dropCause(event, '${f.id}')" class="p-5 bg-slate-50 rounded-[2rem] border-2 transition-all ${idx === 0 ? 'border-red-400 bg-red-50 shadow-md' : 'border-slate-200'}"><div class="flex justify-between items-center mb-3"><span class="font-black text-slate-800 text-sm uppercase tracking-tight">${f.name}</span><div class="flex gap-1"><button onclick="moveFamilyUp(${idx})" class="p-1 text-slate-400 hover:text-slate-900"><i data-lucide="arrow-up" class="w-4 h-4"></i></button><button onclick="deleteFamily('${f.id}')" class="p-1 text-red-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><div class="flex flex-wrap gap-2">${f.causes.map(c => `<span draggable="true" ondragstart="dragCause(event, '${c.id}')" class="px-2 py-1 bg-white border rounded-lg text-[10px] text-slate-600 shadow-sm flex items-center gap-2 cursor-grab hover:bg-slate-100 transition-colors">${c.text}<button onclick="removeCauseFromGroup('${f.id}', '${c.id}')" class="text-red-300 hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></button></span>`).join('')}</div></div>`).join('')}</div></div></div></div>`;
+                    break;
+                case 5:
+                    const currentAnalysis = formData.analyses[currentAnalysisIndex];
+                    const availableFamilies = formData.customFamilies.filter(f => !formData.analyses.find(a => a.familyId === f.id));
+                    content = `<div class="space-y-6"><div class="p-5 bg-indigo-50 border-l-4 border-indigo-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-indigo-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="zoom-in" class="w-3 h-3"></i> Analyser (5 Pourquoi)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Remonter jusqu'à la <strong>cause racine</strong> (le 'vrai' coupable) en demandant 'Pourquoi ?' successivement pour chaque hypothèse retenue. Ne vous arrêtez pas aux symptômes, cherchez la cause systémique.</p></div><div class="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">${formData.analyses.map((a, idx) => `<button onclick="switchAnalysis(${idx})" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${idx === currentAnalysisIndex ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}">${a.familyName}</button>`).join('')}${availableFamilies.length > 0 ? `<div class="relative group"><select onchange="createNewAnalysis(this)" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 cursor-pointer outline-none appearance-none pr-8"><option value="">+ Analyser un autre groupe</option>${availableFamilies.map(f => `<option value="${f.id}">${f.name}</option>`).join('')}</select></div>` : ''}</div>${currentAnalysis ? `<div class="p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 overflow-x-auto min-h-[400px]">${renderWhyTreeUI(currentAnalysisIndex, currentAnalysis.tree)}</div>` : '<div class="p-10 text-center text-slate-400 italic">Aucune analyse disponible.</div>'}<div class="mt-8 p-6 bg-indigo-900 text-white rounded-3xl"><label class="text-[10px] font-black opacity-60 uppercase flex items-center gap-2 mb-2"><i data-lucide="check-square" class="w-3 h-3"></i> Validation des Causes Racines</label><div id="root-causes-list-container" class="space-y-2"></div></div></div>`;
+                    setTimeout(renderRootCausesListOnly, 0);
+                    break;
+                case 6:
+                    const rootNodes = getAllRootCauseNodes();
+                    const selectedRoots = rootNodes.filter(n => formData.selectedRootIds.includes(n.id));
+                    const causesPending = selectedRoots.filter(r => !formData.actions.some(a => a.linkedRootId === r.id));
+                    content = `<div class="space-y-4"><div class="p-5 bg-green-50 border-l-4 border-green-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-green-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="list-todo" class="w-3 h-3"></i> Agir (Plan d'Actions)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Définir et mettre en œuvre des <strong>actions correctives permanentes</strong> pour éliminer la cause racine. Contrairement aux mesures conservatoires, ces actions visent le long terme pour empêcher le problème de réapparaître.</p></div><div class="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl mb-4"><h3 class="text-xs font-bold text-indigo-800 mb-2 flex items-center gap-2"><i data-lucide="target" class="w-3 h-3"></i> A traiter</h3><div class="flex flex-wrap gap-2">${causesPending.length === 0 ? '<span class="text-xs text-indigo-400 italic">Tout est couvert !</span>' : causesPending.map(r => `<span class="px-2 py-1 bg-white border border-indigo-200 rounded-lg text-xs text-indigo-700 font-medium shadow-sm animate-pulse">${r.text}</span>`).join('')}</div></div><div class="p-6 bg-slate-900 rounded-[2.5rem] text-white"><h3 class="text-xs font-black uppercase text-green-400 mb-4 tracking-widest">Nouvelle Action</h3><div class="grid grid-cols-1 gap-2"><div class="mb-2"><label class="text-[10px] uppercase font-bold text-slate-400 ml-1">Cause liée</label><select id="act-root-id" class="w-full p-3 bg-slate-800 border-none rounded-xl text-sm outline-none mt-1"><option value="" disabled selected>Choisir...</option>${selectedRoots.map(r => `<option value="${r.id}">${r.text.substring(0,50)}</option>`).join('')}</select></div><input id="act-task" class="p-3 bg-slate-800 border-none rounded-xl text-sm" placeholder="Action..."><div class="flex gap-2"><input id="act-who" class="flex-1 p-3 bg-slate-800 border-none rounded-xl text-sm" placeholder="Qui ?"><input id="act-when" type="date" class="flex-1 p-3 bg-slate-800 border-none rounded-xl text-sm"></div><button onclick="addAction()" class="w-full py-3 bg-green-500 text-slate-900 font-bold rounded-xl mt-2 hover:bg-green-400 shadow-lg">Ajouter</button></div></div><div class="space-y-3">${formData.actions.map((a, i) => { const statusObj = ACTION_STATUSES.find(s => s.id === a.status) || ACTION_STATUSES[0]; return `<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border rounded-2xl shadow-sm gap-3"><div class="flex-1 w-full"><div class="text-[10px] font-bold text-indigo-500 mb-1 flex items-center gap-1"><i data-lucide="link" class="w-3 h-3"></i> ${a.linkedRootText || 'Aucune'}</div><input class="font-bold text-sm text-slate-800 w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 outline-none py-1 transition-colors" value="${a.task.replace(/"/g, '&quot;')}" oninput="updateActionField(${i}, 'task', this.value)" placeholder="Tâche à réaliser..."><div class="flex items-center gap-2 mt-1"><input class="text-[10px] text-slate-500 uppercase font-black bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 outline-none w-1/3 min-w-[80px]" value="${a.who.replace(/"/g, '&quot;')}" oninput="updateActionField(${i}, 'who', this.value)" placeholder="Pilote"><span class="text-slate-300">•</span><input type="date" class="text-[10px] text-slate-500 uppercase font-black bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 outline-none" value="${a.when}" onchange="updateActionField(${i}, 'when', this.value)"></div></div><div class="flex items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0"><select onchange="updateActionStatus(${i}, this.value)" class="text-xs font-bold p-2 rounded-xl border-2 outline-none cursor-pointer ${statusObj.color}">${ACTION_STATUSES.map(s => `<option value="${s.id}" ${a.status === s.id ? 'selected' : ''}>${s.label}</option>`).join('')}</select><button onclick="removeAction(${i})" class="p-2 text-red-400 hover:text-red-600 transition-colors ml-auto sm:ml-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`; }).join('')}</div></div>`;
+                    break;
+                case 7:
+                    content = `<div class="space-y-6"><div class="p-5 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-emerald-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="shield-check" class="w-3 h-3"></i> Standardisation</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Pérenniser les résultats. Mettez à jour les standards, les procédures, les modes opératoires ou les règles de conception pour verrouiller la solution et éviter la récidive, ici ou sur des lignes similaires.</p></div><div class="space-y-4">${formData.actions.length === 0 ? '<div class="text-center p-10 text-slate-400 italic">Aucune action définie.</div>' : formData.actions.map((a, i) => { const safeStd = a.standardization ? a.standardization.replace(/"/g, '&quot;') : ""; return `<div class="bg-white border border-slate-200 rounded-2xl p-5 transition-all"><div class="flex items-start gap-4"><div class="flex-1"><p class="text-sm font-bold text-slate-800 mb-1">${a.task}</p></div><div class="flex-1 border-l pl-4 border-slate-100"><label class="text-[10px] font-black text-emerald-600 uppercase mb-1 block">Standardisation</label><textarea class="w-full p-3 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-200 outline-none h-20 resize-none" placeholder="Comment pérenniser ?" oninput="updateStandardization(${i}, this.value)">${safeStd}</textarea></div></div></div>` }).join('')}</div></div>`;
+                    break;
+                case 8:
+                    content = `<div class="space-y-6"><div class="p-5 bg-yellow-50 border-l-4 border-yellow-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-yellow-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="award" class="w-3 h-3"></i> Bilan</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Clore le 8D. C'est le moment de féliciter l'équipe pour le travail accompli, de valider l'efficacité finale et de partager les leçons apprises (Retours d'Expérience) avec le reste de l'organisation.</p></div><div class="p-6 bg-yellow-50 rounded-[2.5rem] border border-yellow-100 shadow-sm text-center"><h2 class="text-xl font-black text-slate-800">Félicitations !</h2></div><div><label class="text-[10px] font-black uppercase text-slate-400 ml-1">Preuve d'efficacité</label><textarea class="w-full h-32 p-6 border-2 border-slate-100 rounded-3xl outline-none mt-2 focus:border-yellow-400" oninput="formData.effectiveness = this.value">${formData.effectiveness}</textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="text-[10px] font-black uppercase text-slate-400 ml-1">Leçons</label><textarea class="w-full h-40 p-4 border-2 border-slate-100 rounded-2xl outline-none mt-1 focus:border-blue-400" oninput="formData.lessonsLearned = this.value">${formData.lessonsLearned || ''}</textarea></div><div><label class="text-[10px] font-black uppercase text-slate-400 ml-1">Améliorations</label><textarea class="w-full h-40 p-4 border-2 border-slate-100 rounded-2xl outline-none mt-1 focus:border-green-400" oninput="formData.improvements = this.value">${formData.improvements || ''}</textarea></div></div><div class="p-6 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm"><h3 class="text-xs font-black uppercase text-indigo-600 mb-4 flex items-center gap-2">Partage</h3><div class="space-y-3"><label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer custom-checkbox"><input type="checkbox" class="hidden" ${formData.checklist.informed ? 'checked' : ''} onchange="updateChecklist('informed', this.checked)"><div class="w-6 h-6 rounded-lg border-2 border-slate-300 bg-white flex items-center justify-center"><i data-lucide="check" class="w-4 h-4 text-white hidden"></i></div><span class="text-sm font-medium text-slate-700">Informés ?</span></label><label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer custom-checkbox"><input type="checkbox" class="hidden" ${formData.checklist.applicable ? 'checked' : ''} onchange="updateChecklist('applicable', this.checked)"><div class="w-6 h-6 rounded-lg border-2 border-slate-300 bg-white flex items-center justify-center"><i data-lucide="check" class="w-4 h-4 text-white hidden"></i></div><span class="text-sm font-medium text-slate-700">Applicable ailleurs ?</span></label><label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer custom-checkbox"><input type="checkbox" class="hidden" ${formData.checklist.congratulated ? 'checked' : ''} onchange="updateChecklist('congratulated', this.checked)"><div class="w-6 h-6 rounded-lg border-2 border-slate-300 bg-white flex items-center justify-center"><i data-lucide="check" class="w-4 h-4 text-white hidden"></i></div><span class="text-sm font-medium text-slate-700">Équipe félicitée ?</span></label></div></div></div>`;
+                    break;
+            }
+            container.innerHTML = header + content;
+            if(window.lucide) lucide.createIcons();
+        }
+
+        // --- 4. DATA NORMALIZATION ---
+        function normalizeData() {
+            if (typeof formData.resolutionTitle === 'undefined') formData.resolutionTitle = "";
+            if (typeof formData.startDate === 'undefined') formData.startDate = new Date().toISOString().split('T')[0];
+            if (typeof formData.participants === 'undefined') formData.participants = "";
+
+            if (!formData.measuresList) formData.measuresList = [];
+            
+            const defaultCategories = ["Main d'œuvre", "Matériel", "Matière", "Méthode", "Milieu", "Mesure"];
+            defaultCategories.forEach(cat => { if (!formData.ishikawa[cat]) formData.ishikawa[cat] = []; });
+            Object.keys(formData.ishikawa).forEach(cat => {
+                formData.ishikawa[cat] = formData.ishikawa[cat].map(c => {
+                    if (typeof c === 'string') return { id: generateId('fix'), text: c };
+                    if (!c.id) c.id = generateId('fix');
+                    return c;
+                });
+            });
+
+            if (!formData.selectedRootIds) formData.selectedRootIds = [];
+            if (!formData.actions) formData.actions = [];
+            formData.actions.forEach(a => {
+                if (!a.id) a.id = generateId('act');
+                if (!a.status) a.status = 'attente';
+                if (!a.standardization) a.standardization = "";
+            });
+            if (!formData.checklist) formData.checklist = { informed: false, applicable: false, congratulated: false };
+            if (typeof formData.lessonsLearned === 'undefined') formData.lessonsLearned = "";
+            if (typeof formData.improvements === 'undefined') formData.improvements = "";
+            if (typeof formData.objectives === 'undefined') formData.objectives = "";
+            
+            if ((!formData.analyses || formData.analyses.length === 0) && formData.customFamilies.length > 0) {
+                formData.analyses = [];
+                addAnalysisForFamily(formData.customFamilies[0].id);
+            }
+        }
+
+        // --- 5. LOGIQUE MÉTIER ---
+
+        function addMeasure() {
+            const desc = document.getElementById('mes-desc').value;
+            const who = document.getElementById('mes-who').value;
+            const when = document.getElementById('mes-when').value;
+            if (desc) {
+                formData.measuresList.push({ id: generateId('mes'), description: desc, who: who || "Non défini", date: when || "" });
+                renderContent();
+            } else { showToast("Veuillez décrire la mesure.", "error"); }
+        }
+        
+        function removeMeasure(index) {
+            formData.measuresList.splice(index, 1);
+            renderContent();
+        }
+
+        function addIshikawaItemManual(cat, inputId) {
+            const input = document.getElementById(inputId);
+            const val = input.value.trim();
+            if (val) {
+                formData.ishikawa[cat].push({ id: generateId('c'), text: val });
+                renderContent();
+            }
+        }
+
+        function removeIshikawaItem(cat, index) {
+            formData.ishikawa[cat].splice(index, 1);
+            renderContent();
+        }
+
+        function getAvailableCauses() {
+            let available = [];
+            Object.values(formData.ishikawa).forEach(list => {
+                list.forEach(cause => {
+                    const isGrouped = formData.customFamilies.some(f => f.causes.some(c => c.id === cause.id));
+                    if (!isGrouped) available.push(cause);
+                });
+            });
+            return available;
+        }
+
+        function toggleCauseSelection(causeId) {
+            const index = formData.tempSelectionIds.indexOf(causeId);
+            if (index === -1) formData.tempSelectionIds.push(causeId);
+            else formData.tempSelectionIds.splice(index, 1);
+            renderContent();
+        }
+
+        function groupSelection() {
+            if (formData.tempSelectionIds.length === 0) return;
+            const nameInput = document.getElementById('group-name-input');
+            const name = nameInput ? nameInput.value.trim() : "";
+            if (name) {
+                const available = getAvailableCauses();
+                const selectedCauses = available.filter(c => formData.tempSelectionIds.includes(c.id));
+                if (selectedCauses.length > 0) {
+                    const newFamilyId = generateId('f');
+                    formData.customFamilies.push({ id: newFamilyId, name: name, causes: [...selectedCauses] });
+                    if (formData.customFamilies.length === 1) addAnalysisForFamily(newFamilyId);
+                    formData.tempSelectionIds = [];
+                    renderContent();
+                }
+            } else { showToast("Veuillez nommer le groupe.", "error"); }
+        }
+
+        // --- NOUVELLES FONCTIONS DRAG & DROP ---
+        function dragCause(ev, causeId) {
+            ev.dataTransfer.setData("causeId", causeId);
+            ev.dataTransfer.effectAllowed = "move";
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+            ev.dataTransfer.dropEffect = "move";
+        }
+
+        function dragEnter(ev) {
+            ev.preventDefault();
+            ev.currentTarget.classList.add('drop-zone-active');
+        }
+
+        function dragLeave(ev) {
+            ev.currentTarget.classList.remove('drop-zone-active');
+        }
+
+        function dropCause(ev, familyId) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('drop-zone-active');
+            
+            const causeId = ev.dataTransfer.getData("causeId");
+            if (!causeId) return;
+
+            // Si on déplace une cause qui fait partie de notre sélection multiple, 
+            // on déplace TOUTES les causes sélectionnées d'un coup !
+            let causesToMoveIds = [causeId];
+            if (formData.tempSelectionIds.includes(causeId)) {
+                causesToMoveIds = [...new Set([...formData.tempSelectionIds, causeId])];
+            }
+
+            const targetFamily = formData.customFamilies.find(f => f.id === familyId);
+            if (targetFamily) {
+                let moved = false;
+                
+                causesToMoveIds.forEach(id => {
+                    // Empêcher l'ajout si la cause est déjà dans ce groupe cible
+                    if(targetFamily.causes.some(c => c.id === id)) return;
+                    
+                    let causeObj = null;
+                    
+                    // 1. Chercher dans les causes disponibles (à gauche)
+                    const available = getAvailableCauses();
+                    causeObj = available.find(c => c.id === id);
+                    
+                    // 2. Si introuvable, chercher dans les autres groupes existants (déplacement inter-groupes)
+                    if (!causeObj) {
+                        for (let i = 0; i < formData.customFamilies.length; i++) {
+                            const f = formData.customFamilies[i];
+                            if (f.id !== familyId) {
+                                const idx = f.causes.findIndex(c => c.id === id);
+                                if (idx !== -1) {
+                                    causeObj = f.causes[idx];
+                                    f.causes.splice(idx, 1); // Retirer de l'ancien groupe
+                                    
+                                    // Nettoyage: Si l'ancien groupe devient vide, on le supprime
+                                    if (f.causes.length === 0) {
+                                        formData.customFamilies.splice(i, 1);
+                                        formData.analyses = formData.analyses.filter(a => a.familyId !== f.id);
+                                        i--; // Réajuster l'index après suppression
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Si on a bien trouvé la cause, on l'ajoute au groupe cible
+                    if (causeObj) {
+                        targetFamily.causes.push(causeObj);
+                        moved = true;
+                    }
+                });
+                
+                if (moved) {
+                    formData.tempSelectionIds = formData.tempSelectionIds.filter(id => !causesToMoveIds.includes(id));
+                    renderContent();
+                }
+            }
+        }
+
+        function deleteFamily(familyId) {
+            formData.customFamilies = formData.customFamilies.filter(f => f.id !== familyId);
+            formData.analyses = formData.analyses.filter(a => a.familyId !== familyId);
+            currentAnalysisIndex = 0;
+            renderContent();
+        }
+
+        function moveFamilyUp(index) {
+            if (index > 0) {
+                const temp = formData.customFamilies[index];
+                formData.customFamilies[index] = formData.customFamilies[index-1];
+                formData.customFamilies[index-1] = temp;
+                renderContent();
+            }
+        }
+
+        function removeCauseFromGroup(familyId, causeId) {
+            const family = formData.customFamilies.find(f => f.id === familyId);
+            if (family) {
+                family.causes = family.causes.filter(c => c.id !== causeId);
+                if (family.causes.length === 0) deleteFamily(familyId);
+                else renderContent();
+            }
+        }
+
+        function addAnalysisForFamily(familyId) {
+            const family = formData.customFamilies.find(f => f.id === familyId);
+            if (family) {
+                if (!formData.analyses.find(a => a.familyId === familyId)) {
+                    formData.analyses.push({
+                        familyId: family.id,
+                        familyName: family.name,
+                        tree: { id: generateId('root'), text: family.name, children: [] }
+                    });
+                }
+            }
+        }
+
+        function switchAnalysis(index) {
+            currentAnalysisIndex = index;
+            renderContent();
+        }
+
+        function createNewAnalysis(selectElement) {
+            const familyId = selectElement.value;
+            if (familyId) {
+                addAnalysisForFamily(familyId);
+                currentAnalysisIndex = formData.analyses.length - 1; 
+                renderContent();
+            }
+        }
+
+        function updateWhyText(analysisIndex, nodeId, text) {
+            const tree = formData.analyses[analysisIndex].tree;
+            const findAndUpdate = (node) => {
+                if (node.id === nodeId) { node.text = text; return true; }
+                for (let child of node.children) { if (findAndUpdate(child)) return true; }
+                return false;
+            };
+            findAndUpdate(tree);
+            // On s'assure que renderRootCausesListOnly existe et est appelée avec précaution
+            if (typeof renderRootCausesListOnly === "function") {
+                renderRootCausesListOnly();
+            }
+        }
+
+        function updateWhySelect(analysisIndex, nodeId, text) {
+            updateWhyText(analysisIndex, nodeId, text);
+            renderContent(); // Rafraîchit l'UI pour que la cause sélectionnée disparaisse des autres listes (uniquement sur le P1)
+        }
+
+        function addWhyChild(analysisIndex, nodeId, depth) {
+            if (depth > 6) return showToast("Limite de 6 niveaux atteinte !", "error");
+            const tree = formData.analyses[analysisIndex].tree;
+            const findAndAdd = (node) => {
+                if (node.id === nodeId) {
+                    node.children.push({ id: generateId('w'), text: "", children: [] });
+                    return true;
+                }
+                for (let child of node.children) { if (findAndAdd(child)) return true; }
+                return false;
+            };
+            findAndAdd(tree);
+            renderContent();
+        }
+
+        function removeWhyNode(analysisIndex, nodeId) {
+            const tree = formData.analyses[analysisIndex].tree;
+            const findAndRemove = (parent) => {
+                const index = parent.children.findIndex(n => n.id === nodeId);
+                if (index !== -1) { parent.children.splice(index, 1); return true; }
+                for (let child of parent.children) { if (findAndRemove(child)) return true; }
+                return false;
+            };
+            findAndRemove(tree);
+            renderContent();
+        }
+
+        function calculateRowSpan(node) {
+            if (!node.children || node.children.length === 0) {
+                node.rowSpan = 1;
+                return 1;
+            }
+            let span = 0;
+            for (let child of node.children) {
+                span += calculateRowSpan(child);
+            }
+            node.rowSpan = span;
+            return span;
+        }
+
+        function renderWhyTreeUI(analysisIndex, treeRoot) {
+            calculateRowSpan(treeRoot);
+            const currentAnalysis = formData.analyses[analysisIndex];
+            const familyObj = formData.customFamilies.find(f => f.id === currentAnalysis.familyId);
+
+            let html = `
+            <div class="bg-slate-50 rounded-[2rem] border-2 border-slate-200 shadow-inner p-4 pb-8 overflow-x-auto">
+                <div class="rounded-xl overflow-hidden border border-slate-300 shadow-sm bg-white min-w-max">
+                    <table class="w-full border-collapse text-left bg-white">
+                        <thead>
+                            <tr class="bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest text-center">
+                                <th class="p-3 w-[180px] border-r border-slate-700">Sujet (Famille)</th>
+                                <th class="p-3 w-[220px] border-r border-slate-700">Pourquoi 1</th>
+                                <th class="p-3 w-[220px] border-r border-slate-700">Pourquoi 2</th>
+                                <th class="p-3 w-[220px] border-r border-slate-700">Pourquoi 3</th>
+                                <th class="p-3 w-[220px] border-r border-slate-700">Pourquoi 4</th>
+                                <th class="p-3 w-[220px] border-r border-slate-700">Pourquoi 5</th>
+                                <th class="p-3 w-[220px]">Pourquoi 6</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+            `;
+            
+            function renderNode(node, depth, isFirstChild) {
+                let res = '';
+                if (!isFirstChild) {
+                    res += `<tr class="border-t border-slate-200">`;
+                }
+                
+                const safeText = node.text ? node.text.replace(/"/g, '&quot;') : "";
+                let inputHtml = '';
+                
+                if (depth === 0) {
+                     inputHtml = `<div class="p-3 text-slate-800 font-black text-sm text-center flex-1 bg-slate-100 rounded-lg border border-slate-200">${familyObj ? familyObj.name : 'Analyse'}</div>`;
+                } 
+                else if (depth === 1 && familyObj && familyObj.causes.length > 0) {
+                    const usedCauses = treeRoot.children.map(child => child.text).filter(t => t);
+                    const availableCauses = familyObj.causes.filter(c => c.text === node.text || !usedCauses.includes(c.text));
+
+                    inputHtml = `
+                        <select class="flex-1 w-full p-2 text-sm outline-none bg-transparent cursor-pointer font-bold text-blue-800" onchange="updateWhySelect(${analysisIndex}, '${node.id}', this.value)">
+                            <option value="" disabled ${!node.text ? 'selected' : ''}>Choisir une cause...</option>
+                            ${availableCauses.map(c => `<option value="${c.text.replace(/"/g, '&quot;')}" ${node.text === c.text ? 'selected' : ''}>${c.text}</option>`).join('')}
+                        </select>`;
+                } 
+                else {
+                    inputHtml = `<textarea class="flex-1 w-full p-2 text-sm outline-none bg-transparent resize-none h-[60px] font-medium text-slate-700" oninput="updateWhyText(${analysisIndex}, '${node.id}', this.value)" placeholder="Pourquoi ?">${safeText}</textarea>`;
+                }
+
+                let buttonsHtml = '';
+                if (depth === 0) {
+                    buttonsHtml = `<button onclick="addWhyChild(${analysisIndex}, '${node.id}', ${depth + 1})" class="p-2 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-lg transition-colors shadow-sm ml-2" title="Ajouter un chemin"><i data-lucide="plus" class="w-4 h-4"></i></button>`;
+                } else {
+                    buttonsHtml += `<div class="flex flex-col border-l border-slate-200 bg-slate-50 h-full w-8 shrink-0">`;
+                    if (depth < 6) {
+                        buttonsHtml += `<button onclick="addWhyChild(${analysisIndex}, '${node.id}', ${depth + 1})" class="flex-1 flex items-center justify-center text-blue-500 hover:text-blue-700 hover:bg-blue-100 border-b border-slate-200 transition-colors" title="Ajouter une suite ou ramification"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>`;
+                    }
+                    buttonsHtml += `<button onclick="removeWhyNode(${analysisIndex}, '${node.id}')" class="flex-1 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-100 transition-colors" title="Supprimer ce nœud"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>`;
+                }
+
+                // Flèche de liaison (style logigramme orange)
+                const arrowHtml = node.children.length > 0 
+                    ? `<div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center z-20 shadow-md border-2 border-white"><i data-lucide="arrow-right" class="w-3 h-3"></i></div>` 
+                    : '';
+
+                res += `
+                    <td rowspan="${node.rowSpan}" class="border-r border-slate-200 p-3 align-middle bg-white relative">
+                        <div class="flex items-stretch bg-white border-2 border-slate-200 rounded-xl overflow-visible shadow-sm focus-within:ring-2 focus-within:ring-blue-400 focus-within:border-blue-400 h-full min-h-[60px] relative z-10 transition-all hover:border-blue-200">
+                            <div class="flex-1 flex flex-col justify-center relative">
+                                ${depth === 0 ? '' : `<span class="absolute top-1 left-2 text-[8px] font-black text-slate-300 uppercase">P${depth}</span><div class="pt-4 h-full">`}
+                                ${inputHtml}
+                                ${depth === 0 ? '' : `</div>`}
+                            </div>
+                            ${buttonsHtml}
+                        </div>
+                        ${arrowHtml}
+                    </td>`;
+
+                if (node.children && node.children.length > 0) {
+                    res += renderNode(node.children[0], depth + 1, true);
+                    for (let i = 1; i < node.children.length; i++) {
+                        res += renderNode(node.children[i], depth + 1, false);
+                    }
+                } else {
+                    for (let d = depth + 1; d <= 6; d++) {
+                        res += `<td class="border-r border-slate-100 bg-slate-50/50 p-3"><div class="w-full h-full border-2 border-dashed border-slate-200 rounded-xl opacity-30 min-h-[60px]"></div></td>`;
+                    }
+                    res += `</tr>`;
+                }
+                return res;
+            }
+
+            html += renderNode(treeRoot, 0, true);
+            html += `</tbody></table></div></div>`;
+            return html;
+        }
+
+        function getRootCauseNodes(node) {
+            let nodes = [];
+            if (node.children.length === 0) {
+                if (node.text && node.text.trim() !== "") nodes.push(node);
+            } else {
+                node.children.forEach(child => nodes = nodes.concat(getRootCauseNodes(child)));
+            }
+            return nodes;
+        }
+
+        function getAllRootCauseNodes() {
+            let allNodes = [];
+            formData.analyses.forEach(analysis => {
+                if (analysis.tree.children.length > 0) {
+                    analysis.tree.children.forEach(child => allNodes = allNodes.concat(getRootCauseNodes(child)));
+                }
+            });
+            return allNodes;
+        }
+
+        // --- FONCTION RESTAURÉE ---
+        function renderRootCausesListOnly() {
+            const container = document.getElementById('root-causes-list-container');
+            if (!container) return; 
+            const rootNodes = getAllRootCauseNodes();
+            if (rootNodes.length === 0) {
+                container.innerHTML = '<span class="text-sm italic opacity-50">Complétez l\'arbre pour voir les racines potentielles...</span>';
+                return;
+            }
+            container.innerHTML = rootNodes.map(node => {
+                const isSelected = formData.selectedRootIds.includes(node.id);
+                const safeText = node.text ? node.text.replace(/"/g, '&quot;') : ""; 
+                return `
+                <div class="flex items-center gap-3 p-3 bg-indigo-800/50 rounded-xl text-sm border border-indigo-700 transition-all hover:bg-indigo-700 cursor-pointer" onclick="toggleRootSelection('${node.id}')">
+                    <div class="relative flex items-center justify-center w-5 h-5 border-2 border-green-400 rounded transition-colors ${isSelected ? 'bg-green-400' : 'bg-transparent'}">
+                        ${isSelected ? '<i data-lucide="check" class="w-3 h-3 text-indigo-900 font-bold"></i>' : ''}
+                    </div>
+                    <span class="${isSelected ? 'font-bold text-white' : 'text-indigo-200'}">${safeText}</span>
+                </div>
+            `}).join('');
+            if(window.lucide) lucide.createIcons();
+        }
+
+        function toggleRootSelection(nodeId) {
+            const index = formData.selectedRootIds.indexOf(nodeId);
+            if (index === -1) formData.selectedRootIds.push(nodeId);
+            else formData.selectedRootIds.splice(index, 1);
+            if (typeof renderRootCausesListOnly === "function") {
+                renderRootCausesListOnly(); 
+            }
+        }
+
+        function addAction() {
+            const task = document.getElementById('act-task').value;
+            const who = document.getElementById('act-who').value;
+            const when = document.getElementById('act-when').value;
+            const rootSelect = document.getElementById('act-root-id');
+            let linkedRootId = null;
+            let linkedRootText = "";
+
+            if (rootSelect && rootSelect.value) {
+                linkedRootId = rootSelect.value;
+                const allRoots = getAllRootCauseNodes();
+                const found = allRoots.find(n => n.id === linkedRootId);
+                if(found) linkedRootText = found.text;
+            }
+
+            if (task) { 
+                formData.actions.push({ id: generateId('act'), task, who, when, linkedRootId, linkedRootText, status: 'attente', standardization: "" }); 
+                renderContent(); 
+            } else { showToast("Veuillez saisir une action.", "error"); }
+        }
+
+        function updateActionField(index, field, value) {
+            if (formData.actions[index]) {
+                formData.actions[index][field] = value;
+            }
+        }
+
+        function updateActionStatus(index, newStatus) {
+            formData.actions[index].status = newStatus;
+            renderContent();
+        }
+
+        function updateStandardization(index, text) {
+            formData.actions[index].standardization = text;
+        }
+        
+        function updateChecklist(key, value) {
+            if (!formData.checklist) formData.checklist = {};
+            formData.checklist[key] = value;
+        }
+
+        function removeAction(i) { formData.actions.splice(i, 1); renderContent(); }
+
+        function toggleMenu() { document.getElementById('main-menu').classList.toggle('hidden'); }
+
+        function resetData() {
+            document.getElementById('main-menu').classList.add('hidden');
+            const modal = document.getElementById('reset-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeResetModal() {
+            const modal = document.getElementById('reset-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function executeResetData() {
+            formData = {
+                resolutionTitle: "",
+                startDate: new Date().toISOString().split('T')[0],
+                participants: "",
+                measuresList: [], 
+                qqoqccp: { qui: "", quoi: "", ou: "", quand: "", comment: "", combien: "", pourquoi: "" },
+                problemStatement: "",
+                objectives: "", 
+                ishikawa: { "Main d'œuvre": [], "Matériel": [], "Matière": [], "Méthode": [], "Milieu": [], "Mesure": [] },
+                customFamilies: [],
+                tempSelectionIds: [], 
+                analyses: [], 
+                selectedRootIds: [], 
+                actions: [], 
+                effectiveness: "",
+                standards: "", 
+                lessonsLearned: "", 
+                improvements: "", 
+                checklist: { informed: false, applicable: false, congratulated: false }
+            };
+            currentStep = 0;
+            currentAnalysisIndex = 0;
+            normalizeData();
+            renderStepper();
+            renderContent();
+            closeResetModal();
+            showToast("Analyse réinitialisée avec succès.", "success");
+        }
+
+        function closeWelcomeModal() {
+            const modal = document.getElementById('welcome-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(formData));
+            const safeTitle = formData.resolutionTitle ? formData.resolutionTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_').substring(0, 50) : 'KIHO_8D';
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", `${safeTitle}_${new Date().toISOString().split('T')[0]}.json`);
+            dl.click();
+            toggleMenu();
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) { try { formData = JSON.parse(e.target.result); normalizeData(); renderContent(); showToast("Projet chargé avec succès !", "success"); } catch(err) { showToast("Erreur lors du chargement du fichier.", "error"); } };
+            reader.readAsText(file);
+            toggleMenu();
+        }
+
+        function exportCSV() {
+            let csv = "\ufeffEtape;Champ;Valeur\n";
+            csv += `0;Titre;${formData.resolutionTitle.replace(/[\n;]/g, " ")}\n`;
+            csv += `0;Date_Debut;${formData.startDate}\n`;
+            csv += `0;Participants;${formData.participants.replace(/[\n;]/g, " | ")}\n`;
+            formData.measuresList.forEach((m, i) => { csv += `1;Mesure_${i+1};${m.description} (Qui: ${m.who}, Quand: ${m.date})\n`; });
+            Object.entries(formData.qqoqccp).forEach(([k,v]) => { csv += `2;QQOQCCP_${k};${v}\n`; });
+            csv += `2;Objectifs;${formData.objectives ? formData.objectives.replace(/[\n;]/g, " ") : ""}\n`;
+            csv += `2;Problematique;${formData.problemStatement ? formData.problemStatement.replace(/[\n;]/g, " ") : ""}\n`;
+            formData.customFamilies.forEach((f, i) => { csv += `4;Groupe_${i+1};${f.name} (Causes: ${f.causes.map(c=>c.text).join('|')})\n`; });
+            const roots = getAllRootCauseNodes().filter(n => formData.selectedRootIds.includes(n.id)).map(n => n.text);
+            csv += `5;Racines_Validees;${roots.join(' | ')}\n`;
+            formData.actions.forEach(a => {
+                const statusLabel = ACTION_STATUSES.find(s => s.id === a.status)?.label || 'Inconnu';
+                csv += `6;Action;${a.task} - ${a.who} (Lien: ${a.linkedRootText}) [Statut: ${statusLabel}]\n`;
+                csv += `7;Standardisation;${a.standardization ? a.standardization.replace(/[\n;]/g, " ") : ""}\n`;
+            });
+            csv += `8;Leçons;${formData.lessonsLearned ? formData.lessonsLearned.replace(/[\n;]/g, " ") : ""}\n`;
+            csv += `8;Améliorations;${formData.improvements ? formData.improvements.replace(/[\n;]/g, " ") : ""}\n`;
+            csv += `8;Check_Informés;${formData.checklist.informed ? 'Oui' : 'Non'}\n`;
+            csv += `8;Check_Applicable;${formData.checklist.applicable ? 'Oui' : 'Non'}\n`;
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            const safeTitle = formData.resolutionTitle ? formData.resolutionTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_').substring(0, 50) : 'KIHO_8D';
+            link.href = url; link.download = `Rapport_${safeTitle}.csv`; link.click();
+            toggleMenu();
+        }
+
+        // --- 6. NAVIGATION FUNCTIONS (NEW) ---
+        function goToStep(id) {
+            currentStep = id;
+            if (id === 1 || id === 4 || id === 5 || id === 7 || id === 8) normalizeData();
+            if (id === 4) formData.tempSelectionIds = [];
+            renderStepper();
+            renderContent();
+        }
+
+        function nextStep() {
+            if (currentStep < 8) goToStep(currentStep + 1);
+            else exportCSV();
+        }
+
+        function prevStep() {
+            if (currentStep > 0) goToStep(currentStep - 1);
+        }
+
+        // --- 7. RENDER HELPERS ---
+
+        function renderStepper() {
+            const stepper = document.getElementById('stepper');
+            stepper.innerHTML = steps.map(s => `
+                <button onclick="goToStep(${s.id})" class="flex-1 min-w-[110px] p-5 flex flex-col items-center gap-1 transition-all snap-center ${currentStep === s.id ? 'step-active' : 'opacity-40'}">
+                    <i data-lucide="${s.icon}" class="${currentStep === s.id ? s.color : 'text-slate-400'}"></i>
+                    <span class="text-[9px] font-black uppercase tracking-tighter ${currentStep === s.id ? 'text-slate-900' : 'text-slate-400'}">${s.title}</span>
+                </button>
+            `).join('');
+            const dots = document.getElementById('progress-dots');
+            if(dots) dots.innerHTML = steps.map(s => `
+                <div class="h-1.5 rounded-full transition-all duration-500 ${currentStep === s.id ? 'w-8 bg-blue-600 shadow-sm' : 'w-1.5 bg-slate-300'}"></div>
+            `).join('');
+            if(window.lucide) lucide.createIcons();
+        }
+
+        function printReport() {
+            const rootNodes = getAllRootCauseNodes();
+            const selectedRoots = rootNodes.filter(n => formData.selectedRootIds.includes(n.id));
+            const printHTML = `
+                <div class="print-container">
+                    <div class="flex justify-between items-center mb-4 border-b-4 border-slate-800 pb-2">
+                        <div>
+                            <h1 class="text-2xl font-black uppercase tracking-tighter">KIHO <span class="text-blue-600">8D</span> Report</h1>
+                            <div class="text-sm font-bold text-slate-500">${formData.resolutionTitle || 'Titre non défini'}</div>
+                        </div>
+                        <div class="text-right text-xs"><div class="font-bold">Date: ${formData.startDate}</div><div>Équipe: ${formData.participants || 'N/A'}</div></div>
+                    </div>
+                    <div class="print-grid">
+                        <div class="print-box">
+                            <div class="print-header">1. Description du Problème (QQOQCCP)</div>
+                            <div class="print-content">
+                                <ul class="list-none space-y-1">
+                                    <li><strong>Qui:</strong> ${formData.qqoqccp.qui}</li>
+                                    <li><strong>Quoi:</strong> ${formData.qqoqccp.quoi}</li>
+                                    <li><strong>Où:</strong> ${formData.qqoqccp.ou}</li>
+                                    <li><strong>Quand:</strong> ${formData.qqoqccp.quand}</li>
+                                    <li><strong>Comment:</strong> ${formData.qqoqccp.comment}</li>
+                                    <li><strong>Combien:</strong> ${formData.qqoqccp.combien}</li>
+                                </ul>
+                                <div class="mt-2 pt-2 border-t"><strong>Problématique:</strong><br> ${formData.problemStatement}</div>
+                                <div class="mt-2 pt-2 border-t text-blue-800"><strong>Objectifs:</strong><br> ${formData.objectives}</div>
+                            </div>
+                        </div>
+                        <div class="print-box">
+                            <div class="print-header">2. Mesures Immédiates</div>
+                            <div class="print-content border-b pb-2">${formData.measuresList.length ? formData.measuresList.map(m => `<div class="mb-1">• ${m.description} (${m.who})</div>`).join('') : 'Aucune.'}</div>
+                            <div class="print-header mt-0" style="border-top: 2px solid #334155;">3. Causes Racines (Analysées)</div>
+                            <div class="print-content">${selectedRoots.length ? selectedRoots.map(r => `<div class="font-bold text-purple-800">• ${r.text}</div>`).join('') : 'Aucune cause validée.'}</div>
+                        </div>
+                        <div class="print-box col-span-2">
+                            <div class="print-header">4. Plan d'Actions Correctives</div>
+                            <div class="print-content p-0">
+                                <table class="w-full text-xs text-left">
+                                    <thead class="bg-slate-100 border-b"><tr><th class="p-1">Action</th><th class="p-1 w-20">Qui/Quand</th><th class="p-1 w-16">Statut</th><th class="p-1 w-1/3">Standardisation</th></tr></thead>
+                                    <tbody>
+                                        ${formData.actions.length ? formData.actions.map(a => `
+                                            <tr class="border-b">
+                                                <td class="p-1 align-top"><div class="font-bold">${a.task}</div><div class="text-[9px] text-slate-500">Cause: ${a.linkedRootText || '-'}</div></td>
+                                                <td class="p-1 align-top">${a.who}<br>${a.when}</td>
+                                                <td class="p-1 align-top uppercase font-bold text-[9px]">${a.status}</td>
+                                                <td class="p-1 align-top italic bg-slate-50">${a.standardization || '-'}</td>
+                                            </tr>
+                                        `).join('') : '<tr><td colspan="4" class="p-2 text-center italic">Aucune action.</td></tr>'}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="print-box mt-2">
+                        <div class="print-header bg-yellow-100">5. Bilan & Efficacité</div>
+                        <div class="print-content grid grid-cols-2 gap-4">
+                            <div><strong>Efficacité Mesurée:</strong><br>${formData.effectiveness || 'Non renseignée'}</div>
+                            <div><strong>Leçons Apprises:</strong><br>${formData.lessonsLearned || 'Non renseignées'}</div>
+                        </div>
+                    </div>
+                </div>`;
+            document.getElementById('print-area').innerHTML = printHTML;
+            toggleMenu(); window.print();
+        }
+
+        // --- 9. INITIALISATION SÉCURISÉE ---
+        function init() {
+            try {
+                normalizeData();
+                renderStepper();
+                renderContent();
+                
+                if(window.lucide) {
+                    lucide.createIcons();
+                }
+                
+                // Afficher le message de bienvenue à chaque chargement
+                const welcomeModal = document.getElementById('welcome-modal');
+                if (welcomeModal) {
+                    welcomeModal.classList.remove('hidden');
+                    welcomeModal.classList.add('flex');
+                }
+                
+            } catch (e) {
+                console.error("Erreur d'initialisation:", e);
+                showToast("Erreur au chargement : " + e.message, "error");
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
