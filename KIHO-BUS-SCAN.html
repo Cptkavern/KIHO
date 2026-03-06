@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIHO Bilan sécurité - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; 
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+        }
+
+        .title-font {
+            font-family: 'Bebas Neue', cursive;
+        }
+
+        /* --- BARRE D'APERÇU (FIXE) --- */
+        #preview-bar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: #0f172a;
+            z-index: 10000000;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            color: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        /* --- ZONE DU BUS --- */
+        .bus-container {
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            background-color: #ffffff; 
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            height: 450px;
+            box-shadow: 0 4px 15px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .bus-photo {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; display: none;
+        }
+
+        .bus-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+        }
+
+        .bus-draw-body { fill: #f8fafc; stroke: #334155; stroke-width: 2.5; }
+        .bus-draw-window { fill: #f1f5f9; stroke: #334155; stroke-width: 1.5; }
+        .bus-draw-wheel { fill: #1e293b; stroke: #334155; stroke-width: 2; }
+        .bus-draw-detail { stroke: #94a3b8; stroke-width: 1.5; fill: none; }
+
+        .marker-dot {
+            cursor: pointer; transition: all 0.2s ease;
+            fill: rgba(51, 65, 85, 0.1); stroke: rgba(51, 65, 85, 0.2); stroke-width: 1;
+        }
+        .marker-dot:hover { fill: rgba(37, 99, 235, 0.4); stroke: #2563eb; r: 9; }
+        .marker-dot.active { fill: #ef4444; stroke: #ffffff; stroke-width: 2; r: 10; }
+        .marker-dot.selected { fill: #3b82f6; stroke: #1e293b; stroke-width: 3; r: 12; }
+
+        /* Tooltips : Fond noir, texte blanc, chiffres rouges */
+        .tooltip-bg { fill: #000000; rx: 8; }
+        .text-main { font-size: 14px; fill: #ffffff; font-weight: 700; }
+        .text-sub { font-size: 19px; fill: #ef4444; font-weight: 900; }
+
+        /* --- MODE APERÇU (AFFICHE) --- */
+        body.is-preview {
+            background-color: #334155;
+            padding-top: 100px !important;
+        }
+
+        body.is-preview .page-wrapper {
+            background-color: white !important;
+            padding: 10mm 15mm !important;
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
+            width: 297mm !important;
+            height: 210mm !important;
+            max-height: 210mm !important;
+            margin: 0 auto;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+        }
+
+        .poster-header, .poster-footer {
+            display: none;
+        }
+
+        body.is-preview .poster-header {
+            display: flex !important;
+            align-items: center;
+            border-bottom: 6px solid #ef4444 !important;
+            padding-bottom: 10px !important;
+            margin-bottom: 5px !important;
+            flex-shrink: 0 !important;
+        }
+
+        body.is-preview .poster-footer {
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 5px !important;
+            padding-top: 10px !important;
+            border-top: 2px solid #e2e8f0 !important;
+            flex-shrink: 0 !important;
+        }
+
+        body.is-preview .no-print-element { display: none !important; }
+
+        /* Forcer l'affichage des bulles actives en preview */
+        body.is-preview .active-tooltip { opacity: 1 !important; }
+
+        /* Hauteur automatique pour absorber l'espace restant sans dépasser */
+        body.is-preview .bus-container {
+            height: auto !important;
+            flex: 1 1 0% !important;
+            min-height: 0 !important;
+            margin: 5mm 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* --- MODE IMPRESSION STRICT --- */
+        @media print {
+            @page { size: A4 landscape; margin: 0; }
+            body { background-color: white !important; padding: 0 !important; margin: 0 !important; }
+            
+            .page-wrapper { 
+                width: 297mm !important; 
+                height: 209mm !important; 
+                max-height: 209mm !important;
+                padding: 10mm 15mm !important; 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                border-radius: 0 !important; 
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                overflow: hidden !important;
+                page-break-after: avoid !important;
+            }
+            
+            #preview-bar { display: none !important; }
+            .no-print-element { display: none !important; }
+            
+            .poster-header {
+                display: flex !important;
+                align-items: center;
+                border-bottom: 6px solid #ef4444 !important;
+                padding-bottom: 10px !important;
+                margin-bottom: 5px !important;
+                flex-shrink: 0 !important;
+            }
+            .poster-footer {
+                display: flex !important;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 5px !important;
+                padding-top: 10px !important;
+                border-top: 2px solid #e2e8f0 !important;
+                flex-shrink: 0 !important;
+            }
+            
+            .bus-container {
+                height: auto !important;
+                flex: 1 1 0% !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            
+            .active-tooltip { opacity: 1 !important; }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- Barre d'aperçu dynamique -->
+    <div id="preview-bar">
+        <div class="flex items-center gap-3">
+            <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+            <span class="font-black text-sm uppercase tracking-widest text-white">Bilan Carrosserie - Format Affiche</span>
+        </div>
+        <div class="h-8 w-px bg-slate-700"></div>
+        <button onclick="exitPreview()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-black uppercase transition-all flex items-center gap-2 border border-slate-600 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Retour Saisie
+        </button>
+        <button onclick="window.print()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-black uppercase transition-all shadow-xl shadow-blue-900/40 flex items-center gap-2 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Imprimer le Bilan
+        </button>
+    </div>
+
+    <!-- Interface Application KIHO -->
+    <header class="sticky top-0 z-50 bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between shadow-sm no-print-element">
+        <div class="flex items-center gap-4 text-left">
+            <div class="h-12 flex items-center justify-center">
+                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" alt="Logo Keolis" class="h-full object-contain">
+            </div>
+            <div class="flex flex-col">
+                <h1 class="text-xl font-bold tracking-tight text-slate-900 leading-none">
+                    KIHO <span class="text-blue-600 uppercase">Bilan sécurité</span>
+                </h1>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6">
+            <!-- Gestion des données -->
+            <div class="flex gap-2 border-r border-slate-200 pr-6">
+                <button onclick="exportData()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase rounded-lg transition-all border border-slate-200 flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Exporter
+                </button>
+                <label class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase rounded-lg transition-all border border-slate-200 flex items-center gap-1.5 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    Importer
+                    <input type="file" accept=".json" class="hidden" onchange="importData(event)">
+                </label>
+            </div>
+
+            <div class="flex flex-col items-end">
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Semaine active</span>
+                <input type="text" id="week-label" oninput="updateGlobalTotals()" class="bg-slate-50 border border-slate-200 rounded-lg text-sm font-black text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 px-2 py-1 transition-all">
+            </div>
+            <div class="flex flex-col items-end border-l border-slate-200 pl-6">
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Référence cumul</span>
+                <input type="text" id="since-date" value="01 Janvier 2024" class="bg-slate-50 border border-slate-200 rounded-lg text-sm font-black text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-blue-500 w-40 px-2 py-1 transition-all">
+            </div>
+        </div>
+    </header>
+
+    <div class="page-wrapper max-w-[1200px] mx-auto mt-6 px-4">
+        
+        <!-- HEADER POSTER (Impression) -->
+        <header class="poster-header">
+            <!-- Logo Keolis à gauche -->
+            <div class="w-48 h-20 flex items-center justify-center border-r-2 border-slate-100 pr-6">
+                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" alt="Logo Keolis" class="max-h-full max-w-full object-contain">
+            </div>
+            <!-- Titre centré (compensé par un padding droit égal à la largeur du logo) -->
+            <div class="flex-1 text-center pr-48">
+                <h2 class="text-6xl font-black title-font tracking-wider text-red-600 uppercase italic leading-none mb-3">Bilan Sécurité Carrosserie</h2>
+                <div class="flex justify-center gap-10 text-xl font-black text-slate-500 uppercase tracking-widest">
+                    <span id="print-week-display" class="text-red-600 bg-red-50 px-6 py-1 rounded-full border-2 border-red-200"></span>
+                    <span id="print-date-display" class="py-1"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- RÉCAPITULATIF SUPÉRIEUR (App uniquement) -->
+        <div class="no-print-element mb-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                        Impacts enregistrés
+                    </h3>
+                    <div class="flex gap-2">
+                        <div class="flex bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
+                            <label class="cursor-pointer hover:bg-slate-100 text-slate-600 text-[10px] px-3 py-1.5 transition-all font-black uppercase border-r border-slate-200">
+                                Charger Photo Bus
+                                <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                            </label>
+                            <button onclick="removeBusPhoto()" id="btn-remove-photo" class="hidden hover:bg-red-50 text-red-600 text-[10px] px-3 py-1.5 transition-all font-black uppercase">
+                                Supprimer Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="full-chocs-list" class="flex gap-4 overflow-x-auto pb-2 custom-scrollbar min-h-[60px] items-center">
+                    <p class="text-slate-300 italic text-xs w-full text-center">Aucun impact saisi.</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-col justify-center">
+                <button onclick="enterPreview()" class="w-full h-full bg-blue-600 text-white font-black rounded-2xl shadow-lg shadow-blue-100 flex flex-col items-center justify-center gap-1 hover:bg-blue-700 transition-all uppercase text-[10px] tracking-widest active:scale-95 group">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    Aperçu Affiche
+                </button>
+            </div>
+        </div>
+
+        <!-- ZONE DU BUS -->
+        <div class="bus-container">
+            <img id="main-bus-image" src="" alt="" class="bus-photo">
+            <svg viewBox="0 0 1000 450" class="bus-overlay" id="bus-svg">
+                <g id="bus-blueprint">
+                    <path class="bus-draw-body" d="M100,340 L100,120 Q100,80 160,80 L880,80 Q940,80 940,120 L940,340 L880,340 L880,320 L780,320 L780,340 L220,340 L220,320 L120,320 L120,340 Z" />
+                    <rect class="bus-draw-window" x="115" y="95" width="80" height="150" rx="10" />
+                    <rect class="bus-draw-window" x="210" y="95" width="130" height="120" rx="4" />
+                    <rect class="bus-draw-window" x="350" y="95" width="130" height="120" rx="4" />
+                    <rect class="bus-draw-window" x="490" y="95" width="130" height="120" rx="4" />
+                    <rect class="bus-draw-window" x="630" y="95" width="130" height="120" rx="4" />
+                    <rect class="bus-draw-window" x="770" y="95" width="155" height="150" rx="10" />
+                    <rect class="bus-draw-detail" x="210" y="225" width="130" height="115" />
+                    <rect class="bus-draw-detail" x="630" y="225" width="130" height="115" />
+                    <line class="bus-draw-detail" x1="275" y1="225" x2="275" y2="340" />
+                    <line class="bus-draw-detail" x1="695" y1="225" x2="695" y2="340" />
+                    <circle class="bus-draw-wheel" cx="170" cy="340" r="45" />
+                    <circle cx="170" cy="340" r="18" fill="#f8fafc" />
+                    <circle class="bus-draw-wheel" cx="830" cy="340" r="45" />
+                    <circle cx="830" cy="340" r="18" fill="#f8fafc" />
+                    <path class="bus-draw-body" d="M100,180 Q60,180 60,210 L60,250 Q60,270 80,270 L100,250 Z" />
+                </g>
+                <g id="grid-markers"></g>
+            </svg>
+        </div>
+
+        <!-- ÉDITEUR FLOTTANT (App uniquement) -->
+        <div id="editor-panel" class="no-print-element fixed bottom-8 left-1/2 -translate-x-1/2 w-[600px] bg-white p-6 rounded-3xl shadow-2xl border border-slate-200 hidden z-[9999]">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                <h3 class="font-black text-xs uppercase tracking-widest text-slate-800">Saisie d'incident</h3>
+                <button onclick="closeEditor()" class="text-slate-400 hover:text-red-500 transition-colors">✕</button>
+            </div>
+            <div id="existing-impacts" class="max-h-32 overflow-y-auto mb-4 custom-scrollbar text-[10px] space-y-2"></div>
+            <div class="grid grid-cols-3 gap-3">
+                <div class="col-span-1">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Nature</label>
+                    <input type="text" id="input-name" placeholder="Vitre, choc..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div class="col-span-1">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Coût (€)</label>
+                    <input type="number" id="input-cost" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 font-black text-lg outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div class="col-span-1">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Date</label>
+                    <input type="date" id="input-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 font-bold text-[10px] outline-none">
+                </div>
+            </div>
+            <button onclick="addImpactToPoint()" class="w-full bg-slate-900 text-white font-black mt-4 py-4 rounded-2xl hover:bg-slate-800 transition-all text-xs uppercase tracking-widest active:scale-95">Enregistrer</button>
+        </div>
+
+        <!-- PIED DE PAGE POSTER (Impression) -->
+        <footer class="poster-footer">
+            <!-- Totaux Semaine -->
+            <div class="stat-card-white flex-1 p-5 rounded-3xl border-l-[16px] border-red-500 max-w-[420px] bg-white">
+                <div class="flex justify-between items-start mb-1">
+                    <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">Bilan <span id="current-week-title">Semaine</span></p>
+                    <div class="text-right">
+                        <p class="text-[9px] font-black text-slate-300 uppercase leading-none">Nb Incidents</p>
+                        <p class="text-2xl font-black text-red-600 leading-none mt-1" id="count-week">0</p>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <p class="text-5xl font-black text-slate-900" id="total-week-display">0</p>
+                    <p class="text-xl font-black text-red-500">€</p>
+                </div>
+            </div>
+            
+            <div class="text-center px-6 flex-1">
+                <p class="text-[10px] text-slate-300 font-bold uppercase tracking-widest">Affiche Générée KIHO</p>
+            </div>
+
+            <!-- Totaux Cumulés -->
+            <div class="stat-card-white flex-1 p-5 rounded-3xl border-l-[16px] border-amber-500 max-w-[420px] bg-white">
+                <div class="flex justify-between items-start mb-1">
+                    <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">Cumul Période</p>
+                    <div class="text-right">
+                        <p class="text-[9px] font-black text-slate-300 uppercase leading-none">Nb Incidents</p>
+                        <p class="text-2xl font-black text-amber-600 leading-none mt-1" id="count-cumulative">0</p>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <p class="text-5xl font-black text-slate-900" id="total-cumulative-display">0</p>
+                    <p class="text-xl font-black text-amber-500">€</p>
+                </div>
+                <button onclick="setHistory()" class="no-print-element text-[9px] text-amber-600 font-bold uppercase border border-amber-100 rounded px-2 mt-2">Ajuster Historique</button>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const gridX = 22; const gridY = 12; 
+        let pointsData = {}; let historyBase = 0; let selectedId = null;
+
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+
+        const svgGrid = document.getElementById('grid-markers');
+        for (let y = 0; y < gridY; y++) {
+            for (let x = 0; x < gridX; x++) {
+                const id = `pt-${x}-${y}`;
+                const cx = (x + 0.5) * (1000 / gridX);
+                const cy = (y + 0.5) * (450 / gridY);
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("id", id); circle.setAttribute("cx", cx); circle.setAttribute("cy", cy);
+                circle.setAttribute("r", "5.5"); circle.setAttribute("class", "marker-dot");
+                circle.addEventListener('click', () => selectPoint(id));
+                svgGrid.appendChild(circle);
+
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("id", `tip-${id}`);
+                g.setAttribute("class", "opacity-0 transition-opacity duration-300 pointer-events-none");
+                
+                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("id", `rect-${id}`);
+                rect.setAttribute("x", cx - 85); rect.setAttribute("y", cy + 15);
+                rect.setAttribute("width", "170"); rect.setAttribute("height", "55");
+                rect.setAttribute("class", "tooltip-bg");
+                
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("id", `text-${id}`);
+                text.setAttribute("x", cx); text.setAttribute("y", cy + 35);
+                text.setAttribute("text-anchor", "middle");
+                
+                const tspan1 = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                tspan1.setAttribute("id", `text1-${id}`);
+                tspan1.setAttribute("x", cx); tspan1.setAttribute("dy", "0");
+                tspan1.setAttribute("class", "text-main");
+                
+                const tspan2 = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                tspan2.setAttribute("id", `text2-${id}`);
+                tspan2.setAttribute("x", cx); tspan2.setAttribute("dy", "24");
+                tspan2.setAttribute("class", "text-sub");
+                
+                text.appendChild(tspan1); text.appendChild(tspan2);
+                g.appendChild(rect); g.appendChild(text); svgGrid.appendChild(g);
+            }
+        }
+
+        function selectPoint(id) {
+            if(selectedId) {
+                const prev = document.getElementById(selectedId);
+                if(prev) prev.classList.remove('selected');
+            }
+            selectedId = id;
+            const el = document.getElementById(id);
+            if(el) el.classList.add('selected');
+            
+            const panel = document.getElementById('editor-panel');
+            if(panel) panel.classList.remove('hidden');
+
+            const impacts = pointsData[selectedId] || [];
+            if (impacts.length > 0) {
+                document.getElementById('input-name').value = impacts[impacts.length-1].name;
+                document.getElementById('input-cost').value = impacts[impacts.length-1].cost;
+                document.getElementById('input-date').value = impacts[impacts.length-1].date;
+            } else {
+                document.getElementById('input-name').value = '';
+                document.getElementById('input-cost').value = '';
+                document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+            }
+            renderImpactsList();
+        }
+
+        function renderImpactsList() {
+            const listEl = document.getElementById('existing-impacts');
+            const impacts = pointsData[selectedId] || [];
+            if (impacts.length === 0) { listEl.innerHTML = `<p class="italic text-slate-300">Point vierge.</p>`; return; }
+            let html = '';
+            impacts.forEach((imp, index) => {
+                html += `<div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg mb-1">
+                    <span class="font-bold uppercase text-slate-700">${imp.name} (${imp.date}) — <span class="text-red-600">${imp.cost}€</span></span>
+                    <button onclick="removeImpact(${index})" class="text-red-500 hover:font-bold">✕</button>
+                </div>`;
+            });
+            listEl.innerHTML = html;
+        }
+
+        function addImpactToPoint() {
+            if(!selectedId) return;
+            const nameEl = document.getElementById('input-name');
+            const costEl = document.getElementById('input-cost');
+            const dateEl = document.getElementById('input-date');
+            
+            const name = nameEl.value || "Choc";
+            const cost = parseFloat(costEl.value) || 0;
+            const dateStr = dateEl.value;
+            
+            if (cost <= 0 || !dateStr) return;
+            const weekNum = getWeekNumber(new Date(dateStr));
+            if (!pointsData[selectedId]) pointsData[selectedId] = [];
+            pointsData[selectedId].push({ name, cost, date: dateStr, week: "Semaine " + weekNum });
+            updatePointVisual(selectedId);
+            updateGlobalTotals();
+            renderImpactsList();
+            renderGlobalSummary();
+        }
+
+        function removeImpact(index) {
+            if(!selectedId || !pointsData[selectedId]) return;
+            pointsData[selectedId].splice(index, 1);
+            if (pointsData[selectedId].length === 0) delete pointsData[selectedId];
+            updatePointVisual(selectedId);
+            updateGlobalTotals();
+            renderImpactsList();
+            renderGlobalSummary();
+        }
+
+        function updatePointVisual(id) {
+            const circle = document.getElementById(id);
+            const tipGroup = document.getElementById(`tip-${id}`);
+            const t1 = document.getElementById(`text1-${id}`);
+            const t2 = document.getElementById(`text2-${id}`);
+            const rectEl = document.getElementById(`rect-${id}`);
+            const impacts = pointsData[id] || [];
+            if (impacts.length > 0) {
+                const totalPoint = impacts.reduce((sum, item) => sum + item.cost, 0);
+                circle.classList.add('active');
+                tipGroup.classList.add('active-tooltip');
+                t1.textContent = `${impacts[0].name} (${impacts.length})`;
+                t2.textContent = `${totalPoint.toLocaleString('fr-FR')} €`;
+                const width = Math.max(t1.textContent.length * 9, t2.textContent.length * 11) + 40;
+                rectEl.setAttribute("width", width);
+                rectEl.setAttribute("x", parseFloat(circle.getAttribute("cx")) - (width/2));
+                tipGroup.classList.remove('opacity-0');
+            } else {
+                circle.classList.remove('active');
+                tipGroup.classList.remove('active-tooltip');
+                tipGroup.classList.add('opacity-0');
+            }
+        }
+
+        function renderGlobalSummary() {
+            const summaryContainer = document.getElementById('full-chocs-list');
+            let allChocs = [];
+            Object.keys(pointsData).forEach(id => {
+                pointsData[id].forEach(imp => allChocs.push({ ...imp, id }));
+            });
+
+            if (allChocs.length === 0) {
+                summaryContainer.innerHTML = `<p class="text-slate-300 italic text-xs w-full text-center">Aucun impact saisi.</p>`;
+                return;
+            }
+
+            summaryContainer.innerHTML = '';
+            allChocs.sort((a,b) => new Date(b.date) - new Date(a.date));
+            
+            allChocs.forEach(choc => {
+                const card = document.createElement('div');
+                card.className = "flex-shrink-0 bg-slate-50 border border-slate-100 p-2 rounded-xl flex flex-col min-w-[120px] cursor-pointer hover:bg-white transition-colors shadow-sm";
+                card.innerHTML = `
+                    <span class="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">${choc.week}</span>
+                    <span class="text-[10px] font-bold text-slate-800 uppercase leading-tight truncate">${choc.name}</span>
+                    <span class="text-xs font-black text-red-600 mt-1">${choc.cost}€</span>
+                `;
+                card.onclick = () => selectPoint(choc.id);
+                summaryContainer.appendChild(card);
+            });
+        }
+
+        function updateGlobalTotals() {
+            const weekLabelEl = document.getElementById('week-label');
+            const weekTitleEl = document.getElementById('current-week-title');
+            
+            const totalWeekEl = document.getElementById('total-week-display');
+            const totalCumulEl = document.getElementById('total-cumulative-display');
+            const countWeekEl = document.getElementById('count-week');
+            const countCumulEl = document.getElementById('count-cumulative');
+
+            if (!weekLabelEl) return;
+
+            const filterWeek = weekLabelEl.value.trim();
+            if (weekTitleEl) weekTitleEl.innerText = filterWeek || "Total";
+            
+            let totalWeek = 0; let countWeek = 0;
+            let totalGeneral = 0; let countGeneral = 0;
+
+            Object.values(pointsData).forEach(arr => {
+                arr.forEach(imp => {
+                    totalGeneral += imp.cost;
+                    countGeneral++;
+                    if (filterWeek && imp.week.toLowerCase() === filterWeek.toLowerCase()) {
+                        totalWeek += imp.cost;
+                        countWeek++;
+                    }
+                });
+            });
+
+            if (totalWeekEl) totalWeekEl.innerText = totalWeek.toLocaleString('fr-FR');
+            if (countWeekEl) countWeekEl.innerText = countWeek;
+            if (totalCumulEl) totalCumulEl.innerText = (totalGeneral + historyBase).toLocaleString('fr-FR');
+            if (countCumulEl) countCumulEl.innerText = countGeneral;
+        }
+
+        function setHistory() {
+            const val = prompt("Montant historique (€) :", historyBase);
+            if (val !== null) { historyBase = parseFloat(val) || 0; updateGlobalTotals(); }
+        }
+
+        function exportData() {
+            const data = {
+                pointsData,
+                historyBase,
+                settings: {
+                    sinceDate: document.getElementById('since-date').value,
+                    weekLabel: document.getElementById('week-label').value
+                }
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `kiho-bilan-securite-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    pointsData = data.pointsData || {};
+                    historyBase = data.historyBase || 0;
+                    if (data.settings) {
+                        if (data.settings.sinceDate) document.getElementById('since-date').value = data.settings.sinceDate;
+                        if (data.settings.weekLabel) document.getElementById('week-label').value = data.settings.weekLabel;
+                    }
+                    
+                    Object.keys(pointsData).forEach(id => updatePointVisual(id));
+                    document.querySelectorAll('.marker-dot').forEach(marker => {
+                        if (!pointsData[marker.id]) {
+                            marker.classList.remove('active');
+                            const tip = document.getElementById(`tip-${marker.id}`);
+                            if(tip) {
+                                tip.classList.add('opacity-0');
+                                tip.classList.remove('active-tooltip');
+                            }
+                        }
+                    });
+
+                    updateGlobalTotals();
+                    renderGlobalSummary();
+                } catch (err) {
+                    alert("Erreur lors de l'importation.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function enterPreview() {
+            updateGlobalTotals();
+            document.getElementById('print-week-display').innerText = document.getElementById('week-label').value;
+            document.getElementById('print-date-display').innerText = "Bilan depuis le " + document.getElementById('since-date').value;
+            
+            document.body.classList.add('is-preview');
+            document.getElementById('preview-bar').style.display = 'flex';
+            window.scrollTo(0, 0);
+        }
+
+        function exitPreview() {
+            document.body.classList.remove('is-preview');
+            document.getElementById('preview-bar').style.display = 'none';
+        }
+
+        function closeEditor() {
+            if(selectedId) {
+                const el = document.getElementById(selectedId);
+                if(el) el.classList.remove('selected');
+            }
+            const panel = document.getElementById('editor-panel');
+            if(panel) panel.classList.add('hidden');
+            selectedId = null;
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) { 
+                    const img = document.getElementById('main-bus-image');
+                    const blueprint = document.getElementById('bus-blueprint');
+                    img.src = e.target.result; 
+                    img.style.display = 'block';
+                    if(blueprint) blueprint.style.display = 'none';
+                    const btnRemove = document.getElementById('btn-remove-photo');
+                    if(btnRemove) btnRemove.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeBusPhoto() {
+            const img = document.getElementById('main-bus-image');
+            const blueprint = document.getElementById('bus-blueprint');
+            img.src = "";
+            img.style.display = 'none';
+            if(blueprint) blueprint.style.display = 'block';
+            const btnRemove = document.getElementById('btn-remove-photo');
+            if(btnRemove) btnRemove.classList.add('hidden');
+        }
+
+        window.onload = function() { 
+            const currentWeek = getWeekNumber(new Date());
+            const weekLabelEl = document.getElementById('week-label');
+            if (weekLabelEl) {
+                weekLabelEl.value = "Semaine " + currentWeek;
+            }
+            updateGlobalTotals(); 
+        };
+    </script>
+
+    <!-- Signature Concepteur -->
+    <div class="fixed bottom-4 right-6 text-[10px] font-black text-slate-400 uppercase tracking-widest z-[9999] no-print-element">
+        Concepteur : D.Ablancourt
+    </div>
+</body>
+</html>

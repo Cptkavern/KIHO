@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide d'Orientation KIHO</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        .font-nunito {
+            font-family: 'Nunito', sans-serif;
+        }
+        /* Utilitaires d'animation copiés de Tailwind-animate */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInUp { from { transform: translateY(1rem); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-in { animation: fadeIn 0.3s ease-out, slideInUp 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col relative">
+
+    <div id="app" class="flex-1 flex flex-col w-full h-full"></div>
+
+    <script>
+        // --- DONNÉES PAR DÉFAUT (Logique de l'arbre de décision) ---
+        const defaultData = {
+            themes: [
+                { id: "t1", name: "Gestion du Quotidien et Terrain", icon: "sun", startNode: "t1_q1", description: "Points quotidiens, tournées terrain et résolution de problèmes." },
+                { id: "t2", name: "Stratégie, Performance et Processus", icon: "target", startNode: "t2_q1", description: "Déploiement stratégique, revues de performance et processus." },
+                { id: "t3", name: "Organisation et Compétences", icon: "users", startNode: "t3_q1", description: "Rôles, compétences, organisation de l'environnement de travail." }
+            ],
+            nodes: {
+                // --- THEME 1 : QUOTIDIEN & TERRAIN ---
+                "t1_q1": { type: "question", text: "Vos conducteurs disposent-ils de toutes les informations nécessaires et spécifiques avant de partir en tournée ?", yesId: "t1_q2", noId: "r_info_cond" },
+                "r_info_cond": { type: "result", standard: "Le point information conducteur", standardLink: "#lien-point-conducteur", description: "Standardisez la communication au départ des tournées pour éviter les erreurs et oublis.", tools: [] },
+                
+                "t1_q2": { type: "question", text: "Faites-vous un point régulier (quotidien) avec l'ensemble de votre équipe sur l'activité du jour et de la veille ?", yesId: "t1_q3", noId: "r_point_quot" },
+                "r_point_quot": { type: "result", standard: "Le point quotidien", standardLink: "#lien-point-quotidien", description: "Réunissez l'équipe 5 à 10 minutes chaque jour pour partager les indicateurs et les priorités.", tools: [ { name: "Application de management visuel (Digi 5)", link: "#lien-digi5" } ] },
+
+                "t1_q3": { type: "question", text: "Allez-vous régulièrement sur le terrain pour observer comment les standards sont appliqués en conditions réelles ?", yesId: "t1_q4", noId: "r_tournee" },
+                "r_tournee": { type: "result", standard: "La tournée terrain", standardLink: "#lien-tournee-terrain", description: "Observez l'activité là où elle se passe pour identifier les gaspillages et les opportunités d'amélioration.", tools: [ { name: "Application pour saisir les observations (Tournée terrain)", link: "#lien-app-obs" } ] },
+
+                "t1_q4": { type: "question", text: "Face aux écarts et problèmes constatés sur le terrain, avez-vous une méthode structurée pour en trouver la cause racine et les traiter ?", yesId: "r_t1_ok", noId: "r_res_prob" },
+                "r_res_prob": { type: "result", standard: "La démarche de résolution de problèmes", standardLink: "#lien-resolution-problemes", description: "Ne traitez pas que les symptômes. Utilisez une méthode (ex: 5 Pourquoi, Ishikawa) pour éradiquer définitivement les problèmes.", tools: [ { name: "Application pour gérer les plans d'actions", link: "#lien-app-plan-action" } ] },
+                "r_t1_ok": { type: "result", standard: "Bravo ! Votre gestion du quotidien est maîtrisée.", standardLink: "", description: "Vos équipes sont alignées, vos problèmes sont traités à la racine et le terrain est suivi. Continuez ainsi !", tools: [] },
+
+                // --- THEME 2 : STRATEGIE & PROCESSUS ---
+                "t2_q1": { type: "question", text: "La stratégie globale de l'entreprise est-elle déclinée en actions concrètes et compréhensibles pour votre service ?", yesId: "t2_q2", noId: "r_strat" },
+                "r_strat": { type: "result", standard: "La mise en pratique de la stratégie", standardLink: "#lien-strategie", description: "Assurez-vous que chaque collaborateur comprend comment son travail quotidien contribue à la vision globale de l'entreprise.", tools: [] },
+
+                "t2_q2": { type: "question", text: "Mesurez-vous et analysez-vous régulièrement l'atteinte de vos objectifs avec vos équipes ?", yesId: "t2_q3", noId: "r_perf" },
+                "r_perf": { type: "result", standard: "La revue de performance", standardLink: "#lien-revue-perf", description: "Prenez un temps de recul périodique (hebdomadaire/mensuel) pour analyser vos indicateurs (KPI) et ajuster la trajectoire.", tools: [] },
+
+                "t2_q3": { type: "question", text: "Les échanges, le partage d'informations et les actions croisées avec les autres services sont-ils fluides ?", yesId: "t2_q4", noId: "r_coord" },
+                "r_coord": { type: "result", standard: "La réunion de coordination", standardLink: "#lien-reunion-coord", description: "Cassez les silos. Instaurez un rituel régulier entre les différents départements pour synchroniser les actions.", tools: [] },
+
+                "t2_q4": { type: "question", text: "Vos processus clés sont-ils clairement cartographiés, définis et connus de tous les acteurs impliqués ?", yesId: "r_smi", noId: "r_process" },
+                "r_process": { type: "result", standard: "La fiche processus", standardLink: "#lien-fiche-processus", description: "Formalisez qui fait quoi, quand et comment pour garantir la répétabilité et la qualité de vos activités.", tools: [ { name: "Outil SIPOC (Fipok)", link: "#lien-sipoc" } ] },
+                "r_smi": { type: "result", standard: "Le Système de Management Intégré (SMI)", standardLink: "#lien-smi", description: "Vos processus sont matures. Centralisez-les dans un système unifié pour faciliter les audits et l'amélioration continue.", tools: [ { name: "Application pour le Système de Management Intégré (SMI)", link: "#lien-app-smi" } ] },
+
+                // --- THEME 3 : ORGANISATION & COMPETENCES ---
+                "t3_q1": { type: "question", text: "Les rôles, les missions et les périmètres de responsabilité de chacun dans l'équipe sont-ils formalisés et clairs ?", yesId: "t3_q2", noId: "r_orga" },
+                "r_orga": { type: "result", standard: "La note d'organisation", standardLink: "#lien-note-orga", description: "Clarifiez la structure. Rédigez un document simple qui définit les rôles de chacun pour éviter les zones de flou.", tools: [] },
+
+                "t3_q2": { type: "question", text: "Avez-vous une vision claire des compétences actuelles de votre équipe et de celles à développer pour l'avenir ?", yesId: "t3_q3", noId: "r_comp" },
+                "r_comp": { type: "result", standard: "La gestion des compétences", standardLink: "#lien-gestion-comp", description: "Utilisez une matrice de polyvalence pour identifier les risques (personnes clés uniques) et planifier les formations.", tools: [] },
+
+                "t3_q3": { type: "question", text: "Votre environnement de travail (physique ou digital) est-il standardisé, rangé et optimisé pour ne pas perdre de temps ?", yesId: "t3_q4", noId: "r_5s" },
+                "r_5s": { type: "result", standard: "La démarche 5S (Encaisse)", standardLink: "#lien-demarche-5s", description: "Débarrassez, Rangez, Nettoyez, Standardisez, Respectez. Une méthode simple pour un environnement performant.", tools: [] },
+
+                "t3_q4": { type: "question", text: "Avez-vous trop de chantiers d'amélioration en même temps sans savoir lesquels traiter en priorité ?", yesId: "r_prio", noId: "r_t3_ok" },
+                "r_prio": { type: "result", standard: "Priorisation des chantiers", standardLink: "", description: "Ne vous dispersez pas. Évaluez vos idées d'amélioration selon leur impact et leur facilité de mise en œuvre.", tools: [ { name: "La matrice de priorisation", link: "#lien-matrice-prio" } ] },
+                "r_t3_ok": { type: "result", standard: "Excellente organisation !", standardLink: "", description: "Les rôles sont clairs, les compétences gérées et l'environnement optimisé. Vous avez des bases solides.", tools: [] }
+            }
+        };
+
+        // --- STATE VARIABLES ---
+        let appData = JSON.parse(JSON.stringify(defaultData)); // Deep copy
+        let view = 'home'; // 'home', 'flow', 'settings'
+        let currentThemeId = null;
+        let currentNodeId = null;
+        let historyNodes = [];
+        let jsonError = '';
+        let isMenuOpen = false;
+        let logoError = false;
+
+        // --- ACTIONS ---
+        function setView(newView) {
+            view = newView;
+            render();
+        }
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            render();
+        }
+
+        function closeMenu() {
+            isMenuOpen = false;
+            render();
+        }
+
+        function handleLogoError() {
+            logoError = true;
+            render();
+        }
+
+        function startTheme(themeId) {
+            const theme = appData.themes.find(t => t.id === themeId);
+            if(theme) {
+                currentThemeId = themeId;
+                currentNodeId = theme.startNode;
+                historyNodes = [];
+                view = 'flow';
+                render();
+            }
+        }
+
+        function handleAnswer(nextId) {
+            if (!nextId || !appData.nodes[nextId]) {
+                console.error("Nœud introuvable :", nextId);
+                return;
+            }
+            historyNodes.push(currentNodeId);
+            currentNodeId = nextId;
+            render();
+        }
+
+        function goBack() {
+            if (historyNodes.length === 0) {
+                view = 'home';
+                currentThemeId = null;
+                render();
+                return;
+            }
+            currentNodeId = historyNodes.pop();
+            render();
+        }
+
+        function restart() {
+            view = 'home';
+            currentThemeId = null;
+            currentNodeId = null;
+            historyNodes = [];
+            isMenuOpen = false;
+            render();
+        }
+
+        function handleExport() {
+            const separator = ';';
+            const escapeCSV = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
+            
+            let csvContent = '\uFEFF'; 
+            csvContent += ['ID', 'Type', 'Texte_Ou_Titre', 'Description', 'Lien_Oui_Ou_Debut', 'Lien_Non', 'Lien_Standard', 'Noms_Outils_Separes_Par_Barre', 'Liens_Outils_Separes_Par_Barre'].map(escapeCSV).join(separator) + '\n';
+
+            appData.themes.forEach(t => {
+                csvContent += [t.id, 'theme', t.name, t.description, t.startNode, '', '', '', ''].map(escapeCSV).join(separator) + '\n';
+            });
+
+            Object.entries(appData.nodes).forEach(([id, node]) => {
+                if (node.type === 'question') {
+                    csvContent += [id, 'question', node.text, '', node.yesId, node.noId, '', '', ''].map(escapeCSV).join(separator) + '\n';
+                } else if (node.type === 'result') {
+                    const toolsNames = node.tools && node.tools.length > 0 ? node.tools.map(t => t.name).join('|') : '';
+                    const toolsLinks = node.tools && node.tools.length > 0 ? node.tools.map(t => t.link).join('|') : '';
+                    csvContent += [id, 'result', node.standard, node.description, '', '', node.standardLink || '', toolsNames, toolsLinks].map(escapeCSV).join(separator) + '\n';
+                }
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", url);
+            downloadAnchorNode.setAttribute("download", "kiho_arbre_decision.csv");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            URL.revokeObjectURL(url);
+            
+            closeMenu();
+        }
+
+        function triggerFileInput() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    let text = event.target.result;
+                    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); 
+
+                    const rows = [];
+                    let currentRow = [];
+                    let currentCell = '';
+                    let inQuotes = false;
+                    
+                    for (let i = 0; i < text.length; i++) {
+                        const char = text[i];
+                        const nextChar = text[i+1];
+                        if (char === '"') {
+                            if (inQuotes && nextChar === '"') {
+                                currentCell += '"';
+                                i++;
+                            } else {
+                                inQuotes = !inQuotes;
+                            }
+                        } else if (char === ';' && !inQuotes) {
+                            currentRow.push(currentCell);
+                            currentCell = '';
+                        } else if ((char === '\n' || (char === '\r' && nextChar === '\n')) && !inQuotes) {
+                            if (char === '\r') i++;
+                            currentRow.push(currentCell);
+                            rows.push(currentRow);
+                            currentRow = [];
+                            currentCell = '';
+                        } else {
+                            currentCell += char;
+                        }
+                    }
+                    if (currentRow.length > 0 || currentCell !== '') {
+                        currentRow.push(currentCell);
+                        rows.push(currentRow);
+                    }
+
+                    const newThemes = [];
+                    const newNodes = {};
+
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (row.length < 2 || !row[0]) continue;
+                        
+                        const [id, type, textContent, desc, yesLink, noLink, stdLink, toolsNames, toolsLinks] = row;
+
+                        if (type === 'theme') {
+                            newThemes.push({
+                                id: id,
+                                name: textContent,
+                                description: desc,
+                                startNode: yesLink,
+                                icon: "play"
+                            });
+                        } else if (type === 'question') {
+                            newNodes[id] = {
+                                type: "question",
+                                text: textContent,
+                                yesId: yesLink,
+                                noId: noLink
+                            };
+                        } else if (type === 'result') {
+                            const names = toolsNames ? toolsNames.split('|') : [];
+                            const links = toolsLinks ? toolsLinks.split('|') : [];
+                            const tools = names.map((n, idx) => ({
+                                name: n,
+                                link: links[idx] || ''
+                            }));
+
+                            newNodes[id] = {
+                                type: "result",
+                                standard: textContent,
+                                description: desc,
+                                standardLink: stdLink,
+                                tools: tools
+                            };
+                        }
+                    }
+
+                    if (newThemes.length > 0 && Object.keys(newNodes).length > 0) {
+                        appData = { themes: newThemes, nodes: newNodes };
+                        jsonError = '';
+                        alert("Fichier Excel importé avec succès !");
+                        restart();
+                    } else {
+                        jsonError = "Le fichier ne contient pas de thèmes ou de questions valides. Avez-vous conservé les bonnes colonnes ?";
+                        render();
+                    }
+                } catch (err) {
+                    jsonError = "Erreur lors de la lecture du fichier. Assurez-vous qu'il s'agit bien d'un fichier CSV enregistré depuis Excel.";
+                    render();
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ''; // Reset l'input
+            closeMenu();
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderHeader() {
+            return `
+            <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 z-40 sticky top-0">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="restart()">
+                    ${!logoError 
+                        ? `<img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" alt="Logo Keolis" class="h-[22px] w-auto object-contain bg-transparent border-none" onerror="handleLogoError()">` 
+                        : `<i data-lucide="bus" class="h-[22px] w-auto text-[#005C7A]"></i>`
+                    }
+                    <h1 class="font-nunito text-[20px] sm:text-[30px] font-black tracking-tighter leading-none flex flex-wrap gap-2 items-center">
+                        <span style="color: #005C7A">KIHO GUIDE D'ORIENTATION</span>
+                    </h1>
+                </div>
+                
+                <div class="relative">
+                    <button onclick="toggleMenu()" class="p-2 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center">
+                        <i data-lucide="menu" class="w-6 h-6 text-slate-700"></i>
+                    </button>
+
+                    ${isMenuOpen ? `<div class="fixed inset-0 z-40" onclick="closeMenu()"></div>` : ''}
+
+                    ${isMenuOpen ? `
+                    <div class="absolute right-0 mt-4 w-64 bg-white rounded-3xl shadow-2xl border border-slate-100 z-50 overflow-hidden flex flex-col py-2">
+                        <button onclick="restart()" class="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-rose-50 text-rose-600 transition-colors group">
+                            <i data-lucide="trash-2" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                            <span class="font-bold text-sm">Nouvelle Analyse (Effacer)</span>
+                        </button>
+
+                        <div class="h-px bg-slate-100 my-1 mx-4"></div>
+
+                        <button onclick="handleExport()" class="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-slate-50 text-slate-700 transition-colors group">
+                            <i data-lucide="download" class="w-5 h-5 text-blue-600 group-hover:scale-110 transition-transform"></i>
+                            <span class="font-bold text-sm">Sauvegarder (.csv)</span>
+                        </button>
+
+                        <label class="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-slate-50 text-slate-700 transition-colors group cursor-pointer">
+                            <i data-lucide="upload" class="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform"></i>
+                            <span class="font-bold text-sm">Charger Projet</span>
+                            <input type="file" accept=".csv, .txt, .json" class="hidden" onchange="handleImport(event)" id="fileInputMenu" />
+                        </label>
+
+                        <div class="h-px bg-slate-100 my-1 mx-4"></div>
+
+                        <button onclick="setView('settings'); closeMenu();" class="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-slate-50 text-slate-500 transition-colors group">
+                            <i data-lucide="settings" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                            <span class="font-bold text-sm">Paramètres / Édition</span>
+                        </button>
+                    </div>
+                    ` : ''}
+                </div>
+            </header>
+            `;
+        }
+
+        function renderHome() {
+            let html = `
+            <div class="animate-in">
+                <div class="text-center max-w-2xl mx-auto mb-12">
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">Quel est votre besoin aujourd'hui ?</h2>
+                    <p class="text-slate-600 text-lg">Répondez à quelques questions simples pour identifier le standard ou l'outil KIHO qui résoudra votre problématique.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            `;
+
+            appData.themes.forEach(theme => {
+                html += `
+                <button onclick="startTheme('${theme.id}')" class="group bg-white border border-slate-200 rounded-2xl p-6 text-left hover:border-blue-500 hover:shadow-xl hover:shadow-blue-100 transition-all duration-300 flex flex-col items-start">
+                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <i data-lucide="play" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">${theme.name}</h3>
+                    <p class="text-slate-500 text-sm leading-relaxed flex-1">${theme.description}</p>
+                    <div class="mt-6 flex items-center gap-2 text-sm font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Démarrer le diagnostic <i data-lucide="arrow-left" class="w-4 h-4 rotate-180"></i>
+                    </div>
+                </button>
+                `;
+            });
+
+            html += `</div></div>`;
+            return html;
+        }
+
+        function renderFlow() {
+            const currentNode = appData.nodes[currentNodeId];
+            const currentTheme = appData.themes.find(t => t.id === currentThemeId);
+            
+            if (!currentNode) return '';
+
+            let html = `
+            <div class="max-w-3xl mx-auto animate-in">
+                <div class="flex items-center justify-between mb-8">
+                    <button onclick="goBack()" class="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Retour
+                    </button>
+                    <div class="text-sm font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                        Thème : ${currentTheme ? currentTheme.name : ''}
+                    </div>
+                </div>
+            `;
+
+            if (currentNode.type === 'question') {
+                html += `
+                <div class="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-slate-200 text-center">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <span class="text-2xl font-bold">?</span>
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-12 leading-tight">${currentNode.text}</h2>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
+                        <button onclick="handleAnswer('${currentNode.yesId}')" class="flex items-center justify-center gap-3 py-4 px-6 bg-white border-2 border-slate-200 rounded-xl text-lg font-bold text-slate-700 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 transition-all group">
+                            <i data-lucide="check-circle-2" class="w-6 h-6 text-slate-400 group-hover:text-emerald-600"></i> OUI
+                        </button>
+                        <button onclick="handleAnswer('${currentNode.noId}')" class="flex items-center justify-center gap-3 py-4 px-6 bg-white border-2 border-slate-200 rounded-xl text-lg font-bold text-slate-700 hover:border-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-all group">
+                            <i data-lucide="x-circle" class="w-6 h-6 text-slate-400 group-hover:text-rose-600"></i> NON
+                        </button>
+                    </div>
+                </div>
+                `;
+            } else if (currentNode.type === 'result') {
+                html += `
+                <div class="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200">
+                    <div class="bg-blue-600 p-8 text-center">
+                        <div class="w-16 h-16 bg-white/20 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                            <i data-lucide="book-open" class="w-8 h-8"></i>
+                        </div>
+                        <h2 class="text-sm font-semibold text-blue-100 uppercase tracking-wider mb-2">Standard Recommandé</h2>
+                        <h3 class="text-3xl font-extrabold text-white">${currentNode.standard}</h3>
+                    </div>
+                    <div class="p-8">
+                        <p class="text-lg text-slate-700 mb-8 leading-relaxed text-center">${currentNode.description}</p>
+                        <div class="space-y-4 max-w-md mx-auto">
+                `;
+
+                if (currentNode.standardLink && currentNode.standardLink !== "") {
+                    html += `
+                            <a href="${currentNode.standardLink}" target="_blank" rel="noreferrer" class="flex items-center justify-between w-full py-4 px-6 bg-blue-50 border border-blue-100 rounded-xl text-blue-700 font-bold hover:bg-blue-600 hover:text-white transition-colors group">
+                                <span class="flex items-center gap-3">
+                                    <i data-lucide="book-open" class="w-5 h-5"></i> Consulter le standard
+                                </span>
+                                <i data-lucide="external-link" class="w-5 h-5 opacity-50 group-hover:opacity-100"></i>
+                            </a>
+                    `;
+                }
+
+                if (currentNode.tools && currentNode.tools.length > 0) {
+                    html += `
+                            <div class="pt-4 border-t border-slate-100">
+                                <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 text-center">Outils associés</h4>
+                                <div class="space-y-3">
+                    `;
+                    currentNode.tools.forEach(tool => {
+                        html += `
+                                    <a href="${tool.link}" target="_blank" rel="noreferrer" class="flex items-center justify-between w-full py-3 px-5 bg-white border border-slate-200 rounded-xl text-slate-700 font-medium hover:border-slate-400 hover:shadow-sm transition-all group">
+                                        <span class="flex items-center gap-3">
+                                            <i data-lucide="wrench" class="w-4 h-4 text-slate-400 group-hover:text-slate-600"></i> ${tool.name}
+                                        </span>
+                                        <i data-lucide="external-link" class="w-4 h-4 text-slate-300 group-hover:text-slate-500"></i>
+                                    </a>
+                        `;
+                    });
+                    html += `</div></div>`;
+                }
+
+                html += `
+                        </div>
+                        <div class="mt-12 flex justify-center">
+                            <button onclick="restart()" class="flex items-center gap-2 py-3 px-6 bg-slate-100 text-slate-600 font-semibold rounded-xl hover:bg-slate-200 transition-colors">
+                                <i data-lucide="rotate-ccw" class="w-5 h-5"></i> Terminer et revenir à l'accueil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        function renderSettings() {
+            let html = `
+            <div class="max-w-3xl mx-auto animate-in">
+                <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
+                            <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800">Paramètres & Édition (Excel)</h2>
+                            <p class="text-slate-500 text-sm">Modifiez l'arbre de décision via Excel</p>
+                        </div>
+                    </div>
+
+                    <div class="prose prose-slate max-w-none mb-8">
+                        <p>L'arbre de décision est entièrement modifiable depuis <strong>Microsoft Excel</strong>. Exportez le tableau actuel, ouvrez-le avec Excel, modifiez les textes, les questions ou les liens, puis enregistrez et réimportez-le ici.</p>
+                        <ul class="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <li><strong>Ligne "theme" :</strong> Définit le point de départ.</li>
+                            <li><strong>Ligne "question" :</strong> Indiquez l'ID de la question suivante dans "Lien_Oui" ou "Lien_Non".</li>
+                            <li><strong>Ligne "result" :</strong> Ajoutez le lien du standard, et les outils séparés par une barre <kbd>|</kbd> (ex: Outil 1|Outil 2).</li>
+                        </ul>
+                    </div>
+            `;
+
+            if (jsonError) {
+                html += `
+                    <div class="p-4 mb-6 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm font-medium">
+                        ${jsonError}
+                    </div>
+                `;
+            }
+
+            html += `
+                    <div class="grid sm:grid-cols-2 gap-6">
+                        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:bg-slate-50 transition-colors">
+                            <i data-lucide="download" class="w-8 h-8 text-blue-600 mx-auto mb-4"></i>
+                            <h3 class="font-bold text-slate-800 mb-2">1. Exporter vers Excel</h3>
+                            <p class="text-sm text-slate-500 mb-6">Téléchargez le tableau des questions pour le modifier facilement sur votre ordinateur.</p>
+                            <button onclick="handleExport()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors">
+                                Télécharger (.CSV)
+                            </button>
+                        </div>
+
+                        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:bg-slate-50 transition-colors">
+                            <i data-lucide="upload" class="w-8 h-8 text-emerald-600 mx-auto mb-4"></i>
+                            <h3 class="font-bold text-slate-800 mb-2">2. Importer d'Excel</h3>
+                            <p class="text-sm text-slate-500 mb-6">Une fois vos modifications terminées, réimportez votre fichier sauvegardé.</p>
+                            <input type="file" accept=".csv, .txt" class="hidden" onchange="handleImport(event)" id="fileInputSettings" />
+                            <button onclick="document.getElementById('fileInputSettings').click()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors">
+                                Sélectionner le fichier
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+            return html;
+        }
+
+        function render() {
+            const appDiv = document.getElementById('app');
+            let content = renderHeader();
+            content += `<main class="flex-1 max-w-5xl mx-auto w-full px-4 py-8">`;
+            
+            if (view === 'home') content += renderHome();
+            if (view === 'flow') content += renderFlow();
+            if (view === 'settings') content += renderSettings();
+            
+            content += `</main>`;
+            appDiv.innerHTML = content;
+            
+            // Initialisation des icônes Lucide après chaque rendu DOM
+            lucide.createIcons();
+        }
+
+        // --- DEMARRAGE DE L'APPLICATION ---
+        render();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIHO - Système Intégré Management Qualité</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- FIX POLICE : Importation standard isolée pour garantir le chargement des arrondis -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&display=swap');
+        
+        /* Masquer les flèches d'incrémentation des champs number */
+        .hide-arrows::-webkit-inner-spin-button, .hide-arrows::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .hide-arrows { -moz-appearance: textfield; }
+    </style>
+
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; }
+
+        .tab-active { border-bottom: 3px solid #4f46e5; color: #4f46e5; background-color: #f8fafc; }
+        .custom-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1rem; }
+
+        /* ANIMATIONS */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* SIPOC STYLING FIXES */
+        .sipoc-box { @apply bg-white border-2 border-slate-100 rounded-2xl p-2 shadow-sm transition-all flex flex-col min-h-[160px]; }
+        .line-input { @apply w-full bg-transparent border-none rounded px-2 py-1.5 text-[9px] focus:ring-1 focus:ring-indigo-400 outline-none mb-1 transition-colors resize-none block overflow-hidden; line-height: 1.2; }
+
+        /* ================= ORGANIGRAMME (HYBRIDE HORIZONTAL / VERTICAL) ================= */
+        .org-container { width: 100%; overflow: auto; background-color: #f8fafc; border-radius: 2rem; border: 1px solid #e2e8f0; padding: 60px 40px; text-align: center; }
+        .org-tree { display: inline-flex; justify-content: center; text-align: left; margin: 0 auto; padding-bottom: 40px; min-width: 100%; }
+        
+        .org-tree ul { padding-top: 25px; padding-left: 20px; padding-right: 20px; position: relative; display: flex; gap: 20px; }
+        .org-tree li { text-align: center; list-style-type: none; position: relative; padding: 25px 10px 0 10px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* HORIZONTAL RULES ONLY (N à N-2) */
+        .org-tree li:not(.vertical-centered-li):not(.vertical-indented-li)::before, 
+        .org-tree li:not(.vertical-centered-li):not(.vertical-indented-li)::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid #cbd5e1; width: 50%; height: 25px; }
+        
+        .org-tree li:not(.vertical-centered-li):not(.vertical-indented-li)::after { right: auto; left: 50%; border-left: 2px solid #cbd5e1; }
+        
+        .org-tree li:not(.vertical-centered-li):not(.vertical-indented-li):only-child::after, 
+        .org-tree li:not(.vertical-centered-li):not(.vertical-indented-li):only-child::before { display: none; }
+        
+        .org-tree li:not(.vertical-centered-li):not(.vertical-indented-li):only-child { padding-top: 0; }
+        
+        .org-tree li:not(.vertical-centered-li):not(.vertical-indented-li):first-child::before, 
+        .org-tree li:not(.vertical-centered-li):not(.vertical-indented-li):last-child::after { border: 0 none; }
+        
+        .org-tree li:not(.vertical-centered-li):not(.vertical-indented-li):last-child::before { border-right: 2px solid #cbd5e1; border-radius: 0 8px 0 0; }
+        
+        .org-tree li:not(.vertical-centered-li):not(.vertical-indented-li):first-child::after { border-radius: 8px 0 0 0; }
+        
+        .org-tree ul:not(.vertical-centered-ul):not(.vertical-indented-ul) ul:not(.vertical-centered-ul):not(.vertical-indented-ul)::before { 
+            content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid #cbd5e1; width: 0; height: 25px; transform: translateX(-50%); 
+        }
+
+        .org-node { display: flex; flex-direction: column; text-align: left; z-index: 10; width: 176px; flex-shrink: 0; }
+
+        /* ================= VUE VERTICALE CENTRÉE (N-3) ================= */
+        .org-tree ul.vertical-centered-ul {
+            display: flex; flex-direction: column; align-items: center; padding-top: 25px; gap: 20px; margin: 0; position: relative;
+        }
+        /* Ligne qui descend du N-2 */
+        .org-tree ul.vertical-centered-ul::before {
+            content: ''; position: absolute; top: 0; left: 50%; width: 2px; height: 25px; background-color: #cbd5e1; transform: translateX(-50%);
+        }
+        .org-tree li.vertical-centered-li {
+            display: flex; flex-direction: column; align-items: center; position: relative; padding: 0;
+        }
+        /* Connecteur entre les paires N-3 dans la pile */
+        .org-tree li.vertical-centered-li:not(:first-child)::before {
+            content: ''; position: absolute; top: -20px; left: 50%; width: 2px; height: 20px; background-color: #cbd5e1; transform: translateX(-50%);
+        }
+
+        /* ================= VUE VERTICALE INDENTÉE (N-4 et +) ================= */
+        .org-tree ul.vertical-indented-ul {
+            display: flex; flex-direction: column; align-items: flex-start; padding-top: 15px; margin: 0; gap: 0; position: relative;
+        }
+        /* Accroche sous un parent centré (N-3) */
+        .org-tree li.vertical-centered-li > ul.vertical-indented-ul {
+            margin-left: 50%; 
+        }
+        /* Accroche sous un parent déjà indenté (N-4+) */
+        .org-tree li.vertical-indented-li > ul.vertical-indented-ul {
+            margin-left: 20px; 
+        }
+        /* Ligne de descente initiale */
+        .org-tree ul.vertical-indented-ul::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 2px; height: 15px; background-color: #cbd5e1;
+        }
+
+        .org-tree li.vertical-indented-li {
+            display: flex; flex-direction: column; align-items: flex-start; position: relative; padding: 10px 0 10px 20px; width: max-content;
+        }
+        
+        /* Masquage des connecteurs classiques (sécurité) */
+        .org-tree li.vertical-indented-li::before,
+        .org-tree li.vertical-indented-li::after { display: none !important; }
+        
+        /* Colonne vertébrale des sous-niveaux indentés */
+        .org-tree li.vertical-indented-li > .spine {
+            position: absolute; top: 0; left: 0; width: 2px; height: 100%; background-color: #cbd5e1; z-index: 1;
+        }
+        .org-tree li.vertical-indented-li:last-child > .spine {
+            height: 40px; /* S'arrête à la branche */
+        }
+        /* Branche horizontale (le fameux 'L') */
+        .org-tree li.vertical-indented-li > .branch {
+            position: absolute; top: 40px; left: 0; width: 20px; height: 2px; background-color: #cbd5e1; z-index: 1;
+        }
+
+        /* ARCHITECTURE HIERARCHIQUE */
+        .level-macro { @apply bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-sm mb-6 transition-all; }
+        .level-inter { @apply bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 mb-4 flex-1 min-w-[250px] transition-all; }
+        
+        /* CORRECTION DE L'AFFICHAGE DU PROCESSUS (Pleine largeur, empilé) */
+        .level-proc { @apply flex flex-col gap-1 shadow-sm mb-2 rounded-xl p-3 relative; }
+
+        /* GHOST DRAG & DROP */
+        .drag-over-active { @apply border-indigo-500 border-dashed bg-indigo-50/50 scale-[1.01] shadow-lg; }
+
+        /* MULTI-SELECT CUSTOM */
+        .checkbox-list { @apply bg-white border border-slate-200 rounded-xl max-h-72 overflow-y-auto p-3; }
+        .drop-target { @apply border-indigo-500 border-dashed bg-indigo-50/50; }
+
+        /* ==================================================== */
+        /* WYSIWYG A4 PAPER PREVIEW */
+        /* ==================================================== */
+        .print-content {
+            background: white !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            padding: 5mm !important;
+            text-transform: none !important; 
+            letter-spacing: normal !important; 
+            line-height: 1.1 !important;
+            color: black !important;
+        }
+
+        .print-content.landscape { width: 297mm !important; height: 210mm !important; min-width: 297mm !important; min-height: 210mm !important; }
+        .print-content.portrait { width: 210mm !important; height: 297mm !important; min-width: 210mm !important; min-height: 297mm !important; }
+
+        .print-content * { min-width: 0 !important; min-height: 0 !important; }
+        .print-content .font-black { font-weight: 700 !important; }
+        .print-content .font-bold { font-weight: 500 !important; }
+        
+        .print-content .text-4xl { font-size: 18px !important; }
+        .print-content .text-3xl { font-size: 16px !important; }
+        .print-content .text-2xl { font-size: 14px !important; }
+        .print-content .text-xl, .print-content .text-lg { font-size: 12px !important; }
+        .print-content .text-sm, .print-content .text-xs { font-size: 10px !important; }
+        .print-content .text-\\[11px\\] { font-size: 9px !important; }
+        .print-content .text-\\[10px\\] { font-size: 8.5px !important; }
+        .print-content .text-\\[9px\\] { font-size: 8px !important; }
+        .print-content .text-\\[8px\\] { font-size: 7.5px !important; }
+        .print-content .text-\\[7px\\] { font-size: 7px !important; }
+
+        .print-content .p-12, .print-content .p-10, .print-content .p-8 { padding: 4px !important; }
+        .print-content .p-6, .print-content .p-5, .print-content .p-4 { padding: 3px !important; }
+        .print-content .p-3, .print-content .p-2 { padding: 2px !important; }
+        .print-content .mb-12, .print-content .mb-10, .print-content .mb-8, .print-content .mb-6 { margin-bottom: 4px !important; }
+        .print-content .mb-4, .print-content .mb-3, .print-content .mb-2 { margin-bottom: 2px !important; }
+        .print-content .gap-10, .print-content .gap-8, .print-content .gap-6, .print-content .gap-4, .print-content .gap-3, .print-content .gap-2 { gap: 4px !important; }
+        .print-content .pb-10, .print-content .pb-8, .print-content .pb-6 { padding-bottom: 4px !important; }
+        .print-content .mt-4, .print-content .mt-2 { margin-top: 2px !important; }
+
+        .print-content .header-viz { flex-shrink: 0 !important; margin-bottom: 4px !important; padding-bottom: 4px !important; border-bottom: 2px solid #e2e8f0; }
+        .print-content #viz-mapping-render { flex: 1 1 0% !important; display: flex !important; flex-direction: column !important; justify-content: space-evenly !important; }
+        .print-content .macro-box { border-width: 1px !important; padding: 4px !important; border-radius: 8px !important; }
+        .print-content .inter-box { padding: 2px !important; border-radius: 4px !important; }
+        .print-content .norm-bar { width: 25px !important; writing-mode: vertical-rl; transform: rotate(180deg); display: flex; align-items: center; justify-content: center; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px !important; }
+        
+        .print-content .org-container { 
+            flex: 1 1 0% !important; 
+            display: block !important; 
+            position: relative !important;
+            overflow: hidden !important; 
+            padding: 0 !important; 
+            background: transparent !important; 
+            border: none !important; 
+            border-radius: 0 !important; 
+            width: 100% !important; 
+        }
+        .print-content .org-tree { 
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            margin: 0 !important; 
+            width: max-content !important; 
+            display: block !important;
+            transform-origin: top left !important;
+        }
+        .print-content .org-node { padding: 4px !important; max-width: 140px !important; border-width: 1px !important; border-radius: 8px !important; }
+        .print-content .org-tree ul { padding-top: 15px !important; gap: 8px !important; }
+        .print-content .org-tree li { padding: 15px 2px 0 2px !important; }
+        
+        .print-content .grid-cols-5 { flex: 1 1 0% !important; display: flex !important; flex-direction: row !important; align-items: stretch !important; gap: 4px !important; }
+        .print-content .grid-cols-5 > div { flex: 1 1 0% !important; padding: 4px !important; display: flex !important; flex-direction: column !important; border-radius: 8px !important; }
+        .print-content ul { flex: 1 1 0% !important; overflow: hidden !important; margin-left: 8px !important; }
+        .print-content .kpi-print-container { border-radius: 8px !important; padding: 4px !important; gap: 4px !important; margin-top: 4px !important; background-color: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+        
+        .print-content table { display: table !important; width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; border: 1px solid #e2e8f0; }
+        .print-content thead { display: table-header-group !important; }
+        .print-content tbody { display: table-row-group !important; }
+        .print-content tr { display: table-row !important; page-break-inside: avoid !important; border-bottom: 1px solid #e2e8f0 !important; }
+        .print-content th, .print-content td { display: table-cell !important; padding: 6px 8px !important; overflow: hidden; word-wrap: break-word; white-space: normal; vertical-align: top; border-right: 1px solid #e2e8f0; }
+
+        @media screen {
+            .a4-wrapper { background-color: #64748b; padding: 2rem; border-radius: 1rem; overflow-x: auto; display: flex; justify-content: center; align-items: flex-start; box-shadow: inset 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+            .print-content { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border-radius: 2px !important; }
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { margin: 0 !important; padding: 0 !important; background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .a4-wrapper { padding: 0 !important; background: transparent !important; box-shadow: none !important; display: block !important; overflow: visible !important; }
+            .print-content { box-shadow: none !important; border-radius: 0 !important; width: 100vw !important; height: 100vh !important; max-width: none !important; max-height: none !important; margin: 0 !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-900">
+
+    <!-- SYSTÈME MODAL GLOBAL PERSONNALISÉ (Remplace alert/confirm/prompt) -->
+    <div id="custom-modal" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden flex flex-col p-6 text-center animate-fade-in-up relative">
+            <h3 id="custom-modal-title" class="text-lg font-black text-slate-800 uppercase mb-2"></h3>
+            <p id="custom-modal-message" class="text-slate-600 text-sm mb-6"></p>
+            <input type="text" id="custom-modal-input" class="hidden w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none mb-6 focus:border-indigo-400">
+            <div class="flex gap-3 justify-center">
+                <button id="custom-modal-cancel" class="hidden flex-1 px-4 py-2.5 rounded-xl text-xs font-black uppercase text-slate-500 hover:bg-slate-100 transition">Annuler</button>
+                <button id="custom-modal-confirm" class="flex-1 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-black uppercase hover:bg-indigo-700 transition">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL D'ACCUEIL / AVERTISSEMENT SAUVEGARDE -->
+    <div id="welcome-modal" class="hidden fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col relative animate-fade-in-up">
+            <div class="absolute top-0 left-0 w-full h-2 bg-indigo-600"></div>
+            <div class="p-8 md:p-10 text-center">
+                <div class="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <i data-lucide="shield-alert" class="w-10 h-10"></i>
+                </div>
+                <h3 class="text-2xl font-black text-slate-800 uppercase tracking-tight mb-3">Bienvenue sur l'application KIHO SMI</h3>
+                <p class="text-slate-600 text-sm mb-6 leading-relaxed">
+                    Votre travail est précieux ! <br><br>
+                    Pour garantir la confidentialité absolue de votre organisation, <strong class="text-indigo-700">aucune donnée n'est sauvegardée sur nos serveurs</strong>. Tout est stocké temporairement dans la mémoire de votre navigateur.
+                </p>
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-8 text-left flex items-start gap-3">
+                    <i data-lucide="info" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+                    <p class="text-[11px] text-amber-800 font-medium leading-relaxed">
+                        Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues. <br><br>
+                        <strong>Pensez à exporter régulièrement votre travail</strong> à l'aide des boutons <span class="bg-white border border-amber-200 px-1.5 py-0.5 rounded shadow-sm inline-flex items-center gap-1 mx-1 font-bold"><i data-lucide="download-cloud" class="w-3 h-3 text-slate-600"></i> Exporter</span> présents dans chaque onglet ou globalement en haut à droite.
+                    </p>
+                </div>
+                <button onclick="closeWelcomeModal()" class="w-full bg-indigo-600 text-white px-6 py-4 rounded-xl text-xs font-black uppercase hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 flex items-center justify-center gap-2">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i> J'ai compris, commencer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS CONFIRMATION RESET -->
+    <div id="reset-modal" class="hidden fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col p-8 text-center">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4"><i data-lucide="alert-triangle" class="w-8 h-8"></i></div>
+            <h3 class="text-xl font-black text-slate-800 uppercase mb-2">Réinitialiser ?</h3>
+            <p class="text-slate-500 text-sm mb-6">Toutes les données seront définitivement effacées, y compris le nom de l'établissement.</p>
+            <div class="flex gap-3">
+                <button onclick="closeResetModal()" class="flex-1 px-6 py-3 rounded-xl text-xs font-black uppercase text-slate-500 hover:bg-slate-200 transition">Annuler</button>
+                <button onclick="confirmReset()" class="flex-1 bg-red-500 text-white px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-red-600 transition">Effacer Tout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REFERENTIEL POSTES -->
+    <div id="registry-modal" class="hidden fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white shrink-0">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="briefcase" class="w-5 h-5 text-indigo-400"></i>
+                    <h3 class="text-lg font-black uppercase tracking-tight">Référentiel des Postes</h3>
+                </div>
+                <button onclick="closeRegistryModal()" class="hover:text-red-400 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <p class="text-[10px] text-slate-500 mb-4 font-bold uppercase tracking-widest">Ajouter un titre officiel</p>
+                <div class="flex gap-2 mb-6">
+                    <input type="text" id="new-registry-role" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold outline-none focus:border-indigo-400" placeholder="Ex: Chef de secteur...">
+                    <button onclick="addRegistryRole()" class="bg-indigo-600 text-white px-4 rounded-xl font-black hover:bg-indigo-700 transition"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                </div>
+                <div id="registry-list" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POSTE ORGANIGRAMME -->
+    <div id="role-modal" class="hidden fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white shrink-0">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="user" class="w-5 h-5 text-indigo-400"></i>
+                    <h3 id="role-modal-title" class="text-lg font-black uppercase tracking-tight">Poste Organigramme</h3>
+                </div>
+                <button onclick="closeRoleModal()" class="hover:text-red-400 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 space-y-5 overflow-y-auto">
+                <label class="block">
+                    <span class="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Titre Poste *</span>
+                    <div class="flex gap-2">
+                        <select id="role-title" onchange="syncRoleModalCheckboxes()" class="custom-select flex-1 w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold outline-none cursor-pointer"></select>
+                        <button onclick="promptNewRegistryRole()" class="bg-indigo-50 border border-indigo-100 text-indigo-600 px-4 rounded-xl hover:bg-indigo-100 transition shadow-sm shrink-0" title="Ajouter un poste au référentiel"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    </div>
+                </label>
+                <label class="block">
+                    <span class="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Titulaire</span>
+                    <input type="text" id="role-holder" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none">
+                </label>
+                <label class="block">
+                    <span class="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Dépôt / Centre</span>
+                    <input type="text" id="role-depot" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none" placeholder="Ex: Dépôt Nord">
+                </label>
+                
+                <label class="flex items-center gap-3 p-3 bg-amber-50 border border-amber-100 rounded-xl cursor-pointer mt-1">
+                    <input type="checkbox" id="role-is-manager" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300">
+                    <span class="text-[10px] font-black text-amber-800 uppercase tracking-widest">Poste de Management</span>
+                </label>
+
+                <label class="block">
+                    <span class="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Effectif</span>
+                    <input type="number" id="role-count" min="1" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold outline-none" value="1">
+                </label>
+                <label class="block">
+                    <span class="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Responsable N+1</span>
+                    <select id="role-parent" class="custom-select w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none"></select>
+                </label>
+                <div class="bg-indigo-50 p-4 rounded-xl">
+                    <span class="text-[10px] font-black text-indigo-600 uppercase mb-2 block flex items-center gap-2"><i data-lucide="git-branch" class="w-3 h-3"></i> Processus Pilotés</span>
+                    <div id="role-process-list" class="checkbox-list"></div>
+                </div>
+            </div>
+            <div class="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
+                <button onclick="closeRoleModal()" class="px-5 py-2.5 rounded-xl text-xs font-black uppercase text-slate-500 hover:bg-slate-200 transition">Annuler</button>
+                <button onclick="saveRole()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase hover:bg-indigo-700 transition">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ASSISTANT IA -->
+    <div id="ai-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-900 to-indigo-800 text-white shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-white/10 rounded-xl"><i data-lucide="bot" class="w-5 h-5 text-indigo-300"></i></div>
+                    <h3 class="text-lg font-black uppercase tracking-tight">Agent IA KIHO</h3>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleAiSettings()" class="relative hover:text-indigo-300 transition-colors p-1.5 bg-white/10 rounded-lg" title="Paramètres API">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span id="ai-status-badge" class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-slate-400 border border-indigo-900 transition-colors"></span>
+                    </button>
+                    <button onclick="closeAiModal()" class="hover:text-red-400 transition-colors p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+            <div class="p-6 overflow-y-auto bg-slate-50 flex-1 relative">
+                <div id="ai-main-panel" class="space-y-6">
+                    <div class="bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase p-3 rounded-xl flex items-center gap-2 border border-indigo-200">
+                        <i data-lucide="target" class="w-4 h-4 text-indigo-500"></i>
+                        Cible actuelle : <span id="ai-active-proc-name" class="text-indigo-700 bg-white px-2 py-1 rounded shadow-sm border border-indigo-200">Aucun</span>
+                    </div>
+                    <div class="flex flex-col gap-4" id="ai-suggestions">
+                        <div>
+                            <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-2">Génération & Mapping</span>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="setPrompt('Génère un exemple de cartographie complète pour mon organisation. Structure la réponse avec des catégories, des domaines, des activités et des processus. Utilise l\'action add_macro et add_intermediary.')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:border-slate-400 hover:text-slate-800 transition shadow-sm">💡 Générer Cartographie</button>
+                                <button onclick="setPrompt('À partir du nom de mon organisation, suggère 5 processus de réalisation clés et ajoute-les à la cartographie. Utilise l\'action add_intermediary ou add_macro.')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:border-slate-400 hover:text-slate-800 transition shadow-sm">💡 Suggérer Processus</button>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-2">Rôles & Organigramme</span>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="setPrompt('Analyse tous les processus et tous les postes de l\'organigramme, et affecte automatiquement les responsabilités (pilotes) les plus logiques pour chaque processus en fonction de l\'intitulé des postes. Utilise l\'action assign_pilots.')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:border-blue-300 hover:text-blue-600 transition shadow-sm">💡 Affecter les Pilotes</button>
+                                <button onclick="setPrompt('Propose une répartition RACI pour les étapes de ce processus en utilisant les postes existants dans l\'organigramme.')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:border-slate-400 hover:text-slate-800 transition shadow-sm">💡 Générer RACI</button>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-2">Analyse SIPOC & Performance</span>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="setPrompt('Identifie les fournisseurs probables pour ce processus.')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:border-amber-300 hover:text-amber-600 transition shadow-sm">💡 Fournisseurs</button>
+                                <button onclick="setPrompt('Identifie les données d\'entrée nécessaires pour ce processus.')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:border-blue-300 hover:text-blue-600 transition shadow-sm">💡 Entrées</button>
+                                <button onclick="setPrompt('Identifie les étapes clés de réalisation pour ce processus.')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:border-indigo-300 hover:text-indigo-600 transition shadow-sm">💡 Étapes</button>
+                                <button onclick="setPrompt('Identifie les données de sortie générées par ce processus.')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:border-emerald-300 hover:text-emerald-600 transition shadow-sm">💡 Sorties</button>
+                                <button onclick="setPrompt('Identifie les clients potentiels pour ce processus.')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:border-rose-300 hover:text-rose-600 transition shadow-sm">💡 Clients</button>
+                                <button onclick="setPrompt('Identifie tous les indicateurs de performance (KPIs) possibles pour évaluer ce processus.')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:border-purple-300 hover:text-purple-600 transition shadow-sm">💡 Tous les Indicateurs (KPI)</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mt-2">
+                        <label class="block mb-3 relative">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Demande (Action ou Question)</span>
+                            <textarea id="ai-prompt" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none transition-all" placeholder="Ex: Remplis les indicateurs de performance de ce processus..."></textarea>
+                        </label>
+                        <button onclick="handleAIGenerate()" id="ai-btn" class="bg-indigo-600 text-white shadow-lg w-full py-3 rounded-xl text-[10px] font-black uppercase hover:bg-indigo-700 transition flex items-center justify-center gap-2"><i data-lucide="sparkles" class="w-4 h-4"></i> Exécuter la demande</button>
+                        <div id="ai-result" class="mt-4 p-4 bg-indigo-50 rounded-xl text-xs text-indigo-900 whitespace-pre-wrap border border-indigo-100 hidden leading-relaxed font-medium"></div>
+                    </div>
+                </div>
+
+                <div id="ai-settings-panel" class="hidden space-y-5">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="key" class="w-5 h-5"></i></div>
+                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-tight">Configuration API Gemini</h4>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-6 font-medium">
+                            L'Agent IA fonctionne grâce à l'intelligence artificielle de Google Gemini.<br>
+                            Pour l'utiliser, vous devez intégrer votre propre clé API. Ne vous inquiétez pas, elle reste <strong>stockée localement</strong> dans votre navigateur.<br><br>
+                            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-600 font-bold hover:text-indigo-800 hover:underline inline-flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 transition-colors"><i data-lucide="external-link" class="w-3.5 h-3.5"></i> Obtenir une clé API gratuite ici</a>
+                        </p>
+                        <label class="block mb-3">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Votre Clé API</span>
+                            <input type="password" id="ai-api-key-input" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm font-medium outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all" placeholder="AIzaSy...">
+                        </label>
+                        <button onclick="testAndDetectModel()" id="ai-detect-btn" class="w-full bg-slate-100 text-slate-700 border border-slate-200 px-5 py-3 rounded-xl text-[10px] font-black uppercase hover:bg-slate-200 transition shadow-sm mb-4 flex justify-center items-center gap-2">
+                            <i data-lucide="search" class="w-4 h-4"></i> Valider / Auto-Détecter
+                        </button>
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 mb-6">
+                            <div id="ai-status-dot" class="w-3 h-3 rounded-full bg-slate-300 shrink-0 transition-colors"></div>
+                            <div id="ai-status-text" class="text-xs font-bold text-slate-500 truncate">Aucun modèle détecté</div>
+                        </div>
+                        <button onclick="saveApiConfiguration()" id="ai-save-btn" class="bg-indigo-600 text-white px-5 py-3 rounded-xl text-xs font-black uppercase hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 w-full flex justify-center items-center gap-2 opacity-50 cursor-not-allowed" disabled>
+                            <i data-lucide="save" class="w-4 h-4"></i> Enregistrer la configuration
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER GLOBAL -->
+    <header class="bg-white border-b border-slate-200 shadow-sm no-print sticky top-0 z-50">
+        <div class="w-full px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" alt="Keolis" class="h-[22px] object-contain">
+                <div class="h-6 w-px bg-slate-200"></div>
+                <h1 class="text-[30px] tracking-tighter leading-none mt-0.5 flex items-center gap-1.5" style="font-family: 'Nunito', sans-serif; font-weight: 900;">
+                    <span style="color: #005B63;">KIHO</span>
+                    <span class="text-blue-600">SMI</span>
+                </h1>
+            </div>
+
+            <div class="relative">
+                <button onclick="toggleMobileMenu()" class="relative p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                    <span id="global-ai-badge" class="hidden absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-white"></span>
+                </button>
+                <div id="mobile-menu" class="hidden absolute top-full right-0 mt-2 w-64 bg-white border border-slate-200 shadow-xl rounded-xl p-3 z-50 flex flex-col gap-2">
+                    <button onclick="openAiModal(); toggleMobileMenu();" class="w-full px-4 py-2.5 text-[10px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 rounded-lg transition flex items-center gap-2 uppercase tracking-tighter justify-start">
+                        <i data-lucide="bot" class="w-4 h-4"></i> Assistant IA
+                    </button>
+                    <div class="w-full h-px bg-slate-100 my-1"></div>
+                    <button onclick="triggerImport('global'); toggleMobileMenu();" class="w-full px-4 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="upload-cloud" class="w-4 h-4"></i> TOUT IMPORTER</button>
+                    <button onclick="exportData('global'); toggleMobileMenu();" class="w-full px-4 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="download-cloud" class="w-4 h-4"></i> TOUT EXPORTER</button>
+                    <div class="w-full h-px bg-slate-100 my-1"></div>
+                    <button onclick="openResetModal(); toggleMobileMenu();" class="w-full px-4 py-2.5 text-[10px] font-black text-red-500 hover:bg-red-50 rounded-lg transition uppercase tracking-tighter justify-start flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Reset</button>
+                </div>
+            </div>
+        </div>
+        <nav class="bg-slate-50 border-b border-slate-200 overflow-x-auto no-print">
+            <div class="w-full px-6 flex h-12">
+                <button onclick="switchTab('mapping')" id="tab-mapping" class="px-4 h-full text-[10px] font-black uppercase tracking-widest transition tab-active">1. Cartographie</button>
+                <button onclick="switchTab('org')" id="tab-org" class="px-4 h-full text-[10px] font-black uppercase tracking-widest transition text-slate-400 border-transparent border-b-2">2. Organigramme</button>
+                <button onclick="switchTab('sipoc')" id="tab-sipoc" class="px-4 h-full text-[10px] font-black uppercase tracking-widest transition text-slate-400 border-transparent border-b-2">3. Processus</button>
+                <button onclick="switchTab('raci')" id="tab-raci" class="px-4 h-full text-[10px] font-black uppercase tracking-widest transition text-slate-400 border-transparent border-b-2">4. Rôles & Responsabilités</button>
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-4 h-full text-[10px] font-black uppercase tracking-widest transition text-slate-400 border-transparent border-b-2">5. Surveillance</button>
+                <button onclick="switchTab('evaluation')" id="tab-evaluation" class="px-4 h-full text-[10px] font-black uppercase tracking-widest transition text-slate-400 border-transparent border-b-2">6. Évaluation du SMI</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="w-full p-6 md:p-10">
+        <!-- VUE CARTOGRAPHIE -->
+        <div id="view-mapping" class="space-y-8">
+            <div class="flex items-center justify-between no-print flex-wrap gap-4">
+                <h2 class="text-xl font-black text-slate-800 uppercase italic">Cartographie des Processus</h2>
+                <div class="relative">
+                    <button onclick="toggleViewMenu('menu-mapping')" class="p-2 bg-white border border-slate-200 rounded-xl shadow-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-300 transition">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <div id="menu-mapping" class="view-menu hidden absolute right-0 mt-2 w-48 bg-white border border-slate-200 shadow-xl rounded-xl p-2 z-50 flex flex-col gap-1">
+                        <button onclick="triggerImport('architecture'); toggleViewMenu('menu-mapping')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 hover:text-indigo-600 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Importer Étape</button>
+                        <button onclick="exportData('architecture'); toggleViewMenu('menu-mapping')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 hover:text-indigo-600 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="download-cloud" class="w-4 h-4"></i> Exporter Étape</button>
+                        <div class="w-full h-px bg-slate-100 my-1"></div>
+                        <button onclick="switchTab('mapping-print'); toggleViewMenu('menu-mapping')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="monitor" class="w-4 h-4"></i> Aperçu A4 / PDF</button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex items-center gap-8">
+                <div class="md:w-1/4 flex flex-col items-center">
+                    <div onclick="document.getElementById('logo-upload').click()" class="cursor-pointer h-24 w-24 bg-slate-50 border-2 border-dashed rounded-2xl flex items-center justify-center text-slate-400 hover:bg-slate-100 overflow-hidden">
+                        <div id="logo-preview-box" class="hidden h-full w-full bg-contain bg-center bg-no-repeat"></div>
+                        <div id="logo-placeholder" class="text-[9px] font-bold uppercase">Logo</div>
+                    </div>
+                    <input type="file" id="logo-upload" class="hidden" accept="image/*" onchange="handleLogo(event)">
+                </div>
+                <div class="md:w-3/4 grid grid-cols-2 gap-4 w-full">
+                    <input type="text" id="input-org" oninput="updateMeta('organization', this.value)" class="w-full bg-slate-50 border rounded-xl p-3 text-sm font-black uppercase outline-none" placeholder="Nom Établissement">
+                    <input type="text" id="input-manager" oninput="updateMeta('manager', this.value)" class="w-full bg-slate-50 border rounded-xl p-3 text-sm font-black uppercase outline-none" placeholder="Directeur">
+                </div>
+            </div>
+            <div id="mapping-containers" class="space-y-10"></div>
+        </div>
+
+        <!-- VUE ORGANIGRAMME -->
+        <div id="view-org" class="hidden h-[calc(100vh-176px)] md:h-[calc(100vh-208px)]">
+            <div class="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-200 h-full flex flex-col">
+                <div class="flex items-center justify-between mb-6 md:mb-10 no-print flex-wrap gap-4 shrink-0">
+                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">Organigramme de Pilotage</h3>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openRegistryModal()" class="px-3 py-1.5 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-xl text-[10px] font-black uppercase hover:bg-indigo-100 transition shadow-sm flex items-center gap-1.5 mr-2">
+                            <i data-lucide="book-open" class="w-3.5 h-3.5"></i> Référentiel Postes
+                        </button>
+                        <div class="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-200 mr-2 shadow-sm">
+                            <button onclick="changeOrgZoom(-0.1)" class="p-1.5 hover:bg-white hover:shadow rounded-lg text-slate-500 hover:text-indigo-600 transition" title="Dézoomer"><i data-lucide="zoom-out" class="w-3.5 h-3.5"></i></button>
+                            <button onclick="resetOrgZoom()" id="org-zoom-level" class="text-[10px] font-black w-10 text-center text-slate-600 hover:text-indigo-600 cursor-pointer" title="Remettre à 100%">100%</button>
+                            <button onclick="changeOrgZoom(0.1)" class="p-1.5 hover:bg-white hover:shadow rounded-lg text-slate-500 hover:text-indigo-600 transition" title="Zoomer"><i data-lucide="zoom-in" class="w-3.5 h-3.5"></i></button>
+                            <div class="w-px h-4 bg-slate-200 mx-1"></div>
+                            <button onclick="fitOrgZoom()" class="p-1.5 hover:bg-white hover:shadow rounded-lg text-slate-500 hover:text-indigo-600 transition" title="Ajuster à l'écran"><i data-lucide="maximize" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                        
+                        <div class="relative">
+                            <button onclick="toggleViewMenu('menu-org')" class="p-2 bg-white border border-slate-200 rounded-xl shadow-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-300 transition">
+                                <i data-lucide="menu" class="w-5 h-5"></i>
+                            </button>
+                            <div id="menu-org" class="view-menu hidden absolute right-0 mt-2 w-56 bg-white border border-slate-200 shadow-xl rounded-xl p-2 z-50 flex flex-col gap-1">
+                                <label class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 rounded-lg transition flex items-center gap-2 justify-start cursor-pointer">
+                                    <input type="checkbox" id="toggle-org-edit-procs" checked onchange="renderOrg()" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer transition">
+                                    Afficher Processus
+                                </label>
+                                <div class="w-full h-px bg-slate-100 my-1"></div>
+                                <button onclick="triggerImport('organigramme'); toggleViewMenu('menu-org')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 hover:text-indigo-600 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Importer Étape</button>
+                                <button onclick="exportData('organigramme'); toggleViewMenu('menu-org')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 hover:text-indigo-600 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="download-cloud" class="w-4 h-4"></i> Exporter Étape</button>
+                                <div class="w-full h-px bg-slate-100 my-1"></div>
+                                <button onclick="switchTab('org-print'); toggleViewMenu('menu-org')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="monitor" class="w-4 h-4"></i> Aperçu A4 / PDF</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="org-container shadow-inner no-print flex-1 min-h-0 relative">
+                    <div class="org-tree" id="org-tree-root"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VUE SIPOC -->
+        <div id="view-sipoc" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col gap-4 no-print">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h3 class="text-lg font-black text-slate-800 uppercase italic">Fiche Processus (SIPOC)</h3>
+                    <div class="relative">
+                        <button onclick="toggleViewMenu('menu-sipoc')" class="p-2 bg-white border border-slate-200 rounded-xl shadow-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-300 transition">
+                            <i data-lucide="menu" class="w-5 h-5"></i>
+                        </button>
+                        <div id="menu-sipoc" class="view-menu hidden absolute right-0 mt-2 w-52 bg-white border border-slate-200 shadow-xl rounded-xl p-2 z-[60] flex flex-col gap-1">
+                            <button onclick="triggerImport('sipoc'); toggleViewMenu('menu-sipoc')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 hover:text-indigo-600 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Importer Processus</button>
+                            <button onclick="exportData('sipoc'); toggleViewMenu('menu-sipoc')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 hover:text-indigo-600 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="download-cloud" class="w-4 h-4"></i> Exporter Processus</button>
+                            <div class="w-full h-px bg-slate-100 my-1"></div>
+                            <button onclick="switchTab('sipoc-print'); toggleViewMenu('menu-sipoc')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="monitor" class="w-4 h-4"></i> Aperçu A4 / PDF</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row gap-3 w-full bg-slate-50 p-3 rounded-2xl border border-slate-100 items-center">
+                    <i data-lucide="filter" class="w-5 h-5 text-slate-400 shrink-0 hidden md:block mx-1"></i>
+                    <select id="sipoc-filter-cat" onchange="updateFilters('sipoc', 'cat')" class="custom-select bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-[10px] font-bold outline-none flex-1 w-full truncate"></select>
+                    <select id="sipoc-filter-macro" onchange="updateFilters('sipoc', 'macro')" class="custom-select bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-[10px] font-bold outline-none flex-1 w-full truncate"></select>
+                    <select id="sipoc-filter-inter" onchange="updateFilters('sipoc', 'inter')" class="custom-select bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-[10px] font-bold outline-none flex-1 w-full truncate"></select>
+                    <select id="sipoc-filter-proc" onchange="updateFilters('sipoc', 'proc')" class="custom-select bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-xl px-3 py-2.5 text-[10px] font-black outline-none flex-1 w-full truncate"></select>
+                </div>
+            </div>
+
+            <div class="px-2 md:px-4">
+                <h2 id="sipoc-current-proc-name" class="text-2xl md:text-3xl font-black text-slate-800 uppercase italic mb-1">Sélectionnez un processus</h2>
+                <p id="sipoc-current-proc-desc" class="text-xs md:text-sm text-slate-500 font-medium"></p>
+            </div>
+
+            <div id="sipoc-pilot-banner" class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 flex items-center gap-4">
+                <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-indigo-600"><i data-lucide="user-check" class="w-6 h-6"></i></div>
+                <div class="flex flex-col"><span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Pilote du processus terminal</span><strong id="sipoc-pilot-name" class="text-lg font-black text-indigo-900 uppercase"></strong></div>
+            </div>
+            
+            <div id="sipoc-editor-grid" class="grid grid-cols-1 md:grid-cols-5 gap-2 mt-4"></div>
+            <div id="sipoc-kpis-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8 bg-white p-8 rounded-3xl border border-slate-200 mt-2"></div>
+            
+            <div class="bg-gradient-to-br from-indigo-50 to-blue-50 p-8 rounded-[2rem] shadow-sm border-2 border-indigo-100 mt-2">
+                <label class="block">
+                    <span class="text-[10px] font-black text-indigo-600 uppercase mb-3 block italic tracking-[0.2em]">Indicateur Performance Global — Satisfaction Client</span>
+                    <input type="text" oninput="saveSipocSimple('kpiGlobal', this.value)" id="sipoc-kpiGlobal" class="w-full bg-white border border-indigo-200 rounded-2xl p-5 text-sm font-black text-indigo-900 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition-all shadow-sm">
+                </label>
+            </div>
+        </div>
+
+        <!-- MATRICE RACI -->
+        <div id="view-raci" class="hidden space-y-6">
+            <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200">
+                <div class="flex flex-col gap-6 mb-8 no-print">
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                        <h3 class="text-xl font-black text-slate-800 uppercase italic">Rôles & Responsabilités</h3>
+                        <div class="relative">
+                            <button onclick="toggleViewMenu('menu-raci')" class="p-2 bg-white border border-slate-200 rounded-xl shadow-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-300 transition">
+                                <i data-lucide="menu" class="w-5 h-5"></i>
+                            </button>
+                            <div id="menu-raci" class="view-menu hidden absolute right-0 mt-2 w-52 bg-white border border-slate-200 shadow-xl rounded-xl p-2 z-[60] flex flex-col gap-1">
+                                <button onclick="triggerImport('raci'); toggleViewMenu('menu-raci')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 hover:text-indigo-600 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Importer Matrice</button>
+                                <button onclick="exportData('raci'); toggleViewMenu('menu-raci')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 hover:text-indigo-600 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="download-cloud" class="w-4 h-4"></i> Exporter Matrice</button>
+                                <div class="w-full h-px bg-slate-100 my-1"></div>
+                                <button onclick="switchTab('raci-print'); toggleViewMenu('menu-raci')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="monitor" class="w-4 h-4"></i> Aperçu A4 / PDF</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-3 w-full bg-slate-50 p-3 rounded-2xl border border-slate-100 items-center">
+                        <i data-lucide="filter" class="w-5 h-5 text-slate-400 shrink-0 hidden md:block mx-1"></i>
+                        <select id="raci-filter-cat" onchange="updateFilters('raci', 'cat')" class="custom-select bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-[10px] font-bold outline-none flex-1 w-full truncate"></select>
+                        <select id="raci-filter-macro" onchange="updateFilters('raci', 'macro')" class="custom-select bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-[10px] font-bold outline-none flex-1 w-full truncate"></select>
+                        <select id="raci-filter-inter" onchange="updateFilters('raci', 'inter')" class="custom-select bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-[10px] font-bold outline-none flex-1 w-full truncate"></select>
+                        <select id="raci-filter-proc" onchange="updateFilters('raci', 'proc')" class="custom-select bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-xl px-3 py-2.5 text-[10px] font-black outline-none flex-1 w-full truncate"></select>
+                    </div>
+                </div>
+
+                <div class="overflow-hidden rounded-3xl border border-slate-100 shadow-sm">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest" id="raci-head">
+                                <th class="text-left p-4 w-1/3 border-b border-white/10">Étape SIPOC</th>
+                                <th class="text-left p-4 text-rose-300 border-l border-white/10 w-1/6">Réaliser</th>
+                                <th class="text-left p-4 text-amber-300 border-l border-white/10 w-1/6">Approuver</th>
+                                <th class="text-left p-4 text-blue-300 border-l border-white/10 w-1/6">Consulter</th>
+                                <th class="text-left p-4 text-emerald-300 border-l border-white/10 w-1/6">Informer</th>
+                            </tr>
+                        </thead>
+                        <tbody id="raci-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD SURVEILLANCE -->
+        <div id="view-dashboard" class="hidden space-y-6">
+            <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200 no-print">
+                <div class="flex flex-col gap-6 mb-8">
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                        <h3 class="text-xl font-black text-slate-800 uppercase italic">Plan de Surveillance</h3>
+                        <div class="flex items-center gap-3">
+                            <button onclick="autoFillAllDashboardFromRaci()" class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase hover:bg-indigo-700 transition flex items-center gap-2 shadow-md shadow-indigo-200">
+                                <i data-lucide="wand-2" class="w-4 h-4"></i> Auto-compléter Pilotes
+                            </button>
+                            <div class="relative">
+                                <button onclick="toggleViewMenu('menu-dashboard')" class="p-2.5 bg-white border border-slate-200 rounded-xl shadow-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-300 transition">
+                                    <i data-lucide="menu" class="w-5 h-5"></i>
+                                </button>
+                                <div id="menu-dashboard" class="view-menu hidden absolute right-0 mt-2 w-52 bg-white border border-slate-200 shadow-xl rounded-xl p-2 z-[60] flex flex-col gap-1">
+                                    <button onclick="triggerImport('dashboard'); toggleViewMenu('menu-dashboard')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 hover:text-indigo-600 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Importer Plan</button>
+                                    <button onclick="exportData('dashboard'); toggleViewMenu('menu-dashboard')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 hover:text-indigo-600 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="download-cloud" class="w-4 h-4"></i> Exporter Plan</button>
+                                    <div class="w-full h-px bg-slate-100 my-1"></div>
+                                    <button onclick="switchTab('dashboard-print'); toggleViewMenu('menu-dashboard')" class="w-full px-3 py-2.5 text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="monitor" class="w-4 h-4"></i> Aperçu A4 / PDF</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row gap-3 w-full bg-slate-50 p-3 rounded-2xl border border-slate-100 items-center">
+                        <i data-lucide="filter" class="w-5 h-5 text-slate-400 shrink-0 hidden md:block mx-1"></i>
+                        <select id="dashboard-filter-cat" onchange="updateFilters('dashboard', 'cat')" class="custom-select bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-[10px] font-bold outline-none flex-1 w-full truncate"></select>
+                        <select id="dashboard-filter-macro" onchange="updateFilters('dashboard', 'macro')" class="custom-select bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-[10px] font-bold outline-none flex-1 w-full truncate"></select>
+                        <select id="dashboard-filter-inter" onchange="updateFilters('dashboard', 'inter')" class="custom-select bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-[10px] font-bold outline-none flex-1 w-full truncate"></select>
+                        <select id="dashboard-filter-proc" onchange="updateFilters('dashboard', 'proc')" class="custom-select bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-xl px-3 py-2.5 text-[10px] font-black outline-none flex-1 w-full truncate"></select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-3xl border border-slate-50 shadow-sm">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                <th class="text-left py-6 px-6">Indicateur & Processus</th>
+                                <th class="text-left py-6 px-6 w-56">Fréquence</th>
+                                <th class="text-left py-6 px-6 w-80">Responsable Analyse</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOUVEL ONGLET : EVALUATION DU SYSTEME -->
+        <div id="view-evaluation" class="hidden space-y-6">
+            <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-200 no-print">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                    <div>
+                        <h3 class="text-2xl font-black text-slate-800 uppercase italic">Évaluation du Système (SMI)</h3>
+                        <p class="text-sm text-slate-500 mt-2 font-medium">Analyse automatique des écarts de conception sur l'ensemble de votre système.</p>
+                    </div>
+                    <button onclick="renderEvaluation()" class="bg-indigo-600 text-white hover:bg-indigo-700 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Actualiser l'analyse
+                    </button>
+                </div>
+                <div id="evaluation-content"></div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- PRINT VIEWS (APERÇUS WYSIWYG A4) -->
+        <!-- ============================================== -->
+        
+        <!-- Cartographie - Paysage -->
+        <div id="view-mapping-print" class="hidden space-y-6">
+            <div class="flex justify-between items-center no-print px-4 max-w-5xl mx-auto">
+                <button onclick="switchTab('mapping')" class="text-slate-500 font-black text-xs uppercase flex items-center gap-2 hover:text-indigo-600 transition"><i data-lucide="arrow-left" class="w-4 h-4"></i> Éditer</button>
+                <button onclick="printStage('landscape')" class="bg-emerald-600 text-white px-8 py-3 rounded-full text-xs font-black uppercase flex items-center gap-2 shadow-xl hover:bg-emerald-700 transition"><i data-lucide="printer" class="w-4 h-4"></i> Lancer l'impression PDF</button>
+            </div>
+            <div class="a4-wrapper no-print">
+                <div class="print-content landscape">
+                    <div class="header-viz flex justify-between items-center w-full">
+                        <div class="flex items-center gap-10">
+                            <div class="print-logo-container"></div>
+                            <div class="h-20 w-px bg-slate-100"></div>
+                            <div class="space-y-1">
+                                <h2 class="text-[11px] font-black text-indigo-600 uppercase tracking-[0.4em] mb-2">Cartographie des Processus</h2>
+                                <div class="print-org-name text-4xl font-black uppercase text-slate-900"></div>
+                            </div>
+                        </div>
+                        <div class="print-date text-[10px] font-black text-slate-300 uppercase tracking-widest"></div>
+                    </div>
+                    <div class="flex items-stretch w-full flex-1 mt-4">
+                        <div class="norm-bar text-slate-400">Exigences Clients & Parties Intéressées</div>
+                        <div id="viz-mapping-render"></div>
+                        <div class="norm-bar text-indigo-400" style="background-color:#eef2ff; border-color:#e0e7ff;">Satisfaction Clients & Parties Intéressées</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Organigramme - Paysage -->
+        <div id="view-org-print" class="hidden space-y-6">
+            <div class="flex justify-between items-center no-print px-4 max-w-5xl mx-auto">
+                <button onclick="switchTab('org')" class="text-slate-500 font-black text-xs uppercase flex items-center gap-2 hover:text-indigo-600 transition"><i data-lucide="arrow-left" class="w-4 h-4"></i> Éditer</button>
+                <div class="flex items-center gap-6">
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" id="toggle-org-procs" checked onchange="toggleOrgProcesses(this.checked)" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer transition">
+                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-800 transition">Afficher Processus</span>
+                    </label>
+                    <button onclick="printStage('landscape')" class="bg-emerald-600 text-white px-8 py-3 rounded-full text-xs font-black uppercase flex items-center gap-2 shadow-xl hover:bg-emerald-700 transition"><i data-lucide="printer" class="w-4 h-4"></i> Lancer l'impression PDF</button>
+                </div>
+            </div>
+            <div class="a4-wrapper no-print">
+                <div class="print-content landscape">
+                    <div class="header-viz flex justify-between items-center w-full">
+                        <div class="flex items-center gap-8">
+                            <div class="print-logo-container"></div>
+                            <div class="h-16 w-px bg-slate-100"></div>
+                            <div class="space-y-1">
+                                <h2 class="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] mb-1">Organigramme de Pilotage SMI</h2>
+                                <div class="print-org-name text-3xl font-black uppercase text-slate-900"></div>
+                            </div>
+                        </div>
+                        <div class="print-date text-[10px] font-black text-slate-300 uppercase tracking-widest"></div>
+                    </div>
+                    <div class="org-container">
+                        <div class="org-tree" id="org-tree-print-root"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIPOC - Paysage -->
+        <div id="view-sipoc-print" class="hidden space-y-6">
+            <div class="flex justify-between items-center no-print px-4 max-w-5xl mx-auto">
+                <button onclick="switchTab('sipoc')" class="text-slate-500 font-black text-xs uppercase flex items-center gap-2 hover:text-indigo-600 transition"><i data-lucide="arrow-left" class="w-4 h-4"></i> Éditer</button>
+                <button onclick="printStage('landscape')" class="bg-emerald-600 text-white px-8 py-3 rounded-full text-xs font-black uppercase flex items-center gap-2 shadow-xl hover:bg-emerald-700 transition"><i data-lucide="printer" class="w-4 h-4"></i> Lancer l'impression PDF</button>
+            </div>
+            <div class="a4-wrapper no-print">
+                <div class="print-content landscape">
+                    <div class="header-viz flex justify-between items-center w-full">
+                        <div class="flex items-center gap-6">
+                            <div class="print-logo-container"></div>
+                            <div class="h-12 w-px bg-slate-100"></div>
+                            <div class="space-y-1">
+                                <h2 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Fiche Processus (SIPOC)</h2>
+                                <div id="viz-sipoc-proc-name" class="text-3xl font-black uppercase text-slate-900 italic"></div>
+                                <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Pilote : <span id="viz-sipoc-pilot-name" class="text-indigo-600 italic"></span></div>
+                            </div>
+                        </div>
+                        <div class="print-date text-[10px] font-black text-slate-300 uppercase tracking-widest"></div>
+                    </div>
+                    <div class="grid grid-cols-5 w-full flex-1">
+                        <div style="background-color: #f8fafc;"><div class="text-[9px] font-black text-amber-600 uppercase mb-3 border-b pb-1">Fournisseurs</div><ul id="viz-sipoc-s" class="text-[8px] list-disc ml-4 space-y-1 text-slate-700"></ul></div>
+                        <div style="background-color: #f8fafc;"><div class="text-[9px] font-black text-blue-600 uppercase mb-3 border-b pb-1">Entrées</div><ul id="viz-sipoc-i" class="text-[8px] list-disc ml-4 space-y-1 text-slate-700"></ul></div>
+                        <div style="background-color: #eef2ff; border: 1px solid #c7d2fe;"><div class="text-[9px] font-black text-indigo-700 uppercase mb-3 border-b pb-1" style="border-color: #c7d2fe;">Activités</div><ul id="viz-sipoc-p" class="text-[8px] list-decimal ml-4 font-bold space-y-1 text-slate-800"></ul></div>
+                        <div style="background-color: #f8fafc;"><div class="text-[9px] font-black text-emerald-600 uppercase mb-3 border-b pb-1">Sorties</div><ul id="viz-sipoc-o" class="text-[8px] list-disc ml-4 space-y-1 text-slate-700"></ul></div>
+                        <div style="background-color: #f8fafc;"><div class="text-[9px] font-black text-rose-600 uppercase mb-3 border-b pb-1">Clients</div><ul id="viz-sipoc-c" class="text-[8px] list-disc ml-4 space-y-1 text-slate-700"></ul></div>
+                    </div>
+                    <div class="kpi-print-container grid grid-cols-3 w-full">
+                        <div><div class="text-[8px] font-black text-blue-600 uppercase mb-2 border-b border-blue-100 pb-1">KPI Exigences</div><ul id="viz-sipoc-kpi-i" class="text-[8px] text-slate-600 list-disc ml-4 space-y-0.5"></ul></div>
+                        <div><div class="text-[8px] font-black text-indigo-600 uppercase mb-2 border-b border-indigo-100 pb-1">KPI Maîtrise</div><ul id="viz-sipoc-kpi-p" class="text-[8px] text-slate-600 list-disc ml-4 space-y-0.5"></ul></div>
+                        <div><div class="text-[8px] font-black text-emerald-600 uppercase mb-2 border-b border-emerald-100 pb-1">KPI Performance</div><ul id="viz-sipoc-kpi-o" class="text-[8px] text-slate-600 list-disc ml-4 space-y-0.5"></ul></div>
+                    </div>
+                    <div class="mt-2 pt-2 border-t flex justify-between items-center w-full"><span class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Objectif Succès Global</span><div id="viz-sipoc-kpi-g" class="text-lg font-black italic"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RACI - Portrait -->
+        <div id="view-raci-print" class="hidden space-y-6">
+            <div class="flex justify-between items-center no-print px-4 max-w-3xl mx-auto">
+                <button onclick="switchTab('raci')" class="text-slate-500 font-black text-xs uppercase flex items-center gap-2 hover:text-indigo-600 transition"><i data-lucide="arrow-left" class="w-4 h-4"></i> Éditer</button>
+                <button onclick="printStage('portrait')" class="bg-emerald-600 text-white px-8 py-3 rounded-full text-xs font-black uppercase flex items-center gap-2 shadow-xl hover:bg-emerald-700 transition"><i data-lucide="printer" class="w-4 h-4"></i> Lancer l'impression PDF</button>
+            </div>
+            <div class="a4-wrapper no-print">
+                <div class="print-content portrait">
+                    <div class="header-viz flex justify-between items-center w-full">
+                        <div class="flex items-center gap-6">
+                            <div class="print-logo-container"></div>
+                            <div class="h-12 w-px bg-slate-100"></div>
+                            <div class="space-y-1">
+                                <h2 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Rôles & Responsabilités</h2>
+                                <div class="print-org-name text-3xl font-black uppercase text-slate-900"></div>
+                            </div>
+                        </div>
+                        <div class="print-date text-[10px] font-black text-slate-300 uppercase tracking-widest"></div>
+                    </div>
+                    <div class="w-full flex-1 overflow-hidden">
+                        <h3 id="viz-raci-proc-name" class="text-lg font-black text-slate-800 uppercase italic mb-4"></h3>
+                        <table>
+                            <thead>
+                                <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                                    <th class="text-left w-2/5">Étape SIPOC</th>
+                                    <th class="text-left w-[15%]">Réaliser</th>
+                                    <th class="text-left w-[15%]">Approuver</th>
+                                    <th class="text-left w-[15%]">Consulter</th>
+                                    <th class="text-left w-[15%]">Informer</th>
+                                </tr>
+                            </thead>
+                            <tbody id="raci-print-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Surveillance - Portrait -->
+        <div id="view-dashboard-print" class="hidden space-y-6">
+            <div class="flex justify-between items-center no-print px-4 max-w-3xl mx-auto">
+                <button onclick="switchTab('dashboard')" class="text-slate-500 font-black text-xs uppercase flex items-center gap-2 hover:text-indigo-600 transition"><i data-lucide="arrow-left" class="w-4 h-4"></i> Éditer</button>
+                <button onclick="printStage('portrait')" class="bg-emerald-600 text-white px-8 py-3 rounded-full text-xs font-black uppercase flex items-center gap-2 shadow-xl hover:bg-emerald-700 transition"><i data-lucide="printer" class="w-4 h-4"></i> Lancer l'impression PDF</button>
+            </div>
+            <div class="a4-wrapper no-print">
+                <div class="print-content portrait">
+                    <div class="header-viz flex justify-between items-center w-full">
+                        <div class="flex items-center gap-6">
+                            <div class="print-logo-container"></div>
+                            <div class="h-12 w-px bg-slate-100"></div>
+                            <div class="space-y-1">
+                                <h2 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Plan de Surveillance</h2>
+                                <div class="print-org-name text-3xl font-black uppercase text-slate-900"></div>
+                            </div>
+                        </div>
+                        <div class="print-date text-[10px] font-black text-slate-300 uppercase tracking-widest"></div>
+                    </div>
+                    <div class="w-full flex-1 overflow-hidden">
+                        <table>
+                            <thead>
+                                <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; text-transform: uppercase;">
+                                    <th class="text-left w-1/2">Indicateur & Processus</th>
+                                    <th class="text-left w-1/4">Fréquence</th>
+                                    <th class="text-left w-1/4">Responsable Analyse</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-print-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <input type="file" id="import-file" class="hidden" accept=".json" onchange="handleImport(event)">
+
+    <script>
+        let apiKey = localStorage.getItem('kiho_api_key') || localStorage.getItem('kiho_gemini_api_key') || "";
+        let modelID = localStorage.getItem('kiho_model_id') || "";
+        let tempModelID = "";
+
+        const initialData = {
+            meta: { organization: "", manager: "", logoUrl: null },
+            roleRegistry: [], 
+            roles: [],
+            categories: [
+                { id: 'pilo', label: 'Processus de management', color: 'indigo', macros: [] },
+                { id: 'met', label: 'Processus de réalisation', color: 'emerald', macros: [] },
+                { id: 'sup', label: 'Processus support', color: 'slate', macros: [] }
+            ],
+            sipocs: {},
+            raci: {}, 
+            monitoring_config: {}
+        };
+
+        let appData = JSON.parse(JSON.stringify(initialData));
+        let draggedMapItem = null;
+        let draggedItem = null;
+        let currentOrgZoomLevel = 1;
+        let currentEditRoleId = null;
+
+        // ================= GLOBAL MODAL SYSTEM =================
+        function showCustomModal({ title, message, type = 'alert', inputValue = '', onConfirm = null }) {
+            const modal = document.getElementById('custom-modal');
+            document.getElementById('custom-modal-title').innerText = title || 'Information';
+            document.getElementById('custom-modal-message').innerText = message;
+            
+            const input = document.getElementById('custom-modal-input');
+            const cancelBtn = document.getElementById('custom-modal-cancel');
+            const confirmBtn = document.getElementById('custom-modal-confirm');
+            
+            input.value = inputValue;
+            input.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
+            
+            confirmBtn.onclick = () => {
+                modal.classList.add('hidden');
+                if (onConfirm) {
+                    if (type === 'prompt') onConfirm(input.value);
+                    else onConfirm();
+                }
+            };
+            
+            cancelBtn.onclick = () => { modal.classList.add('hidden'); };
+
+            if (type === 'confirm') {
+                cancelBtn.classList.remove('hidden');
+            } else if (type === 'prompt') {
+                cancelBtn.classList.remove('hidden');
+                input.classList.remove('hidden');
+                setTimeout(() => input.focus(), 100);
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        // ================= IA & CONFIG =================
+        function updateAiStatusBadge() {
+            const badge = document.getElementById('global-ai-badge');
+            if(badge) {
+                badge.className = (apiKey && modelID) ? "absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-white" : "absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-400 border border-white";
+                badge.classList.remove('hidden');
+            }
+            const internalBadge = document.getElementById('ai-status-badge');
+            if(internalBadge) {
+                internalBadge.className = (apiKey && modelID) ? "absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-indigo-900 transition-colors" : "absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-400 border border-indigo-900 transition-colors";
+            }
+        }
+
+        function toggleAiSettings() {
+            const main = document.getElementById('ai-main-panel');
+            const settings = document.getElementById('ai-settings-panel');
+            if (main.classList.contains('hidden')) {
+                main.classList.remove('hidden'); settings.classList.add('hidden'); updateAiStatusBadge();
+            } else {
+                main.classList.add('hidden'); settings.classList.remove('hidden');
+                document.getElementById('ai-api-key-input').value = apiKey;
+                tempModelID = modelID;
+                if (apiKey && modelID) {
+                    document.getElementById('ai-status-dot').className = "w-3 h-3 rounded-full bg-emerald-400 shrink-0 transition-colors";
+                    document.getElementById('ai-status-text').innerText = "Modèle actif : " + modelID.replace('models/', '');
+                    document.getElementById('ai-status-text').className = 'text-xs font-bold truncate text-emerald-700';
+                    document.getElementById('ai-save-btn').disabled = false;
+                    document.getElementById('ai-save-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    document.getElementById('ai-status-dot').className = "w-3 h-3 rounded-full bg-slate-400 shrink-0 transition-colors";
+                    document.getElementById('ai-status-text').innerText = "Aucun modèle configuré";
+                    document.getElementById('ai-status-text').className = 'text-xs font-bold truncate text-slate-500';
+                    document.getElementById('ai-save-btn').disabled = true;
+                    document.getElementById('ai-save-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        async function testAndDetectModel() {
+            const inputKey = document.getElementById('ai-api-key-input').value.trim();
+            const btn = document.getElementById('ai-detect-btn');
+            const dot = document.getElementById('ai-status-dot');
+            const txt = document.getElementById('ai-status-text');
+            const saveBtn = document.getElementById('ai-save-btn');
+
+            if (!inputKey) { showCustomModal({ title: 'Attention', message: "Veuillez saisir une clé API." }); return; }
+
+            btn.disabled = true; btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Détection en cours...`; lucide.createIcons();
+            txt.innerText = "Interrogation de l'API..."; txt.className = 'text-xs font-bold truncate text-slate-500';
+            dot.className = "w-3 h-3 rounded-full bg-amber-400 shrink-0 transition-colors animate-pulse";
+            
+            let detectedModel = null; let success = false; let errorMsg = "Erreur inconnue";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${inputKey}`;
+            let delay = 1000;
+            
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) { if (response.status === 400) throw new Error("Clé API invalide"); throw new Error(`Erreur réseau (${response.status})`); }
+                    const data = await response.json();
+                    if (data && data.models) {
+                        const models = data.models.filter(m => m.name.includes('gemini'));
+                        const flash15 = models.find(m => m.name === 'models/gemini-1.5-flash');
+                        const pro15 = models.find(m => m.name === 'models/gemini-1.5-pro');
+                        const flash25preview = models.find(m => m.name === 'models/gemini-2.5-flash-preview-09-2025');
+                        
+                        if (flash25preview) detectedModel = flash25preview.name;
+                        else if (flash15) detectedModel = flash15.name;
+                        else if (pro15) detectedModel = pro15.name;
+                        else if (models.length > 0) detectedModel = models[0].name;
+
+                        if (detectedModel) { success = true; break; } else { throw new Error("Aucun modèle Gemini compatible trouvé."); }
+                    } else { throw new Error("Format de réponse inattendu de l'API."); }
+                } catch (error) {
+                    errorMsg = error.message;
+                    if (error.message === "Clé API invalide" || i === 4) break;
+                    await new Promise(r => setTimeout(r, delay)); delay *= 2;
+                }
+            }
+
+            btn.disabled = false; btn.innerHTML = `<i data-lucide="search" class="w-4 h-4"></i> Valider / Auto-Détecter`; lucide.createIcons();
+
+            if (success && detectedModel) {
+                tempModelID = detectedModel;
+                dot.className = "w-3 h-3 rounded-full bg-emerald-400 shrink-0 transition-colors";
+                txt.innerText = "Détecté : " + detectedModel.replace('models/', ''); txt.className = 'text-xs font-bold truncate text-emerald-700';
+                saveBtn.disabled = false; saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                tempModelID = "";
+                dot.className = "w-3 h-3 rounded-full bg-red-500 shrink-0 transition-colors";
+                txt.innerText = "Échec : " + errorMsg; txt.className = 'text-xs font-bold truncate text-red-500';
+                saveBtn.disabled = true; saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function saveApiConfiguration() {
+            apiKey = document.getElementById('ai-api-key-input').value.trim(); modelID = tempModelID;
+            localStorage.setItem('kiho_api_key', apiKey); localStorage.setItem('kiho_model_id', modelID);
+            updateAiStatusBadge(); toggleAiSettings();
+        }
+
+        async function callGeminiAPI(promptText, systemPrompt) {
+            let targetModel = "models/gemini-2.5-flash-preview-09-2025"; 
+            if (apiKey && apiKey.trim() !== "") targetModel = modelID || "models/gemini-1.5-flash";
+            const url = `https://generativelanguage.googleapis.com/v1beta/${targetModel}:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ parts: [{ text: promptText }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json" } };
+            let delay = 1000;
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const result = await response.json();
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+                } catch (error) {
+                    if (i === 4) throw error;
+                    await new Promise(r => setTimeout(r, delay)); delay *= 2;
+                }
+            }
+        }
+
+        function setPrompt(txt) { document.getElementById('ai-prompt').value = txt; }
+
+        function openAiModal() {
+            const currentProc = getProcessList().find(p => p.id === appData.currentSipocId);
+            const targetEl = document.getElementById('ai-active-proc-name');
+            if(targetEl) targetEl.innerText = currentProc ? currentProc.name : "Aucun processus sélectionné";
+            document.getElementById('ai-result').innerHTML = ''; document.getElementById('ai-result').classList.add('hidden');
+            document.getElementById('ai-prompt').value = ''; document.getElementById('ai-modal').classList.remove('hidden');
+            
+            if (!apiKey || !modelID) {
+                document.getElementById('ai-main-panel').classList.add('hidden');
+                document.getElementById('ai-settings-panel').classList.remove('hidden');
+                document.getElementById('ai-api-key-input').value = apiKey;
+            }
+        }
+
+        function closeAiModal() { document.getElementById('ai-modal').classList.add('hidden'); }
+        function closeWelcomeModal() { document.getElementById('welcome-modal').classList.add('hidden'); }
+
+        async function handleAIGenerate() {
+            if (!apiKey || !modelID) { toggleAiSettings(); setTimeout(() => showCustomModal({ message: "Veuillez configurer et auto-détecter votre modèle Gemini avant d'utiliser l'assistant." }), 100); return; }
+            const btn = document.getElementById('ai-btn'); const prompt = document.getElementById('ai-prompt').value; const resDiv = document.getElementById('ai-result');
+            if(!prompt.trim()) return;
+            btn.disabled = true; btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Traitement...`; lucide.createIcons();
+            resDiv.classList.remove('hidden'); resDiv.innerHTML = `<div class="text-indigo-400 text-center italic">Analyse et intégration des données...</div>`;
+
+            const currentProc = getProcessList().find(p => p.id === appData.currentSipocId);
+            const activeSipoc = appData.sipocs[appData.currentSipocId] || {};
+            const contextStr = JSON.stringify({
+                activeProcessId: appData.currentSipocId, activeProcessName: currentProc ? currentProc.name : "Aucun",
+                activeProcessSteps: activeSipoc.steps || [], orgRoles: appData.roles.map(r => ({ id: r.id, title: r.title, parentId: r.parentId })),
+                allProcesses: getProcessList().map(p => ({ id: p.id, name: p.name, path: p.path, isExcluded: p.isExcluded })),
+                categories: appData.categories.map(c => ({ id: c.id, label: c.label, macros: c.macros.map(m => ({ id: m.id, name: m.name })) }))
+            });
+
+            const systemInstruction = `Tu es KIHO IA, un expert en gestion de la qualité (SMQ, ISO 9001). Ton rôle est de répondre à la demande de l'utilisateur en renvoyant STRICTEMENT et UNIQUEMENT un objet JSON valide. Ne génère aucun texte en dehors du JSON. L'architecture est stricte : Catégorie > Domaine > Activité > Processus. Format JSON attendu : { "message": "Texte court", "mutations": [ { "action": "update_sipoc", "processId": "ID", "data": { "suppliers": ["A"], "inputs": ["B"], "steps": ["C"], "outputs": ["D"], "customers": ["E"], "kpiInputs": ["F"], "kpiProcess": ["G"], "kpiOutputs": ["H"], "kpiGlobal": "I" } }, { "action": "add_role", "data": { "title": "Titre", "parentId": "ID_PARENT", "holder": "", "depot": "", "count": 1 } }, { "action": "assign_pilots", "assignments": [ { "roleId": "ID_ROLE", "processIds": ["ID_PROC"] } ] }, { "action": "update_raci", "processId": "ID", "data": { "raci": [ { "r": ["ID_ROLE"], "a": "ID_ROLE", "c": [], "i": [] } ] } }, { "action": "add_macro", "categoryId": "ID", "name": "Nom", "intermediaries": [ { "name": "Nom", "processes": [ { "name": "Nom", "desc": "..." } ] } ] }, { "action": "add_intermediary", "macroId": "ID", "name": "Nom", "processes": [ { "name": "Nom", "desc": "..." } ] } ] }`;
+
+            try {
+                const jsonStr = await callGeminiAPI(prompt, systemInstruction + "\nContext:\n" + contextStr);
+                const responseData = JSON.parse(jsonStr.replace(/```json/gi, '').replace(/```/g, '').trim());
+                resDiv.innerHTML = responseData.message || "Action terminée avec succès.";
+                if (responseData.mutations) applyMutations(responseData.mutations);
+            } catch (e) {
+                resDiv.innerHTML = "Une erreur est survenue lors du traitement de la requête IA. Veuillez réessayer."; console.error("Erreur IA:", e);
+            } finally {
+                btn.disabled = false; btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4"></i> Exécuter la demande`; lucide.createIcons();
+            }
+        }
+
+        function applyMutations(mutations) {
+            if (!Array.isArray(mutations)) return;
+            mutations.forEach(m => {
+                try {
+                    if (m.action === 'update_sipoc' && m.processId) {
+                        if (!appData.sipocs[m.processId]) appData.sipocs[m.processId] = { suppliers:[""], inputs:[""], steps:[""], outputs:[""], customers:[""], kpiInputs:[""], kpiProcess:[""], kpiOutputs:[""], kpiGlobal:"" };
+                        ['suppliers', 'inputs', 'steps', 'outputs', 'customers', 'kpiInputs', 'kpiProcess', 'kpiOutputs'].forEach(f => {
+                            if(m.data[f] && Array.isArray(m.data[f])) {
+                                let current = appData.sipocs[m.processId][f] || []; current = current.filter(x => x && typeof x === 'string' && x.trim() !== '');
+                                const newItems = m.data[f].filter(x => x && typeof x === 'string' && x.trim() !== ''); newItems.forEach(item => { if(!current.includes(item)) current.push(item); });
+                                if(current.length === 0) current = [""]; appData.sipocs[m.processId][f] = current;
+                            }
+                        });
+                        if(m.data.kpiGlobal !== undefined) appData.sipocs[m.processId].kpiGlobal = m.data.kpiGlobal;
+                    }
+                    else if (m.action === 'add_role' && m.data) {
+                        appData.roles.push({ id: generateId(), title: m.data.title || "Nouveau Poste", holder: m.data.holder || "", depot: m.data.depot || "", count: m.data.count || 1, parentId: m.data.parentId || null, pilotedProcesses: m.data.pilotedProcesses || [] });
+                        if (m.data.title && !appData.roleRegistry.includes(m.data.title)) appData.roleRegistry.push(m.data.title);
+                    }
+                    else if (m.action === 'assign_pilots' && Array.isArray(m.assignments)) {
+                        m.assignments.forEach(assign => {
+                            const role = appData.roles.find(r => r.id === assign.roleId);
+                            if (role && Array.isArray(assign.processIds)) {
+                                if (!role.pilotedProcesses) role.pilotedProcesses = [];
+                                assign.processIds.forEach(pid => { if (!role.pilotedProcesses.includes(pid)) role.pilotedProcesses.push(pid); });
+                            }
+                        });
+                    }
+                    else if (m.action === 'update_raci' && m.processId && m.data && Array.isArray(m.data.raci)) {
+                        appData.raci[m.processId] = m.data.raci.map(row => ({ r: Array.isArray(row.r) ? row.r : (row.r ? [row.r] : []), a: Array.isArray(row.a) ? (row.a[0] || "") : (row.a || ""), c: Array.isArray(row.c) ? row.c : (row.c ? [row.c] : []), i: Array.isArray(row.i) ? row.i : (row.i ? [row.i] : []) }));
+                    }
+                    else if (m.action === 'add_macro' && m.categoryId) {
+                        const cat = appData.categories.find(c => c.id === m.categoryId);
+                        if (cat) cat.macros.push({ id: generateId(), name: m.name || "Nouveau Domaine", order: cat.macros.length + 1, intermediaries: (m.intermediaries || []).map((inter, idx) => ({ id: generateId(), name: inter.name || "Nouvelle Activité", order: idx + 1, processes: (inter.processes || []).map(p => ({ id: generateId(), name: p.name || "Nouveau Processus", desc: p.desc || "" })) })) });
+                    }
+                    else if (m.action === 'add_intermediary' && m.macroId) {
+                        let targetMac = null; appData.categories.forEach(c => { const mac = c.macros.find(x => x.id === m.macroId); if (mac) targetMac = mac; });
+                        if (targetMac) targetMac.intermediaries.push({ id: generateId(), name: m.name || "Nouvelle Activité", order: targetMac.intermediaries.length + 1, processes: (m.processes || []).map(p => ({ id: generateId(), name: p.name || "Nouveau Processus", desc: p.desc || "" })) });
+                    }
+                } catch(e) { console.error("Échec mutation IA", e, m); }
+            });
+            const activeView = Array.from(document.querySelectorAll('[id^="view-"]')).find(el => !el.classList.contains('hidden'));
+            if (activeView) switchTab(activeView.id.replace('view-', '')); else initAll();
+        }
+
+        // ================= REFERENTIEL POSTES =================
+        function openRegistryModal() { renderRegistry(); document.getElementById('registry-modal').classList.remove('hidden'); }
+        function closeRegistryModal() { document.getElementById('registry-modal').classList.add('hidden'); }
+        function renderRegistry() {
+            const list = document.getElementById('registry-list'); list.innerHTML = '';
+            appData.roleRegistry.sort().forEach(title => {
+                list.innerHTML += `<div class="flex items-center justify-between bg-white border border-slate-200 p-3 rounded-xl shadow-sm"><span class="text-xs font-bold text-slate-700">${title}</span><button onclick="removeRegistryRole('${title.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`;
+            });
+            lucide.createIcons();
+        }
+        function addRegistryRole() {
+            const val = document.getElementById('new-registry-role').value.trim();
+            if (val && !appData.roleRegistry.includes(val)) {
+                appData.roleRegistry.push(val); document.getElementById('new-registry-role').value = ''; renderRegistry(); syncRoleTitleDropdown(val);
+            }
+        }
+        function removeRegistryRole(title) {
+            showCustomModal({
+                title: 'Confirmation',
+                message: `Voulez-vous retirer "${title}" du référentiel ? (Les postes existants ne seront pas supprimés)`,
+                type: 'confirm',
+                onConfirm: () => {
+                    appData.roleRegistry = appData.roleRegistry.filter(t => t !== title); 
+                    renderRegistry(); 
+                    syncRoleTitleDropdown();
+                }
+            });
+        }
+        function promptNewRegistryRole() {
+            showCustomModal({
+                title: 'Nouveau Poste',
+                message: 'Saisissez le titre du nouveau poste officiel :',
+                type: 'prompt',
+                onConfirm: (val) => {
+                    if (val && val.trim() !== "") {
+                        const title = val.trim();
+                        if (!appData.roleRegistry.includes(title)) appData.roleRegistry.push(title);
+                        syncRoleTitleDropdown(title); 
+                        syncRoleModalCheckboxes();
+                    }
+                }
+            });
+        }
+        function syncRoleTitleDropdown(selectedValue = null) {
+            const rTitle = document.getElementById('role-title'); if (!rTitle) return;
+            const currentVal = selectedValue || rTitle.value;
+            rTitle.innerHTML = '<option value="" disabled selected>Sélectionner...</option>';
+            appData.roleRegistry.sort().forEach(t => rTitle.appendChild(new Option(t, t)));
+            if (currentVal && appData.roleRegistry.includes(currentVal)) rTitle.value = currentVal;
+        }
+        function syncRoleModalCheckboxes() {
+            const t = document.getElementById('role-title').value; if (!t) return;
+            const existingRole = appData.roles.find(r => r.title === t && r.pilotedProcesses && r.pilotedProcesses.length > 0);
+            const procsToSync = existingRole ? existingRole.pilotedProcesses : [];
+            document.querySelectorAll('input[name="role-processes"]').forEach(cb => { cb.checked = procsToSync.includes(cb.value); });
+        }
+
+        // ================= DRAG & DROP CARTOGRAPHIE =================
+        function handleMapDragStart(e, type, cId, mId, iId) { e.stopPropagation(); draggedMapItem = { type, cId, mId, iId }; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('opacity-40'), 0); }
+        function handleMapDragOver(e, type) { e.preventDefault(); e.stopPropagation(); if (draggedMapItem && draggedMapItem.type === type) e.currentTarget.classList.add('drag-over-active'); }
+        function handleMapDragLeave(e) { e.currentTarget.classList.remove('drag-over-active'); }
+        function handleMapDrop(e, targetType, tCId, tMId, tIId) {
+            e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('drag-over-active');
+            if (!draggedMapItem || draggedMapItem.type !== targetType) return;
+            if (targetType === 'macro') {
+                const sCat = appData.categories.find(c => c.id === draggedMapItem.cId); const tCat = appData.categories.find(c => c.id === tCId);
+                const sIdx = sCat.macros.findIndex(m => m.id === draggedMapItem.mId); const tIdx = tCat.macros.findIndex(m => m.id === tMId);
+                if (sIdx > -1 && tIdx > -1) { const [movedMacro] = sCat.macros.splice(sIdx, 1); tCat.macros.splice(tIdx, 0, movedMacro); }
+            } else if (targetType === 'inter') {
+                const sMac = appData.categories.find(c => c.id === draggedMapItem.cId).macros.find(m => m.id === draggedMapItem.mId);
+                const tMac = appData.categories.find(c => c.id === tCId).macros.find(m => m.id === tMId);
+                const sIdx = sMac.intermediaries.findIndex(i => i.id === draggedMapItem.iId); const tIdx = tMac.intermediaries.findIndex(i => i.id === tIId);
+                if (sIdx > -1 && tIdx > -1) { const [movedInter] = sMac.intermediaries.splice(sIdx, 1); tMac.intermediaries.splice(tIdx, 0, movedInter); }
+            }
+            draggedMapItem = null; renderMapping();
+        }
+        function handleMapDragEnd(e) { e.target.classList.remove('opacity-40'); draggedMapItem = null; }
+
+        // ================= MAPPING ACTIONS =================
+        function updateMacro(cId, mId, f, v) { const m = appData.categories.find(c=>c.id===cId)?.macros.find(m=>m.id===mId); if(m) m[f]=v; }
+        function updateInter(cId, mId, iId, f, v) { const i = appData.categories.find(c=>c.id===cId)?.macros.find(m=>m.id===mId)?.intermediaries.find(i=>i.id===iId); if(i) i[f]=v; }
+        function updateProc(cId, mId, iId, pId, f, v) { const p = appData.categories.find(c=>c.id===cId)?.macros.find(m=>m.id===mId)?.intermediaries.find(i=>i.id===iId)?.processes.find(p=>p.id===pId); if(p) p[f]=v; }
+        function addMacro(cId) { const c = appData.categories.find(c=>c.id===cId); if(c){ c.macros.push({id: generateId(), name: '', order: c.macros.length + 1, intermediaries: []}); renderMapping(); } }
+        function addInter(cId, mId) { const m = appData.categories.find(c=>c.id===cId)?.macros.find(m=>m.id===mId); if(m){ m.intermediaries.push({id: generateId(), name: '', order: m.intermediaries.length + 1, processes: []}); renderMapping(); } }
+        function addProc(cId, mId, iId) { const i = appData.categories.find(c=>c.id===cId)?.macros.find(m=>m.id===mId)?.intermediaries.find(i=>i.id===iId); if(i){ i.processes.push({id: generateId(), name: '', desc: '', isExcluded: false}); renderMapping(); } }
+        function deleteMacro(cId, mId) { const c = appData.categories.find(c=>c.id===cId); if(c){ c.macros = c.macros.filter(m=>m.id!==mId); renderMapping(); } }
+        function deleteInter(cId, mId, iId) { const m = appData.categories.find(c=>c.id===cId)?.macros.find(m=>m.id===mId); if(m){ m.intermediaries = m.intermediaries.filter(i=>i.id!==iId); renderMapping(); } }
+        function deleteProc(cId, mId, iId, pId) { const i = appData.categories.find(c=>c.id===cId)?.macros.find(m=>m.id===mId)?.intermediaries.find(i=>i.id===iId); if(i){ i.processes = i.processes.filter(p=>p.id!==pId); renderMapping(); } }
+        function toggleExcluded(cId, mId, iId, pId, checked) { updateProc(cId, mId, iId, pId, 'isExcluded', checked); renderMapping(); ['sipoc', 'raci', 'dashboard'].forEach(v => syncFiltersWithProcId(v, appData.currentSipocId)); }
+
+        function getProcHTML(cId, mId, iId, proc) {
+            const escName = proc.name ? proc.name.replace(/"/g, '&quot;') : '';
+            const escDesc = proc.desc ? proc.desc.replace(/"/g, '&quot;') : '';
+            const excludedClass = proc.isExcluded ? 'opacity-60 bg-slate-50 border-dashed border-slate-300' : 'bg-white border-solid border-slate-100';
+            const textClass = proc.isExcluded ? 'text-slate-500' : 'text-indigo-900';
+            const controlsVisible = proc.isExcluded ? 'opacity-100' : 'opacity-10 md:opacity-0 group-hover:opacity-100';
+            return `<div class="level-proc cursor-default transition-all ${excludedClass} group"><div class="flex items-start justify-between w-full gap-3"><input type="text" value="${escName}" oninput="updateProc('${cId}','${mId}','${iId}','${proc.id}','name',this.value)" class="flex-1 w-full mt-1 text-[11px] font-black uppercase ${textClass} outline-none bg-transparent" placeholder="Nom du Processus"><div class="flex items-center gap-1.5 shrink-0 ${controlsVisible} transition-opacity z-10"><label class="flex items-center gap-1 cursor-pointer bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md transition-colors" title="Exclure de l'évaluation SMI"><input type="checkbox" ${proc.isExcluded ? 'checked' : ''} onchange="toggleExcluded('${cId}','${mId}','${iId}','${proc.id}',this.checked)" class="w-3 h-3 rounded text-slate-500 focus:ring-slate-500 border-slate-300 cursor-pointer"><span class="text-[7px] font-black uppercase ${proc.isExcluded ? 'text-red-500' : 'text-slate-500'}">Hors Périmètre</span></label><button onclick="deleteProc('${cId}','${mId}','${iId}','${proc.id}')" class="bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 p-1 rounded-md transition-colors" title="Supprimer"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div></div><textarea oninput="this.style.height='auto';this.style.height=(this.scrollHeight)+'px';updateProc('${cId}','${mId}','${iId}','${proc.id}','desc',this.value)" class="w-full text-[9px] text-slate-500 outline-none resize-none bg-transparent leading-relaxed overflow-hidden" placeholder="Mission du processus..." rows="1" style="min-height: 20px;">${escDesc}</textarea></div>`;
+        }
+
+        function getInterHTML(cId, mId, inter) {
+            const escInterName = inter.name ? inter.name.replace(/"/g, '&quot;') : '';
+            return `<div class="level-inter cursor-grab active:cursor-grabbing" draggable="true" ondragstart="handleMapDragStart(event, 'inter', '${cId}', '${mId}', '${inter.id}')" ondragover="handleMapDragOver(event, 'inter')" ondragleave="handleMapDragLeave(event)" ondrop="handleMapDrop(event, 'inter', '${cId}', '${mId}', '${inter.id}')" ondragend="handleMapDragEnd(event)"><div class="flex items-center gap-3 mb-5 group"><div class="w-8 h-8 bg-white border-2 border-slate-200 rounded-lg flex items-center justify-center text-sm font-black text-indigo-600 shadow-sm shrink-0" title="Glisser le cadre pour réorganiser">${inter.order}</div><input type="text" value="${escInterName}" oninput="updateInter('${cId}','${mId}','${inter.id}','name',this.value)" class="text-xs font-bold text-slate-700 outline-none w-full bg-transparent border-b-2 border-transparent focus:border-indigo-300 px-1 py-0.5" placeholder="Nom de l'activité"><button onclick="addProc('${cId}','${mId}','${inter.id}')" class="bg-white text-indigo-600 text-[8px] font-black p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition uppercase shadow-sm tracking-tighter border border-slate-100 hover:border-indigo-200 shrink-0" title="Ajouter un processus"><i data-lucide="plus" class="w-4 h-4"></i></button><button onclick="deleteInter('${cId}','${mId}','${inter.id}')" class="text-red-300 hover:text-red-500 p-1 shrink-0"><i data-lucide="x" class="w-4 h-4"></i></button></div><div id="procs-${inter.id}" class="flex flex-col gap-3">${inter.processes.map(p => getProcHTML(cId, mId, inter.id, p)).join('')}</div></div>`;
+        }
+
+        function getMacroHTML(cId, macro) {
+            const escMacroName = macro.name ? macro.name.replace(/"/g, '&quot;') : '';
+            return `<div class="level-macro cursor-grab active:cursor-grabbing" draggable="true" ondragstart="handleMapDragStart(event, 'macro', '${cId}', '${macro.id}', null)" ondragover="handleMapDragOver(event, 'macro')" ondragleave="handleMapDragLeave(event)" ondrop="handleMapDrop(event, 'macro', '${cId}', '${macro.id}', null)" ondragend="handleMapDragEnd(event)"><div class="flex items-center gap-4 mb-6 group"><div class="flex flex-col items-center"><span class="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">Ordre</span><div class="w-12 h-12 bg-slate-100 border-2 border-slate-200 rounded-xl flex items-center justify-center text-lg font-black text-indigo-600 shadow-inner" title="Glisser le cadre pour réorganiser">${macro.order}</div></div><input type="text" value="${escMacroName}" oninput="updateMacro('${cId}','${macro.id}','name',this.value)" class="text-sm font-black uppercase text-slate-800 outline-none w-full bg-slate-50 p-3 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="Nom du Domaine"><button onclick="addInter('${cId}','${macro.id}')" class="bg-indigo-50 text-indigo-600 text-[8px] font-black px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition uppercase tracking-tighter shrink-0">+ Activité</button><button onclick="deleteMacro('${cId}','${macro.id}')" class="text-red-300 hover:text-red-500 p-2 shrink-0"><i data-lucide="trash-2" class="w-5 h-5"></i></button></div><div id="inters-${macro.id}" class="flex flex-row flex-wrap gap-4 pt-2">${macro.intermediaries.map((inter, iIdx) => { inter.order = iIdx + 1; return getInterHTML(cId, macro.id, inter); }).join('')}</div></div>`;
+        }
+
+        function renderMapping() {
+            const container = document.getElementById('mapping-containers'); if(!container) return;
+            container.innerHTML = appData.categories.map(cat => `<div class="p-8 rounded-[2rem] bg-white border border-slate-200 shadow-sm mb-8"><div class="flex justify-between items-center mb-8"><h3 class="text-xs font-black uppercase text-${cat.color}-600 tracking-widest">${cat.label}</h3><button onclick="addMacro('${cat.id}')" class="bg-slate-900 text-white text-[9px] px-5 py-2 rounded-full font-black uppercase">+ Domaine</button></div><div id="macros-${cat.id}">${cat.macros.map((macro, mIdx) => { macro.order = mIdx + 1; return getMacroHTML(cat.id, macro); }).join('')}</div></div>`).join('');
+            lucide.createIcons(); setTimeout(() => { container.querySelectorAll('textarea').forEach(tx => { tx.style.height = 'auto'; tx.style.height = (tx.scrollHeight) + 'px'; }); }, 50);
+        }
+
+        // ================= VIZ FULL (PRINT) =================
+        function getPrintProcHTML(proc) {
+            const bg = proc.isExcluded ? '#f8fafc' : 'white'; const border = proc.isExcluded ? '1px dashed #cbd5e1' : '1px solid #e2e8f0'; const textColor = proc.isExcluded ? 'text-slate-400' : 'text-slate-800'; const exclText = proc.isExcluded ? '<br>(Hors Périmètre)' : '';
+            return `<div class="text-center w-full" style="background-color:${bg}; border:${border}; border-radius:4px; padding:3px;"><div class="text-[8px] font-black uppercase ${textColor} leading-tight">${proc.name} ${exclText}</div></div>`;
+        }
+        function getPrintInterHTML(inter) {
+            let procGrid = `<div class="flex flex-row gap-2 justify-center w-full">`;
+            for (let i = 0; i < inter.processes.length; i += 5) { procGrid += `<div class="flex flex-col gap-2 flex-1">${inter.processes.slice(i, i + 5).map(p => getPrintProcHTML(p)).join('')}</div>`; }
+            return `<div class="inter-box flex flex-col items-center h-full w-full text-center" style="background-color:#f8fafc;"><div class="text-[7px] font-bold text-slate-500 uppercase mb-2">${inter.name}</div>${procGrid}</div>`;
+        }
+        function getPrintMacroHTML(macro) {
+            const groupedInters = {}; macro.intermediaries.forEach(inter => { const o = inter.order || 1; if(!groupedInters[o]) groupedInters[o] = []; groupedInters[o].push(inter); });
+            const intersCols = Object.keys(groupedInters).sort((a,b)=>a-b).map(order => `<div class="flex flex-col gap-3 flex-1">${groupedInters[order].map(i => getPrintInterHTML(i)).join('')}</div>`).join('');
+            return `<div class="macro-box flex flex-col items-center h-full"><div class="text-[8px] font-black text-slate-500 uppercase mb-4 italic tracking-widest">${macro.name}</div><div class="flex flex-row gap-3 w-full justify-center flex-1">${intersCols}</div></div>`;
+        }
+        function renderVizFull() {
+            populateHeader(); const container = document.getElementById('viz-mapping-render'); if(!container) return;
+            container.innerHTML = appData.categories.map(cat => {
+                const groupedMacros = {}; cat.macros.forEach(m => { const o = m.order || 1; if(!groupedMacros[o]) groupedMacros[o] = []; groupedMacros[o].push(m); });
+                const macrosCols = Object.keys(groupedMacros).sort((a,b)=>a-b).map(order => `<div class="flex flex-col gap-4 flex-1">${groupedMacros[order].map(m => getPrintMacroHTML(m)).join('')}</div>`).join('');
+                return `<div class="flex flex-col items-center gap-4"><div class="px-8 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-full" style="background-color:#f1f5f9; color:#475569; border: 1px solid #e2e8f0;">${cat.label}</div><div class="flex flex-row flex-wrap justify-center gap-4 w-full">${macrosCols}</div></div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // ================= ZOOM & ORG CHART =================
+        function changeOrgZoom(delta) { currentOrgZoomLevel += delta; if (currentOrgZoomLevel < 0.2) currentOrgZoomLevel = 0.2; if (currentOrgZoomLevel > 2.0) currentOrgZoomLevel = 2.0; applyOrgEditZoom(); }
+        function resetOrgZoom() { currentOrgZoomLevel = 1; applyOrgEditZoom(); }
+        function fitOrgZoom() {
+            const root = document.getElementById('org-tree-root'); const container = root.closest('.org-container');
+            if (root && container) {
+                root.style.transform = 'none'; 
+                setTimeout(() => {
+                    const treeWidth = root.scrollWidth, treeHeight = root.scrollHeight;
+                    if (treeWidth > 0 && treeHeight > 0) {
+                        currentOrgZoomLevel = Math.max(0.1, Math.min((container.clientWidth - 80) / treeWidth, (container.clientHeight - 120) / treeHeight, 1)); applyOrgEditZoom();
+                    }
+                }, 50);
+            }
+        }
+        function applyOrgEditZoom() {
+            const root = document.getElementById('org-tree-root'); const label = document.getElementById('org-zoom-level');
+            if (root) { root.style.transform = `scale(${currentOrgZoomLevel})`; root.style.transformOrigin = 'top left'; }
+            if (label) label.innerText = Math.round(currentOrgZoomLevel * 100) + '%';
+        }
+        function autoScaleOrgPrint() {
+            const root = document.getElementById('org-tree-print-root'); const container = root?.closest('.org-container');
+            if(root && container) {
+                root.style.transform = 'none'; 
+                setTimeout(() => {
+                    const tw = root.scrollWidth, th = root.scrollHeight;
+                    if (tw > 0 && th > 0) {
+                        const scale = Math.min(container.clientWidth / tw, container.clientHeight / th, 1) * 0.95; 
+                        const offsetX = Math.max(0, (container.clientWidth - (tw * scale)) / 2); const offsetY = Math.max(0, (container.clientHeight - (th * scale)) / 2) * 0.3; 
+                        root.style.transformOrigin = 'top left'; root.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+                    }
+                }, 100);
+            }
+        }
+        function renderOrg() { 
+            const r = document.getElementById('org-tree-root'); const showProcs = document.getElementById('toggle-org-edit-procs')?.checked ?? true;
+            if(r) { r.innerHTML = buildOrgTree(false, showProcs); r.style.transition = 'transform 0.2s ease-in-out'; applyOrgEditZoom(); }
+            lucide.createIcons(); 
+        }
+        function renderOrgPrint() { 
+            populateHeader(); const r = document.getElementById('org-tree-print-root'); if(r) r.innerHTML = buildOrgTree(true, document.getElementById('toggle-org-procs')?.checked ?? true); 
+            lucide.createIcons(); 
+        }
+        function toggleOrgProcesses(show) { renderOrgPrint(); autoScaleOrgPrint(); }
+        function getOrgNodeHTML(c, isPrint, showProcs, pilotedProcs) {
+            let procTags = ''; if (showProcs) pilotedProcs.forEach(p => { procTags += `<div class="mt-1 text-[7px] font-black text-white bg-indigo-600 px-1.5 py-1 rounded uppercase border border-indigo-700 w-full text-left truncate" title="${p.name}">${p.name}</div>`; });
+            const bProc = procTags ? `<div class="mt-2 w-full space-y-0.5">${procTags}</div>` : '';
+            const bHold = c.holder ? `<div class="text-[9px] font-bold text-indigo-500 mt-2 italic border-t pt-1 w-full text-center break-words leading-tight">${c.holder}</div>` : '';
+            const bDepot = c.depot ? `<div class="text-[7.5px] font-black text-slate-500 mt-1.5 bg-slate-100 px-2 py-0.5 rounded uppercase tracking-widest border border-slate-200">${c.depot}</div>` : '';
+            const bCount = c.count > 1 ? `<div class="absolute -bottom-1.5 -right-1.5 bg-slate-800 text-white text-[8px] font-black w-6 h-6 flex items-center justify-center rounded-full border-2 border-white z-20">x${c.count}</div>` : '';
+            const bActions = isPrint ? '' : `<div class="absolute -top-3 -right-2 hidden group-hover:flex gap-1 bg-white shadow-xl border rounded-lg p-1 z-50"><button onclick="openRoleModal('${c.id}', null)" class="p-1.5 hover:bg-indigo-50 rounded transition"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button><button onclick="openRoleModal(null, '${c.id}')" class="p-1.5 hover:bg-emerald-50 rounded transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>${c.parentId?`<button onclick="deleteRole('${c.id}')" class="p-1.5 hover:bg-red-50 rounded transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>`:''}</div>`;
+            const bManager = c.isManager ? `<div class="absolute -top-2 -left-2 bg-amber-100 text-amber-600 p-1.5 rounded-full shadow-sm border border-amber-200 z-20" title="Poste de Management"><i data-lucide="award" class="w-3 h-3"></i></div>` : '';
+            return `<div class="org-node shrink-0 bg-white border-2 ${c.isManager ? 'border-amber-300 shadow-amber-100' : 'border-slate-200'} rounded-3xl shadow-sm p-4 relative group flex flex-col items-center">${bActions}${bManager}<div class="text-xs font-black ${c.isManager ? 'text-amber-900' : 'text-slate-800'} text-center uppercase mb-1 leading-tight break-words w-full">${c.title}</div>${bHold}${bDepot}${bProc}${bCount}</div>`;
+        }
+        function buildOrgTree(isPrint, showProcs = true, parentId = null, depth = 0) {
+            const children = appData.roles.filter(r => r.parentId === parentId); if (children.length === 0) return '';
+            let ulClass = ''; if (depth === 3) ulClass = 'vertical-centered-ul'; else if (depth >= 4) ulClass = 'vertical-indented-ul';
+            let html = `<ul class="${ulClass}">`;
+            children.forEach(c => {
+                const pilotedProcs = getProcessList().filter(p => (c.pilotedProcesses || []).includes(p.id));
+                const nodeInner = getOrgNodeHTML(c, isPrint, showProcs, pilotedProcs);
+                let liClass = ''; if (depth === 3) liClass = 'vertical-centered-li'; else if (depth >= 4) liClass = 'vertical-indented-li';
+                if (depth >= 4) html += `<li class="${liClass}"><div class="spine"></div><div class="branch"></div>${nodeInner}${buildOrgTree(isPrint, showProcs, c.id, depth + 1)}</li>`;
+                else html += `<li class="${liClass}">${nodeInner}${buildOrgTree(isPrint, showProcs, c.id, depth + 1)}</li>`;
+            });
+            return html + '</ul>';
+        }
+
+        // ================= GENERAL UI & UTILS =================
+        function switchTab(t) {
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('tab-active', 'text-slate-400'));
+            const tabEl = document.getElementById('tab-'+t); if(tabEl) tabEl.classList.add('tab-active');
+            ['view-mapping','view-mapping-print','view-sipoc','view-sipoc-print','view-dashboard','view-dashboard-print','view-org','view-org-print','view-raci','view-raci-print','view-evaluation'].forEach(v => {
+                const el = document.getElementById(v); if(el) el.classList.add('hidden');
+            });
+            const view = document.getElementById('view-'+t); if(view) view.classList.remove('hidden');
+            
+            if(t=== 'mapping') renderMapping();
+            if(t==='mapping-print') renderVizFull();
+            if(t==='org') renderOrg();
+            if(t==='org-print') { renderOrgPrint(); autoScaleOrgPrint(); }
+            if(t==='sipoc') syncFiltersWithProcId('sipoc', appData.currentSipocId || getFirstProcessId());
+            if(t==='sipoc-print') renderSipocPrint();
+            if(t==='raci') syncFiltersWithProcId('raci', appData.currentSipocId || getFirstProcessId());
+            if(t==='raci-print') renderRaciPrint();
+            if(t==='dashboard') { syncFiltersWithProcId('dashboard', appData.currentSipocId || getFirstProcessId()); renderDashboard(); }
+            if(t==='dashboard-print') renderDashboardPrint();
+            if(t==='evaluation') renderEvaluation();
+            
+            lucide.createIcons();
+        }
+        function printStage(orientation) { 
+            let styleEl = document.getElementById('print-orientation-style');
+            if(!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'print-orientation-style'; document.head.appendChild(styleEl); }
+            styleEl.innerHTML = orientation === 'portrait' ? '@media print { @page { size: A4 portrait; margin: 0; } }' : '@media print { @page { size: A4 landscape; margin: 0; } }';
+            setTimeout(() => { window.print(); }, 150); 
+        }
+        function getProcessList() { 
+            let all = []; appData.categories.forEach(c => c.macros.forEach(m => m.intermediaries.forEach(i => i.processes.forEach(p => all.push({...p, path: `${m.name} > ${i.name}`}))))); return all; 
+        }
+        function getFirstProcessId() { const all = getProcessList(); return all.length > 0 ? all[0].id : null; }
+        function getRoleById(id) { return appData.roles.find(r => r.id === id); }
+        function generateId() { return 'id_' + Math.random().toString(36).substr(2, 9); }
+        function updateMeta(f, v) { appData.meta[f] = v; }
+        
+        function populateHeader() { 
+            document.querySelectorAll('.print-org-name').forEach(el => el.innerText = appData.meta.organization || ""); 
+            document.querySelectorAll('.print-manager').forEach(el => el.innerText = appData.meta.manager || ""); 
+            document.querySelectorAll('.print-date').forEach(el => el.innerText = "Édition : " + new Date().toLocaleDateString('fr-FR')); 
+            const img = appData.meta.logoUrl ? `<img src="${appData.meta.logoUrl}" class="h-14 w-auto">` : `<div class="h-10 w-10 border border-slate-300 rounded flex items-center justify-center text-[6px] font-black text-slate-400 p-1 uppercase">LOGO</div>`; 
+            document.querySelectorAll('.print-logo-container').forEach(el => el.innerHTML = img); 
+        }
+        function handleLogo(e) { 
+            const f = e.target.files[0]; 
+            if(f) { 
+                const r = new FileReader(); 
+                r.onload=(re)=>{ appData.meta.logoUrl=re.target.result; const b=document.getElementById('logo-preview-box'); b.style.backgroundImage=`url(${re.target.result})`; b.classList.remove('hidden'); document.getElementById('logo-placeholder').classList.add('hidden'); }; 
+                r.readAsDataURL(f); 
+            } 
+        }
+        function populateFilter(selectId, options) {
+            const s = document.getElementById(selectId); if(!s) return;
+            s.innerHTML = ''; options.forEach(opt => s.appendChild(new Option(opt.label, opt.value)));
+            if (options.length === 0) s.appendChild(new Option("Aucun", ""));
+        }
+        function updateFilters(view, levelChanged, triggerAction = true) {
+            const catSelect = document.getElementById(`${view}-filter-cat`); const macroSelect = document.getElementById(`${view}-filter-macro`);
+            const interSelect = document.getElementById(`${view}-filter-inter`); const procSelect = document.getElementById(`${view}-filter-proc`);
+            if (!catSelect || !macroSelect || !interSelect || !procSelect) return;
+
+            if(levelChanged === 'init') { populateFilter(`${view}-filter-cat`, appData.categories.map(c => ({label: c.label, value: c.id}))); levelChanged = 'cat'; }
+            if(levelChanged === 'cat') { const cat = appData.categories.find(c => c.id === catSelect.value); populateFilter(`${view}-filter-macro`, cat ? cat.macros.map(m => ({label: m.name, value: m.id})) : []); levelChanged = 'macro'; }
+            if(levelChanged === 'macro') { const macro = appData.categories.find(c => c.id === catSelect.value)?.macros.find(m => m.id === macroSelect.value); populateFilter(`${view}-filter-inter`, macro ? macro.intermediaries.map(i => ({label: i.name, value: i.id})) : []); levelChanged = 'inter'; }
+            if(levelChanged === 'inter') { const inter = appData.categories.find(c => c.id === catSelect.value)?.macros.find(m => m.id === macroSelect.value)?.intermediaries.find(i => i.id === interSelect.value); populateFilter(`${view}-filter-proc`, inter ? inter.processes.map(p => ({label: p.isExcluded ? `[Hors Périmètre] ${p.name}` : p.name, value: p.id})) : []); }
+            if (triggerAction) {
+                const procId = procSelect.value;
+                if (procId && procId !== 'all') appData.currentSipocId = procId; 
+                if(view === 'sipoc') (procId && procId !== 'all') ? loadSipoc(procId) : clearSipoc(); 
+                else if (view === 'raci') renderRaci(); 
+                else if (view === 'dashboard') renderDashboard();
+            }
+        }
+        function syncFiltersWithProcId(view, targetProcId) {
+            if(!targetProcId) return updateFilters(view, 'init');
+            let found = null; appData.categories.forEach(c => c.macros.forEach(m => m.intermediaries.forEach(i => i.processes.forEach(p => { if(p.id === targetProcId) found = {c:c.id, m:m.id, i:i.id}; }))));
+            if(found) {
+                updateFilters(view, 'init', false); const catEl = document.getElementById(`${view}-filter-cat`); if (catEl) catEl.value = found.c;
+                updateFilters(view, 'cat', false); const macEl = document.getElementById(`${view}-filter-macro`); if (macEl) macEl.value = found.m;
+                updateFilters(view, 'macro', false); const intEl = document.getElementById(`${view}-filter-inter`); if (intEl) intEl.value = found.i;
+                updateFilters(view, 'inter', false); const proEl = document.getElementById(`${view}-filter-proc`); if (proEl) proEl.value = targetProcId;
+                updateFilters(view, 'proc', true); 
+            } else updateFilters(view, 'init');
+        }
+
+        // ================= EVALUATION SMI =================
+        function buildEvalCard(title, errors, icon) {
+            const hasErr = errors.length > 0; const iconColor = hasErr ? 'text-red-500' : 'text-emerald-500'; const bgHead = hasErr ? 'bg-red-50' : 'bg-emerald-50'; const borderCard = hasErr ? 'border-red-200' : 'border-emerald-200'; const badgeColor = hasErr ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700';
+            let errHtml = hasErr ? `<ul class="space-y-3 mt-5">` + errors.map(e => `<li class="flex items-start gap-2.5 text-[11px] text-slate-700 leading-tight"><i data-lucide="alert-circle" class="w-4 h-4 text-red-400 shrink-0 mt-0.5"></i> <span>${e}</span></li>`).join('') + `</ul>` : `<div class="mt-5 flex items-center gap-2 text-emerald-700 text-xs font-bold bg-emerald-50 p-4 rounded-xl border border-emerald-100"><i data-lucide="check-circle-2" class="w-5 h-5"></i> Aucune anomalie détectée sur cette section.</div>`;
+            return `<div class="bg-white rounded-[2rem] p-6 border-2 ${borderCard} shadow-sm flex flex-col transition-all hover:shadow-md"><div class="flex items-center gap-3 border-b border-slate-100 pb-4 shrink-0"><div class="p-2.5 rounded-xl ${bgHead} ${iconColor}"><i data-lucide="${icon}" class="w-5 h-5"></i></div><h4 class="text-sm font-black uppercase text-slate-800 tracking-tight">${title}</h4><div class="ml-auto text-[10px] font-black px-2.5 py-1 rounded-lg ${badgeColor}">${errors.length} écart(s)</div></div><div class="flex-1 overflow-y-auto max-h-80 pr-2 custom-scrollbar">${errHtml}</div></div>`;
+        }
+        function renderEvaluation() {
+            const container = document.getElementById('evaluation-content'); if (!container) return;
+            const allProcs = getProcessList(); const activeProcs = allProcs.filter(p => !p.isExcluded); 
+            
+            let errCarto = [];
+            appData.categories.forEach(cat => {
+                if (!cat.macros || cat.macros.length === 0) errCarto.push(`La catégorie "<b>${cat.label}</b>" n'a aucun domaine défini.`);
+                else cat.macros.forEach(mac => {
+                    if (!mac.intermediaries || mac.intermediaries.length === 0) errCarto.push(`Le domaine "<b>${mac.name}</b>" n'a aucune activité.`);
+                    else mac.intermediaries.forEach(int => { if (!int.processes || int.processes.length === 0) errCarto.push(`L'activité "<b>${int.name}</b>" n'a aucun processus.`); });
+                });
+            });
+
+            let errOrga = []; let procPilots = {}; activeProcs.forEach(p => procPilots[p.id] = []);
+            appData.roles.forEach(r => {
+                if (r.isManager && (!r.holder || !r.holder.trim())) errOrga.push(`Le poste de management "<b>${r.title}</b>" n'a pas de titulaire assigné.`);
+                (r.pilotedProcesses || []).forEach(pid => { if (procPilots[pid] !== undefined) procPilots[pid].push(r); });
+            });
+            activeProcs.forEach(p => {
+                const pilots = procPilots[p.id];
+                if (pilots.length === 0) errOrga.push(`Le processus "<b>${p.name}</b>" n'est affecté à aucun poste.`);
+                else if (pilots.length > 1) {
+                    let depotCounts = {}; let hasConflict = false; let conflictMsgs = [];
+                    pilots.forEach(r => { const depot = (r.depot || "").trim().toLowerCase() || "aucun"; if (!depotCounts[depot]) depotCounts[depot] = []; depotCounts[depot].push(r.title); });
+                    for (const [dep, titles] of Object.entries(depotCounts)) {
+                        if (titles.length > 1) { hasConflict = true; const depName = dep === "aucun" ? "sans dépôt défini" : `sur le même dépôt (${dep.toUpperCase()})`; conflictMsgs.push(`${titles.length} postes ${depName}`); }
+                    }
+                    if (hasConflict) errOrga.push(`Le processus "<b>${p.name}</b>" présente un conflit de pilotage : affecté à ${conflictMsgs.join(' ET ')}.`);
+                }
+            });
+
+            let errSipoc = [];
+            activeProcs.forEach(p => {
+                const s = appData.sipocs[p.id];
+                if (!s) errSipoc.push(`Le processus "<b>${p.name}</b>" n'a pas encore de fiche SIPOC décrite.`);
+                else {
+                    let missing = []; const checkF = (f, l) => { if ((s[f] || []).filter(x => x && x.trim() !== "").length === 0) missing.push(l); };
+                    checkF('suppliers', 'Fournisseurs'); checkF('inputs', 'Entrées'); checkF('steps', 'Étapes'); checkF('outputs', 'Sorties'); checkF('customers', 'Clients');
+                    const hasKpi = (s.kpiGlobal && s.kpiGlobal.trim()) || ((s.kpiInputs || []).filter(x=>x.trim()).length > 0) || ((s.kpiProcess || []).filter(x=>x.trim()).length > 0) || ((s.kpiOutputs || []).filter(x=>x.trim()).length > 0);
+                    if (!hasKpi) missing.push('Indicateurs (KPI)');
+                    if (missing.length > 0) errSipoc.push(`SIPOC incomplet pour "<b>${p.name}</b>" — Manque : <i>${missing.join(', ')}</i>.`);
+                }
+            });
+
+            let errRaci = [];
+            activeProcs.forEach(p => {
+                const s = appData.sipocs[p.id];
+                if (s && s.steps) {
+                    const steps = s.steps.filter(st => st.trim()); const raci = appData.raci[p.id] || [];
+                    if (steps.length > 0 && raci.length === 0) errRaci.push(`Matrice RACI non débutée pour "<b>${p.name}</b>".`);
+                    else steps.forEach((st, i) => {
+                        const conf = raci[i] || { r: [], a: '' };
+                        if (!conf.r || conf.r.length === 0) errRaci.push(`"<b>${p.name}</b>" - Étape "<i>${st}</i>" : Aucun Réalisateur (R).`);
+                        if (!conf.a) errRaci.push(`"<b>${p.name}</b>" - Étape "<i>${st}</i>" : Aucun Approbateur (A).`);
+                    });
+                }
+            });
+
+            let errSurv = [];
+            activeProcs.forEach(p => {
+                const s = appData.sipocs[p.id];
+                if (s) {
+                    let lines = []; 
+                    [{k:'kpiG',t:s.kpiGlobal?[s.kpiGlobal]:[]}, {k:'kpiInputs',t:s.kpiInputs}, {k:'kpiProcess',t:s.kpiProcess}, {k:'kpiOutputs',t:s.kpiOutputs}].forEach(kp => { (kp.t||[]).forEach((txt, idx) => { if(txt && txt.trim()) lines.push({t: txt, k: kp.k, i: idx}); }); });
+                    lines.forEach(ln => {
+                        const cfg = appData.monitoring_config[`${p.id}_${ln.k}_${ln.i}`];
+                        if (!cfg || !cfg.level || cfg.level === 'Non suivi') errSurv.push(`KPI "<b>${ln.t}</b>" (Processus "${p.name}") : Fréquence non définie.`);
+                        if (!cfg || !cfg.pilots || cfg.pilots.length === 0) errSurv.push(`KPI "<b>${ln.t}</b>" (Processus "${p.name}") : Aucun responsable d'analyse.`);
+                    });
+                }
+            });
+
+            container.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">${buildEvalCard("1. Cartographie", errCarto, "map")}${buildEvalCard("2. Organigramme", errOrga, "users")}${buildEvalCard("3. Processus (SIPOC)", errSipoc, "layout-list")}${buildEvalCard("4. Matrice RACI", errRaci, "git-merge")}${buildEvalCard("5. Plan de Surveillance", errSurv, "activity")}</div><style>.custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }</style>`;
+            if(window.lucide) lucide.createIcons();
+        }
+
+        // ================= EDIT ROLES =================
+        function getRoleCheckboxHTML(px, isChecked, count) {
+            let textColor = 'text-slate-700'; let badge = '';
+            if (px.isExcluded) {
+                textColor = 'text-slate-400'; badge = '<span class="ml-1.5 px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[7px] font-black uppercase tracking-widest shrink-0 mt-px border border-slate-200">Hors Périmètre</span>';
+            } else {
+                if (count === 0) { textColor = 'text-blue-600'; badge = '<span class="ml-1.5 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[7px] font-black uppercase tracking-widest shrink-0 mt-px">À affecter</span>'; } 
+                else if (count > 1) { textColor = 'text-amber-600'; badge = '<span class="ml-1.5 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[7px] font-black uppercase tracking-widest shrink-0 mt-px">Multi-affecté</span>'; }
+            }
+            return `<label class="flex items-start gap-2 p-1.5 hover:bg-indigo-50 rounded-lg cursor-pointer transition-colors"><input type="checkbox" name="role-processes" value="${px.id}" ${isChecked ? 'checked' : ''} class="w-4 h-4 mt-0.5 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500"><div class="flex items-start flex-wrap flex-1"><span class="text-[9.5px] font-bold ${textColor} ${px.isExcluded ? 'line-through opacity-50' : ''} leading-snug">${px.name}</span>${badge}</div></label>`;
+        }
+
+        function openRoleModal(editId, parentId) {
+            currentEditRoleId = editId; 
+            const pS = document.getElementById('role-parent'); const pL = document.getElementById('role-process-list');
+            pS.innerHTML = '<option value="">-- Direction Générale --</option>'; 
+            appData.roles.forEach(r => { if(r.id !== editId) pS.appendChild(new Option(r.title, r.id)); });
+            const cur = editId ? getRoleById(editId) : null; 
+            
+            const pCount = {};
+            appData.roles.forEach(r => { (r.pilotedProcesses || []).forEach(pid => { pCount[pid] = (pCount[pid] || 0) + 1; }); });
+            
+            pL.innerHTML = appData.categories.map(cat => cat.macros.filter(m => m.intermediaries.some(i => i.processes.length > 0)).map(macro => `
+                <div class="mb-4">
+                    <div class="text-[10px] font-black text-slate-800 uppercase bg-slate-100 p-2 rounded-lg flex items-center gap-2"><i data-lucide="folder-tree" class="w-3.5 h-3.5 text-slate-500"></i> ${macro.name}</div>
+                    ${macro.intermediaries.filter(i => i.processes.length > 0).map(inter => `
+                        <div class="ml-3 mt-2 border-l-2 border-slate-200 pl-3 space-y-1">
+                            <div class="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">${inter.name}</div>
+                            ${inter.processes.map(px => getRoleCheckboxHTML(px, cur?.pilotedProcesses?.includes(px.id), pCount[px.id] || 0)).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('')).join('');
+
+            syncRoleTitleDropdown();
+            const rTitle = document.getElementById('role-title');
+            if (cur) {
+                if (!appData.roleRegistry.includes(cur.title)) {
+                    appData.roleRegistry.push(cur.title);
+                    syncRoleTitleDropdown(cur.title);
+                } else {
+                    rTitle.value = cur.title;
+                }
+            } else { rTitle.value = ""; }
+
+            document.getElementById('role-holder').value = cur?.holder || ""; 
+            document.getElementById('role-depot').value = cur?.depot || "";
+            document.getElementById('role-count').value = cur?.count || 1; 
+            pS.value = (cur ? cur.parentId : parentId) || "";
+            document.getElementById('role-is-manager').checked = cur ? !!cur.isManager : false;
+            document.getElementById('role-modal').classList.remove('hidden');
+            lucide.createIcons(); 
+        }
+        
+        function closeRoleModal() { document.getElementById('role-modal').classList.add('hidden'); }
+        
+        function saveRole() {
+            const t = document.getElementById('role-title').value; if (!t) { showCustomModal({ message: "Veuillez sélectionner un titre de poste." }); return; }
+            const ps = Array.from(document.querySelectorAll('input[name="role-processes"]:checked')).map(cb => cb.value);
+            const dat = { 
+                title: t, holder: document.getElementById('role-holder').value.trim(), depot: document.getElementById('role-depot').value.trim(),
+                count: parseInt(document.getElementById('role-count').value), parentId: document.getElementById('role-parent').value || null, 
+                pilotedProcesses: ps, isManager: document.getElementById('role-is-manager').checked 
+            };
+            if (currentEditRoleId) Object.assign(getRoleById(currentEditRoleId), dat); else appData.roles.push({id: generateId(), ...dat}); 
+            
+            // Sync processes to all identical roles
+            appData.roles.forEach(r => { if (r.title === t) r.pilotedProcesses = [...ps]; });
+            
+            closeRoleModal(); renderOrg();
+        }
+        
+        function deleteRole(id) { appData.roles = appData.roles.filter(r => r.id !== id); renderOrg(); }
+
+        // ================= IMPORT / EXPORT =================
+        function triggerImport(stage) { window.currentImportTarget = stage; document.getElementById('import-file').click(); }
+        function handleImport(e) { 
+            const f = e.target.files[0]; if(!f) return; 
+            const r = new FileReader(); 
+            r.onload = (re) => { 
+                try { 
+                    const json = JSON.parse(re.target.result);
+                    if (!json.kiho_export_type || json.kiho_export_type === 'global' || window.currentImportTarget === 'global') {
+                        appData = json.data ? json.data : json; initAll(); switchTab('mapping'); showCustomModal({ message: "Importation globale réussie." });
+                    } else {
+                        const type = json.kiho_export_type; const data = json.data; const pid = appData.currentSipocId;
+                        if (type === 'architecture') { appData.categories = data; renderMapping(); updateFilters('sipoc', 'init', false); } 
+                        else if (type === 'organigramme') { appData.roles = data; renderOrg(); } 
+                        else if (type === 'sipoc') { if(!pid) return showCustomModal({ message: "Sélectionnez un processus." }); appData.sipocs[pid] = data; loadSipoc(pid); } 
+                        else if (type === 'raci') { if(!pid) return showCustomModal({ message: "Sélectionnez un processus." }); appData.raci[pid] = data; renderRaci(); } 
+                        else if (type === 'dashboard') { if(!pid) return showCustomModal({ message: "Sélectionnez un processus." }); Object.keys(data).forEach(k => appData.monitoring_config[`${pid}_${k}`] = data[k]); renderDashboard(); }
+                        showCustomModal({ message: `Données (${type}) importées.` });
+                    }
+                } catch(err) { showCustomModal({ message: "Fichier JSON invalide." }); } 
+                e.target.value = ''; 
+            }; r.readAsText(f); 
+        }
+
+        function exportData(stage) { 
+            const orgName = appData.meta.organization ? appData.meta.organization.replace(/[\s\/\\:*?"<>|]+/g, '_') : 'KIHO';
+            const dateStr = new Date().toISOString().split('T')[0];
+            let filename = `${orgName}_${stage}_${dateStr}.json`;
+            let payload = { kiho_export_type: stage, data: null };
+            const pid = appData.currentSipocId; const proc = getProcessList().find(p => p.id === pid); const procName = proc ? proc.name.replace(/[\s\/\\:*?"<>|]+/g, '_') : 'Processus';
+
+            if (stage === 'global') { payload = appData; filename = `${orgName}_GLOBAL_${dateStr}.json`; } 
+            else if (stage === 'architecture') { payload.data = appData.categories; filename = `${orgName}_Cartographie_${dateStr}.json`; } 
+            else if (stage === 'organigramme') { payload.data = appData.roles; filename = `${orgName}_Organigramme_${dateStr}.json`; } 
+            else if (stage === 'sipoc') { if(!pid) return showCustomModal({ message: "Sélectionnez un processus à exporter." }); payload.data = appData.sipocs[pid] || {}; filename = `${orgName}_SIPOC_${procName}_${dateStr}.json`; } 
+            else if (stage === 'raci') { if(!pid) return showCustomModal({ message: "Sélectionnez un processus à exporter." }); payload.data = appData.raci[pid] || []; filename = `${orgName}_RACI_${procName}_${dateStr}.json`; } 
+            else if (stage === 'dashboard') {
+                if(!pid) return showCustomModal({ message: "Sélectionnez un processus à exporter." });
+                const dashData = {}; Object.keys(appData.monitoring_config).forEach(k => { if (k.startsWith(pid + '_')) dashData[k.substring(pid.length + 1)] = appData.monitoring_config[k]; });
+                payload.data = dashData; filename = `${orgName}_Surveillance_${procName}_${dateStr}.json`;
+            }
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'})); a.download = filename; a.click(); 
+        }
+
+        // ================= MENUS & INITIALISATION =================
+        function toggleMobileMenu() { const m = document.getElementById('mobile-menu'); if (m) m.classList.toggle('hidden'); }
+        function toggleViewMenu(menuId) {
+            const menu = document.getElementById(menuId);
+            if (menu) {
+                document.querySelectorAll('.view-menu').forEach(m => { if (m.id !== menuId && !m.classList.contains('hidden')) m.classList.add('hidden'); });
+                menu.classList.toggle('hidden');
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            const mobileMenu = document.getElementById('mobile-menu');
+            if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                const burgerBtn = mobileMenu.previousElementSibling;
+                if (!mobileMenu.contains(event.target) && (!burgerBtn || !burgerBtn.contains(event.target))) mobileMenu.classList.add('hidden');
+            }
+            document.querySelectorAll('.view-menu').forEach(menu => {
+                if (!menu.classList.contains('hidden')) {
+                    const toggleBtn = menu.previousElementSibling;
+                    if (!menu.contains(event.target) && (!toggleBtn || !toggleBtn.contains(event.target))) menu.classList.add('hidden');
+                }
+            });
+        });
+
+        function clearSipoc() {
+            document.getElementById('sipoc-editor-grid').innerHTML = ''; document.getElementById('sipoc-kpis-grid').innerHTML = '';
+            document.getElementById('sipoc-pilot-name').innerText = "NON DÉFINI"; document.getElementById('sipoc-current-proc-name').innerText = "SÉLECTIONNEZ UN PROCESSUS";
+            document.getElementById('sipoc-current-proc-desc').innerText = ""; document.getElementById('sipoc-kpiGlobal').value = "";
+        }
+
+        function loadSipoc(id) { 
+            appData.currentSipocId = id; const proc = getProcessList().find(p => p.id === id);
+            document.getElementById('sipoc-current-proc-name').innerText = proc ? proc.name : "";
+            document.getElementById('sipoc-current-proc-desc').innerText = proc ? proc.desc : "";
+            renderSipocInputs(); 
+            const rps = appData.roles.filter(r => (r.pilotedProcesses || []).includes(id)); 
+            document.getElementById('sipoc-pilot-name').innerText = rps.length > 0 ? rps.map(rp => rp.title + (rp.holder ? ` (${rp.holder})` : "")).join(" / ") : "NON DÉFINI"; 
+            document.getElementById('sipoc-kpiGlobal').value = appData.sipocs[id]?.kpiGlobal || ""; 
+        }
+
+        function renderSipocInputs() {
+            const grid = document.getElementById('sipoc-editor-grid'); const kGrid = document.getElementById('sipoc-kpis-grid'); 
+            grid.innerHTML = ''; kGrid.innerHTML = '';
+            [{k:'suppliers',l:'Fournisseurs',c:'amber'},{k:'inputs',l:'Entrées',c:'blue'},{k:'steps',l:'Processus',c:'indigo',m:true},
+             {k:'outputs',l:'Sorties',c:'emerald'},{k:'customers',l:'Clients',c:'rose'}].forEach(col => { 
+                const el = document.createElement('div'); el.className = (col.m ? "bg-indigo-600 rounded-3xl p-4 text-white flex flex-col min-h-[160px] shadow-sm" : "sipoc-box") + " transition-all"; 
+                el.setAttribute('ondragover', 'onDragOver(event)'); el.setAttribute('ondrop', `onDrop(event, '${col.k}')`); el.setAttribute('ondragleave', 'onDragLeave(event)');
+                el.innerHTML = `<div class="text-[9px] font-black uppercase mb-2 ${col.m?'text-indigo-100':'text-slate-400'}">${col.l}</div><div id="list-${col.k}" class="space-y-1"></div><button onclick="addL('${col.k}')" class="mt-auto w-full py-1.5 border-2 border-dashed rounded-xl text-[8px] font-black uppercase opacity-60 hover:opacity-100 transition tracking-tighter">+ Ligne</button>`; 
+                grid.appendChild(el); renderLines(col.k, col.m); 
+            });
+            [{k:'kpiInputs',l:'Exigence',c:'blue'},{k:'kpiProcess',l:'Maîtrise',c:'indigo'},{k:'kpiOutputs',l:'Performance',c:'emerald'}].forEach(col => { 
+                const el = document.createElement('div'); el.innerHTML = `<span class="text-[8px] font-black text-${col.c}-500 uppercase block mb-1.5">${col.l}</span><div id="list-${col.k}" class="space-y-1"></div><button onclick="addL('${col.k}')" class="mt-1.5 text-[8px] font-black text-slate-400 uppercase tracking-tighter">+ KPI</button>`; 
+                kGrid.appendChild(el); renderLines(col.k, false); 
+            });
+        }
+
+        function renderLines(k, m) { 
+            const id = appData.currentSipocId; const c = document.getElementById(`list-${k}`); if(!c || !id) return; 
+            if(!appData.sipocs[id]) appData.sipocs[id] = {}; if(!appData.sipocs[id][k]) appData.sipocs[id][k] = [""]; 
+            c.innerHTML = ''; 
+            appData.sipocs[id][k].forEach((l, i) => { 
+                const r = document.createElement('div'); r.className = "flex items-center gap-1 group relative cursor-grab active:cursor-grabbing"; r.setAttribute('draggable', 'true'); r.setAttribute('ondragstart', `onDragStart(event, '${k}', ${i})`);
+                r.innerHTML = `<textarea oninput="this.style.height='auto';this.style.height=(this.scrollHeight)+'px';saveL('${k}',${i},this.value)" class="line-input ${m?'text-white placeholder-indigo-200':''}" placeholder="..." rows="1">${l}</textarea><button onclick="remL('${k}',${i})" class="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition shrink-0 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>`; 
+                c.appendChild(r); 
+            }); 
+            c.querySelectorAll('textarea').forEach(tx => { tx.style.height = 'auto'; tx.style.height = tx.scrollHeight + 'px'; }); 
+            lucide.createIcons(); 
+        }
+
+        function onDragStart(e, category, index) { draggedItem = { category, index }; e.dataTransfer.effectAllowed = 'move'; e.target.style.opacity = '0.5'; }
+        function onDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drop-target'); }
+        function onDragLeave(e) { e.currentTarget.classList.remove('drop-target'); }
+        function onDrop(e, targetCategory) {
+            e.preventDefault(); e.currentTarget.classList.remove('drop-target'); if (!draggedItem) return;
+            const { category: sourceCategory, index: sourceIndex } = draggedItem;
+            if (sourceCategory !== targetCategory) {
+                const id = appData.currentSipocId; const val = appData.sipocs[id][sourceCategory][sourceIndex];
+                if (!appData.sipocs[id][targetCategory]) appData.sipocs[id][targetCategory] = [];
+                appData.sipocs[id][targetCategory].push(val); appData.sipocs[id][sourceCategory].splice(sourceIndex, 1);
+                if (appData.sipocs[id][sourceCategory].length === 0) appData.sipocs[id][sourceCategory] = [""]; renderSipocInputs();
+            } draggedItem = null;
+        }
+
+        function addL(k) { const id = appData.currentSipocId; if(!appData.sipocs[id]) appData.sipocs[id] = {}; if(!appData.sipocs[id][k]) appData.sipocs[id][k] = []; appData.sipocs[id][k].push(""); renderLines(k, k==='steps'); }
+        function remL(k, i) { const id = appData.currentSipocId; if(!appData.sipocs[id] || !appData.sipocs[id][k]) return; if(appData.sipocs[id][k].length > 1) appData.sipocs[id][k].splice(i, 1); else appData.sipocs[id][k][0] = ""; renderLines(k, k==='steps'); }
+        function saveL(k, i, v) { if(!appData.sipocs[appData.currentSipocId]) appData.sipocs[appData.currentSipocId] = {}; appData.sipocs[appData.currentSipocId][k][i] = v; }
+        function saveSipocSimple(k, v) { if(!appData.sipocs[appData.currentSipocId]) appData.sipocs[appData.currentSipocId] = {}; appData.sipocs[appData.currentSipocId][k] = v; }
+
+        function renderRaci() {
+            const tb = document.getElementById('raci-table-body'); const pid = document.getElementById('raci-filter-proc').value;
+            if(!pid || pid === 'all') { tb.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 italic font-bold text-xs">Sélectionnez un processus terminal.</td></tr>'; return; }
+            const steps = appData.sipocs[pid]?.steps || []; if(!appData.raci[pid]) appData.raci[pid] = [];
+            const validSteps = steps.filter(s=>s.trim());
+            if(!validSteps.length) { tb.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 italic font-bold text-xs">Définissez des étapes dans le SIPOC.</td></tr>'; return; }
+            let htmlBuffer = '';
+            steps.forEach((s, i) => { 
+                if(!s.trim()) return; if(!appData.raci[pid][i]) appData.raci[pid][i] = { r: [], a: '', c: [], i: [] }; const conf = appData.raci[pid][i]; 
+                htmlBuffer += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="p-5 text-[9px] font-black uppercase text-slate-700 bg-white border-r border-slate-100 leading-snug">${s}</td><td class="p-3 border-r border-slate-100 align-top">${raciMultiSel(pid, i, 'r', conf.r)}</td><td class="p-3 border-r border-slate-100 align-top">${raciSingleSel(pid, i, conf.a)}</td><td class="p-3 border-r border-slate-100 align-top">${raciMultiSel(pid, i, 'c', conf.c)}</td><td class="p-3 align-top">${raciMultiSel(pid, i, 'i', conf.i)}</td></tr>`; 
+            }); tb.innerHTML = htmlBuffer; lucide.createIcons();
+        }
+
+        function raciMultiSel(pid, i, roleType, selectedArr) { 
+            let tags = selectedArr.map(rId => { const r = getRoleById(rId); return r ? `<span class="inline-flex items-center gap-1 bg-white border border-slate-200 px-1.5 py-1 rounded text-[8px] font-black text-slate-700 shadow-sm leading-none mb-1 mr-1">${r.title} <i data-lucide="x" class="w-2.5 h-2.5 cursor-pointer text-slate-400 hover:text-red-500" onclick="remRaciRole('${pid}', ${i}, '${roleType}', '${rId}')"></i></span>` : ''; }).join('');
+            let opts = '<option value="" disabled selected></option>'; appData.roles.forEach(p => { if(!selectedArr.includes(p.id)) opts += `<option value="${p.id}">${p.title}</option>`; });
+            return `<div class="flex flex-col min-w-[120px]"><div class="flex flex-wrap items-center">${tags}<div class="relative inline-block mb-1"><button class="flex items-center justify-center w-5 h-5 bg-slate-100 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded text-slate-500 hover:text-indigo-600 transition cursor-pointer" title="Ajouter"><i data-lucide="plus" class="w-3 h-3 pointer-events-none"></i></button><select onchange="addRaciRole('${pid}', ${i}, '${roleType}', this.value)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">${opts}</select></div></div></div>`; 
+        }
+
+        function raciSingleSel(pid, i, val) { 
+            let tags = val ? `<span class="inline-flex items-center gap-1 bg-amber-50 border border-amber-200 px-1.5 py-1 rounded text-[8px] font-black text-amber-800 shadow-sm leading-none mb-1 mr-1">${getRoleById(val)?.title} <i data-lucide="x" class="w-2.5 h-2.5 cursor-pointer text-amber-500 hover:text-red-500" onclick="setRaciSingle('${pid}', ${i}, '')"></i></span>` : '';
+            let opts = '<option value="" disabled selected></option>'; appData.roles.forEach(p => opts += `<option value="${p.id}" ${p.id===val?'disabled':''}>${p.title}</option>`); 
+            return `<div class="flex flex-col min-w-[120px]"><div class="flex flex-wrap items-center">${tags}<div class="relative inline-block mb-1"><button class="flex items-center justify-center w-5 h-5 bg-slate-100 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 rounded text-slate-500 hover:text-amber-600 transition cursor-pointer" title="Définir"><i data-lucide="${val ? 'refresh-cw' : 'plus'}" class="w-3 h-3 pointer-events-none"></i></button><select onchange="setRaciSingle('${pid}', ${i}, this.value)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">${opts}</select></div></div></div>`; 
+        }
+
+        function addRaciRole(pid, i, type, rId) { if(rId && !appData.raci[pid][i][type].includes(rId)) { appData.raci[pid][i][type].push(rId); renderRaci(); } }
+        function remRaciRole(pid, i, type, rId) { appData.raci[pid][i][type] = appData.raci[pid][i][type].filter(id => id !== rId); renderRaci(); }
+        function setRaciSingle(pid, i, rId) { appData.raci[pid][i].a = rId; renderRaci(); }
+
+        function autoFillAllDashboardFromRaci() {
+            let updatedKPIs = 0; let updatedProcs = 0;
+            getProcessList().forEach(p => {
+                if (p.isExcluded) return; 
+                const pid = p.id; const raci = appData.raci[pid];
+                if (!raci || raci.length === 0) return;
+                let roles = new Set();
+                raci.forEach(step => { if (step.a) roles.add(step.a); if (step.r && Array.isArray(step.r)) step.r.forEach(rId => roles.add(rId)); });
+                const uniqueRoles = Array.from(roles);
+                if (uniqueRoles.length === 0) return;
+                const s = appData.sipocs[pid]; if (!s) return;
+                let procUpdated = false;
+                const kps = [{k:'kpiG', t: s.kpiGlobal ? [s.kpiGlobal] : []}, {k:'kpiInputs', t: s.kpiInputs}, {k:'kpiProcess', t: s.kpiProcess}, {k:'kpiOutputs', t: s.kpiOutputs}];
+                kps.forEach(kp => { 
+                    (kp.t || []).forEach((txt, idx) => { 
+                        if(txt && txt.trim()) {
+                            const ck = `${pid}_${kp.k}_${idx}`;
+                            if (!appData.monitoring_config[ck]) appData.monitoring_config[ck] = {level:'Mensuel', pilots: []};
+                            let currentPilots = new Set(appData.monitoring_config[ck].pilots || []);
+                            let initialSize = currentPilots.size;
+                            uniqueRoles.forEach(r => currentPilots.add(r));
+                            if (currentPilots.size > initialSize) { appData.monitoring_config[ck].pilots = Array.from(currentPilots); updatedKPIs++; procUpdated = true; }
+                        }
+                    }); 
+                });
+                if (procUpdated) updatedProcs++;
+            });
+            renderDashboard();
+            showCustomModal({ message: `Auto-complétion terminée : ${updatedKPIs} indicateur(s) mis à jour sur ${updatedProcs} processus.` });
+        }
+
+        function renderDashboard() { 
+            const tb = document.getElementById('dashboard-table-body'); const pid = document.getElementById('dashboard-filter-proc').value;
+            if(!pid || pid === 'all') { tb.innerHTML = '<tr><td colspan="3" class="p-10 text-center text-slate-400 italic font-bold text-xs">Sélectionnez un processus terminal.</td></tr>'; return; }
+            tb.innerHTML = ''; let has = false; let htmlBuffer = ''; const p = getProcessList().find(x=>x.id===pid); if(!p) return;
+            const s = appData.sipocs[p.id]; 
+            if(s) { 
+                const gK = s.kpiGlobal && s.kpiGlobal.trim() ? [s.kpiGlobal] : []; const rK = (s.kpiInputs || []).filter(x => x.trim()); const cK = (s.kpiProcess || []).filter(x => x.trim()); const pK = (s.kpiOutputs || []).filter(x => x.trim());
+                if (gK.length || rK.length || cK.length || pK.length) {
+                    has = true; htmlBuffer += `<tr class="bg-indigo-50/50 border-y border-indigo-100"><td colspan="3" class="py-3 px-6 text-[11px] font-black uppercase text-indigo-900 tracking-widest"><div class="flex items-center gap-2"><i data-lucide="git-commit" class="w-4 h-4 text-indigo-400"></i> ${p.name}</div></td></tr>`;
+                    if(gK.length) htmlBuffer += buildDBLine(p, "Globale", gK[0], "kpiG", 0);
+                    rK.forEach((l, i) => htmlBuffer += buildDBLine(p, "Exigence", l, "kpiInputs", i)); cK.forEach((l, i) => htmlBuffer += buildDBLine(p, "Maîtrise", l, "kpiProcess", i)); pK.forEach((l, i) => htmlBuffer += buildDBLine(p, "Performance", l, "kpiOutputs", i));
+                }
+            }
+            tb.innerHTML = has ? htmlBuffer : '<tr><td colspan="3" class="p-10 text-center text-slate-400 italic">Aucun KPI défini pour ce processus.</td></tr>'; lucide.createIcons(); 
+        }
+        
+        function buildDBLine(p, l, txt, k, i) { 
+            const ck = `${p.id}_${k}_${i}`; if(!appData.monitoring_config[ck]) appData.monitoring_config[ck] = {level:'Mensuel', pilots: []}; const cfg = appData.monitoring_config[ck]; 
+            const selectOpts = ['Hebdomadaire', 'Mensuel', 'Trimestriel', 'Annuel', 'Non suivi'].map(f => `<option value="${f}" ${cfg.level === f ? 'selected' : ''}>${f}</option>`).join('');
+            let bC = "bg-slate-100 text-slate-600"; if(l==="Globale") bC="bg-purple-100 text-purple-700"; if(l==="Exigence") bC="bg-blue-100 text-blue-700"; if(l==="Maîtrise") bC="bg-indigo-100 text-indigo-700"; if(l==="Performance") bC="bg-emerald-100 text-emerald-700";
+            return `<tr class="border-b hover:bg-slate-50"><td class="py-3 px-6 pl-12"><div class="flex items-start gap-3"><span class="text-[7px] px-2 py-0.5 rounded font-black uppercase tracking-widest min-w-[70px] text-center shrink-0 mt-0.5 ${bC}">${l}</span><span class="text-[10px] text-slate-700 font-semibold leading-relaxed">${txt}</span></div></td><td class="px-6 py-2"><select onchange="appData.monitoring_config['${ck}'].level = this.value" class="custom-select w-full bg-slate-50 border-none rounded-xl p-2 text-[10px] font-black uppercase outline-none">${selectOpts}</select></td><td class="px-6 py-2 align-top">${dashboardMultiSel(ck, cfg.pilots)}</td></tr>`; 
+        }
+
+        function dashboardMultiSel(ck, selectedArr) {
+            let tags = (selectedArr || []).map(rId => { const r = getRoleById(rId); return r ? `<span class="inline-flex items-center gap-1 bg-white border border-slate-200 px-1.5 py-1 rounded text-[8px] font-black text-slate-700 shadow-sm leading-none mb-1 mr-1">${r.title} <i data-lucide="x" class="w-2.5 h-2.5 cursor-pointer text-slate-400 hover:text-red-500" onclick="remDashboardRole('${ck}', '${rId}')"></i></span>` : ''; }).join('');
+            let opts = '<option value="" disabled selected></option>'; appData.roles.forEach(p => { if(!(selectedArr || []).includes(p.id)) opts += `<option value="${p.id}">${p.title}</option>`; });
+            return `<div class="flex flex-col min-w-[140px]"><div class="flex flex-wrap items-center">${tags}<div class="relative inline-block mb-1"><button class="flex items-center justify-center w-5 h-5 bg-slate-100 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded text-slate-500 hover:text-indigo-600 transition cursor-pointer" title="Ajouter"><i data-lucide="plus" class="w-3 h-3 pointer-events-none"></i></button><select onchange="addDashboardRole('${ck}', this.value)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">${opts}</select></div></div></div>`;
+        }
+        
+        function addDashboardRole(ck, rId) { if(rId && !appData.monitoring_config[ck].pilots.includes(rId)) { appData.monitoring_config[ck].pilots.push(rId); renderDashboard(); } }
+        function remDashboardRole(ck, rId) { appData.monitoring_config[ck].pilots = appData.monitoring_config[ck].pilots.filter(id => id !== rId); renderDashboard(); }
+
+        function initAll() {
+            if (!appData.roleRegistry) appData.roleRegistry = [];
+            appData.roles.forEach(r => { if (r.title && !appData.roleRegistry.includes(r.title)) appData.roleRegistry.push(r.title); });
+
+            renderMapping(); 
+            document.getElementById('input-org').value = appData.meta.organization || ""; 
+            document.getElementById('input-manager').value = appData.meta.manager || "";
+            if (appData.meta.logoUrl) { 
+                document.getElementById('logo-preview-box').style.backgroundImage = `url(${appData.meta.logoUrl})`; 
+                document.getElementById('logo-preview-box').classList.remove('hidden'); 
+                document.getElementById('logo-placeholder').classList.add('hidden'); 
+            }
+            if (!appData.currentSipocId) appData.currentSipocId = getFirstProcessId();
+            syncFiltersWithProcId('sipoc', appData.currentSipocId); 
+            syncFiltersWithProcId('raci', appData.currentSipocId); 
+            syncFiltersWithProcId('dashboard', appData.currentSipocId); 
+            renderOrg();
+            updateAiStatusBadge(); 
+        }
+
+        window.onload = () => { 
+            initAll(); 
+            lucide.createIcons(); 
+            const welcomeModal = document.getElementById('welcome-modal');
+            if (welcomeModal) welcomeModal.classList.remove('hidden');
+        };
+    </script>
+    
+    <div class="fixed bottom-3 right-4 text-[10px] font-bold text-slate-400 tracking-widest uppercase no-print z-50 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md">
+        Concepteur : D.Ablancourt
+    </div>
+</body>
+</html>

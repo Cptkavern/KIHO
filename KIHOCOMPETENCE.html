@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIHO GESTION DES COMPÉTENCES</title>
+    
+    <!-- Import des polices Google Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-nunito { font-family: 'Nunito', sans-serif; }
+        .kiho-title-main { color: #005B63; }
+        .modal-enter { animation: modalFadeIn 0.3s ease-out forwards; }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        .score-badge {
+            @apply flex items-center justify-center w-8 h-8 rounded-lg font-black text-sm shrink-0;
+        }
+        .score-0 { @apply bg-red-100 text-red-700 border border-red-200; }
+        .score-1 { @apply bg-orange-100 text-orange-700 border border-orange-200; }
+        .score-2 { @apply bg-blue-100 text-blue-700 border border-blue-200; }
+        .score-3 { @apply bg-emerald-100 text-emerald-700 border border-emerald-200; }
+
+        .prev-eval-box {
+            @apply mt-3 p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-500 italic flex flex-col gap-1;
+        }
+
+        .multi-select-job {
+            @apply px-3 py-1 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all;
+        }
+        .multi-select-job.active {
+            @apply bg-blue-600 border-blue-600 text-white;
+        }
+
+        /* Matrix Specific */
+        .matrix-table th {
+            @apply p-3 text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200 bg-slate-50;
+        }
+        .matrix-table td {
+            @apply p-3 border-b border-slate-100 text-sm;
+        }
+        .sticky-col {
+            @apply sticky left-0 bg-white z-10 border-r border-slate-200 shadow-[2px_0_5px_rgba(0,0,0,0.05)];
+        }
+        .footer-row td {
+            @apply bg-indigo-50 font-black text-indigo-700 border-t-2 border-indigo-200;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-20">
+
+    <!-- HEADER GLOBAL -->
+    <header class="sticky top-0 z-40 w-full bg-white border-b border-slate-200 shadow-sm">
+        <div class="w-full px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-4 overflow-hidden">
+                <div class="flex items-center shrink-0">
+                    <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" 
+                         alt="Logo Keolis" 
+                         class="h-[22px] w-auto block"
+                         onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e9/Keolis_2017_logo.svg'">
+                </div>
+                <div class="w-px h-6 bg-slate-200 shrink-0"></div>
+                <div class="flex items-center mt-0.5 truncate">
+                    <h1 class="font-nunito font-[900] text-[20px] md:text-[28px] tracking-tighter leading-none truncate uppercase">
+                        <span class="kiho-title-main">KIHO</span>
+                        <span class="text-blue-600 ml-1">GESTION DES COMPÉTENCES</span>
+                    </h1>
+                </div>
+            </div>
+
+            <div class="relative shrink-0">
+                <button id="menuBtn" class="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl py-2 z-50">
+                    <button onclick="triggerImport()" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 text-left font-bold">
+                        <i data-lucide="upload" class="w-4 h-4 text-blue-500"></i> Importer des données (JSON)
+                    </button>
+                    <button onclick="exportData()" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 text-left font-bold">
+                        <i data-lucide="download" class="w-4 h-4 text-emerald-500"></i> Exporter des données (JSON)
+                    </button>
+                    <button onclick="resetData()" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left border-t border-slate-100 font-bold">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Réinitialiser l'App
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <nav class="w-full bg-slate-50 border-t border-slate-100 px-4 overflow-x-auto no-scrollbar">
+            <div class="flex items-center space-x-8">
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-tab py-3 px-1 border-b-2 border-blue-600 text-blue-600 text-sm font-semibold whitespace-nowrap uppercase tracking-wide transition-all">Dashboard (Effectifs)</button>
+                <button onclick="switchTab('referentiels')" id="tab-referentiels" class="nav-tab py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 text-sm font-medium whitespace-nowrap uppercase tracking-wide transition-all">Référentiels</button>
+                <button onclick="switchTab('evaluations')" id="tab-evaluations" class="nav-tab py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 text-sm font-medium whitespace-nowrap uppercase tracking-wide transition-all">Évaluations</button>
+                <button onclick="switchTab('reporting')" id="tab-reporting" class="nav-tab py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 text-sm font-medium whitespace-nowrap uppercase tracking-wide transition-all font-bold">Reporting (Matrice)</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- INPUT IMPORT CACHÉ -->
+    <input type="file" id="importInput" class="hidden" accept=".json" onchange="handleImport(event)">
+
+    <main class="p-4 md:p-8">
+        
+        <!-- VUE DASHBOARD -->
+        <div id="view-dashboard" class="tab-view max-w-7xl mx-auto space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Métiers & Besoin Cible -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="bg-white rounded-[2rem] p-6 border border-slate-200 card-shadow">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight">Paramétrage Métiers</h2>
+                            <span id="jobCount" class="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full">0</span>
+                        </div>
+                        <div class="flex gap-2 mb-8">
+                            <input type="text" id="newJobInput" placeholder="Nom du métier..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 uppercase font-bold">
+                            <button onclick="addJob()" class="bg-blue-600 text-white p-2 rounded-xl hover:bg-blue-700 transition-all"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                        </div>
+                        <div class="space-y-4">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Besoin cible (Collaborateurs autonomes requis) :</p>
+                            <div id="dashboardJobsList" class="space-y-3 max-h-[450px] overflow-y-auto pr-2 no-scrollbar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Effectifs -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="bg-white rounded-[2rem] p-6 border border-slate-200 card-shadow h-full">
+                        <div class="flex flex-col gap-6 mb-8">
+                            <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight">Effectifs Filiale</h2>
+                            <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-4">
+                                <div class="flex gap-2">
+                                    <input type="text" id="employeeNameInput" placeholder="Nom Prénom du collaborateur" class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                                    <button onclick="addEmployee()" class="bg-indigo-600 text-white px-8 rounded-xl hover:bg-indigo-700 font-bold text-sm uppercase transition-all flex items-center gap-2 shadow-lg shadow-indigo-100">Ajouter</button>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Métiers à affecter :</p>
+                                    <div id="jobSelectionContainer" class="flex flex-wrap gap-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="text-slate-400 text-xs uppercase tracking-widest border-b border-slate-100">
+                                        <th class="pb-4 font-bold">Collaborateur</th>
+                                        <th class="pb-4 font-bold">Métiers</th>
+                                        <th class="pb-4 font-bold text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employeeTableBody" class="divide-y divide-slate-50"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RÉFÉRENTIELS -->
+        <div id="view-referentiels" class="tab-view hidden max-w-7xl mx-auto space-y-6">
+            <div id="jobsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+        <!-- VUE ÉVALUATIONS -->
+        <div id="view-evaluations" class="tab-view hidden max-w-7xl mx-auto space-y-6">
+            <div id="evaluationList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <div id="evaluationFormContainer" class="hidden bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden modal-enter">
+                <div class="p-8 border-b bg-slate-50 flex justify-between items-center">
+                    <div>
+                        <button onclick="closeEvaluationForm()" class="text-slate-400 hover:text-slate-600 mb-2 flex items-center gap-1 text-xs font-bold uppercase"><i data-lucide="chevron-left" class="w-4 h-4"></i> Retour</button>
+                        <h2 id="evalFormTitle" class="text-2xl font-black text-slate-800 uppercase tracking-tight">Saisie Évaluation</h2>
+                        <p id="evalFormJob" class="text-blue-600 font-bold text-sm uppercase"></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Date session</p>
+                        <p id="evalFormDate" class="text-slate-800 font-black"></p>
+                    </div>
+                </div>
+                <div id="evalFormContent" class="p-8 space-y-12"></div>
+                <div class="p-8 bg-slate-50 border-t flex justify-end gap-4">
+                    <button onclick="closeEvaluationForm()" class="px-8 py-3 text-slate-600 font-bold hover:bg-slate-200 rounded-2xl transition-all uppercase text-sm">Annuler</button>
+                    <button onclick="saveEvaluation()" class="px-12 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-lg uppercase tracking-wide text-sm">Enregistrer les notes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VUE REPORTING (MATRICE) -->
+        <div id="view-reporting" class="tab-view hidden max-w-7xl mx-auto space-y-6">
+            <div class="bg-white rounded-[2rem] p-8 border border-slate-200 card-shadow">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Matrice de Polycompétence</h2>
+                        <p class="text-slate-500 text-sm">Visualisation des taux de couverture (collaborateurs niveau 2+) par rapport au besoin cible.</p>
+                    </div>
+                    <div class="w-full md:w-80">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Sélectionner un métier</label>
+                        <select id="matrixJobSelector" onchange="renderMatrix()" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-700 outline-none cursor-pointer hover:bg-white transition-all text-sm uppercase shadow-sm">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-100 rounded-2xl no-scrollbar">
+                    <table class="matrix-table w-full text-left border-collapse" id="skillsMatrixTable">
+                    </table>
+                </div>
+                
+                <div id="emptyMatrixState" class="hidden py-20 text-center text-slate-400 italic">
+                    <i data-lucide="users" class="w-12 h-12 mx-auto mb-4 opacity-20"></i>
+                    Aucun collaborateur rattaché ou évalué sur ce métier.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODALE ÉDITION RÉFÉRENTIEL -->
+    <div id="editRefModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        <div class="relative bg-white w-full max-w-4xl h-[85vh] rounded-[2rem] shadow-2xl modal-enter flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-[2rem]">
+                <div><h3 id="editRefTitle" class="text-xl font-black text-slate-800 uppercase tracking-tight">RÉFÉRENTIEL</h3></div>
+                <button onclick="closeModal('editRefModal')" class="p-2 hover:bg-slate-200 rounded-full transition-all"><i data-lucide="x" class="w-6 h-6 text-slate-500"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-8" id="refEditorContent"></div>
+            <div class="p-6 border-t bg-white rounded-b-[2rem] flex justify-between gap-4">
+                <button onclick="addNewTheme()" class="px-6 py-3 border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all uppercase text-sm">+ Ajouter thème</button>
+                <button onclick="closeModal('editRefModal')" class="px-10 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-blue-600 shadow-lg uppercase">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE BIENVENUE RESTAURÉE -->
+    <div id="welcomeModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        <div class="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden modal-enter">
+            <!-- Bandeau de couleur supérieur -->
+            <div class="absolute top-0 left-0 w-full h-2 bg-indigo-600"></div>
+            
+            <div class="pt-12 px-8 pb-10 flex flex-col items-center text-center">
+                <!-- Icône -->
+                <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6">
+                    <i data-lucide="shield-alert" class="w-10 h-10 text-indigo-600"></i>
+                </div>
+                
+                <!-- Titre -->
+                <h2 class="text-2xl font-bold text-slate-900 mb-4 font-nunito tracking-tight uppercase">
+                    Bienvenue sur KIHO GESTION DES COMPÉTENCES
+                </h2>
+                
+                <!-- Description -->
+                <p class="text-slate-600 leading-relaxed mb-6 text-sm">
+                    Votre travail est précieux ! Pour garantir la confidentialité, 
+                    <span class="font-semibold text-slate-900">aucune donnée n'est sauvegardée sur nos serveurs.</span> 
+                    Tout est stocké localement dans votre navigateur.
+                </p>
+                
+                <!-- Encart d'avertissement restauré -->
+                <div class="w-full bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-8 flex gap-4 text-left">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-amber-600 shrink-0"></i>
+                    <p class="text-xs text-amber-800 leading-relaxed">
+                        <span class="font-bold">Attention :</span> Si vous fermez cette page ou videz votre cache sans exporter, <span class="font-bold underline">vos données seront perdues.</span> 
+                        Pensez à <span class="font-bold">exporter régulièrement</span> votre travail au format JSON via le menu en haut à droite.
+                    </p>
+                </div>
+                
+                <!-- Bouton d'action -->
+                <button onclick="closeModal('welcomeModal')" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 transition-all active:scale-95 uppercase">
+                    J'ai compris, commencer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- BASE DE DONNÉES COMPLÈTE ---
+        const PERFECT_STATE = {
+            jobs: [
+                { id: 'job-manager', title: "MANAGER D'UNITÉ", targetNeed: 3, themes: [{ id: 1, name: "MANAGEMENT", skills: ["Entretien professionnel", "Gestion des conflits", "Briefing quotidien"] }, { id: 2, name: "EXPLOITATION", skills: ["Analyse indicateurs", "Gestion mode perturbé", "Sécurité ferroviaire/bus"] }] },
+                { id: 'job-conducteur', title: "CONDUCTEUR-RECEVEUR", targetNeed: 6, themes: [{ id: 3, name: "CONDUITE", skills: ["Respect code route", "Confort passager", "Éco-conduite"] }, { id: 4, name: "CLIENT", skills: ["Accueil", "Vente et Information"] }] },
+                { id: 'job-regulateur', title: "RÉGULATEUR PC", targetNeed: 4, themes: [{ id: 5, name: "TECHNIQUE PC", skills: ["Maîtrise SAEIV", "Procédures radio", "Alerte secours"] }] },
+                { id: 'job-mecanicien', title: "MÉCANICIEN", targetNeed: 2, themes: [{ id: 6, name: "TECHNIQUE ATELIER", skills: ["Diagnostic pannes", "Maintenance préventive", "Usage outillage spécifique"] }] },
+                { id: 'job-controleur', title: "CONTRÔLEUR", targetNeed: 4, themes: [{ id: 7, name: "RELATION CLIENT", skills: ["Accueil et posture", "Gestion de l'agressivité", "Information réseau"] }, { id: 8, name: "PROCÉDURES", skills: ["Usage terminal contrôle", "Rédaction de procès-verbal"] }] }
+            ],
+            employees: [
+                { id: 'emp-1', name: "Thomas Lefebvre", jobIds: ["job-manager", "job-regulateur"] },
+                { id: 'emp-2', name: "Marc Dubois", jobIds: ["job-conducteur"] },
+                { id: 'emp-3', name: "Sophie Martin", jobIds: ["job-manager", "job-conducteur"] },
+                { id: 'emp-4', name: "Julie Petit", jobIds: ["job-conducteur", "job-controleur"] },
+                { id: 'emp-5', name: "Karim Belkacem", jobIds: ["job-mecanicien"] },
+                { id: 'emp-6', name: "Léa Girard", jobIds: ["job-conducteur"] },
+                { id: 'emp-7', name: "Éric Richard", jobIds: ["job-regulateur"] },
+                { id: 'emp-8', name: "Valérie Leroy", jobIds: ["job-controleur"] },
+                { id: 'emp-9', name: "Antoine Brun", jobIds: ["job-regulateur"] },
+                { id: 'emp-10', name: "Chloé Dumas", jobIds: ["job-regulateur"] },
+                { id: 'emp-11', name: "Sarah Bernard", jobIds: ["job-conducteur"] },
+                { id: 'emp-12', name: "Lucas Morel", jobIds: ["job-conducteur"] },
+                { id: 'emp-13', name: "Paul Lambert", jobIds: ["job-mecanicien"] },
+                { id: 'emp-14', name: "Maxime Faure", jobIds: ["job-controleur"] },
+                { id: 'emp-15', name: "Sandrine Meunier", jobIds: ["job-controleur"] },
+                { id: 'emp-16', name: "Nicolas Legrand", jobIds: ["job-manager"] }
+            ],
+            evaluations: [
+                { id: 'ev-1', employeeId: 'emp-1', jobId: 'job-manager', date: '2026-01-10', scores: {"0-0":2, "0-1":2, "0-2":2, "1-0":2, "1-1":2}, comments: {}, globalThemeScores: [2, 2] },
+                { id: 'ev-2', employeeId: 'emp-3', jobId: 'job-manager', date: '2026-01-15', scores: {"0-0":2, "0-1":2, "0-2":2, "1-0":2, "1-1":2}, comments: {}, globalThemeScores: [2, 2] },
+                { id: 'ev-3', employeeId: 'emp-16', jobId: 'job-manager', date: '2026-02-01', scores: {"0-0":3, "0-1":3, "0-2":3, "1-0":3, "1-1":3}, comments: {}, globalThemeScores: [3, 3] },
+                { id: 'ev-4', employeeId: 'emp-2', jobId: 'job-conducteur', date: '2026-01-20', scores: {"0-0":3, "0-1":3, "0-2":3, "1-0":3, "1-1":3}, comments: {}, globalThemeScores: [3, 3] },
+                { id: 'ev-5', employeeId: 'emp-4', jobId: 'job-conducteur', date: '2026-01-22', scores: {"0-0":2, "0-1":2, "0-2":2, "1-0":2, "1-1":2}, comments: {}, globalThemeScores: [2, 2] },
+                { id: 'ev-6', employeeId: 'emp-6', jobId: 'job-conducteur', date: '2026-02-05', scores: {"0-0":2, "0-1":2, "0-2":2, "1-0":2, "1-1":2}, comments: {}, globalThemeScores: [2, 2] },
+                { id: 'ev-10', employeeId: 'emp-1', jobId: 'job-regulateur', date: '2026-01-10', scores: {"0-0":3, "0-1":3, "0-2":3}, comments: {}, globalThemeScores: [3] }
+            ]
+        };
+
+        let state = {...PERFECT_STATE, selectedJobsForNewEmp: [], currentEvaluatingEmployeeId: null, currentEvaluatingJobId: null, tempEvaluation: { scores: {}, comments: {} }};
+
+        // --- NAVIGATION ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-tab').forEach(t => {
+                t.classList.remove('border-blue-600', 'text-blue-600', 'font-bold');
+                t.classList.add('border-transparent', 'text-slate-500');
+            });
+            document.getElementById(`tab-${tabId}`).classList.add('border-blue-600', 'text-blue-600', 'font-bold');
+            if (tabId === 'dashboard') renderDashboard();
+            if (tabId === 'referentiels') renderReferentiels();
+            if (tabId === 'evaluations') renderEvaluationsList();
+            if (tabId === 'reporting') renderMatrix();
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // --- DASHBOARD JS ---
+        function renderDashboard() {
+            const jobList = document.getElementById('dashboardJobsList');
+            document.getElementById('jobCount').innerText = state.jobs.length;
+            jobList.innerHTML = state.jobs.map(job => `
+                <div class="flex flex-col p-4 bg-slate-50 rounded-2xl border border-slate-100 group transition-all">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm font-black text-slate-700 truncate uppercase tracking-tight">${job.title}</span>
+                        <button onclick="deleteJob('${job.id}')" class="text-slate-300 hover:text-red-500 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Postes autonomes cibles</label>
+                        <input type="number" value="${job.targetNeed || 0}" 
+                               onchange="updateTargetNeed('${job.id}', this.value)"
+                               class="w-16 bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-center font-black text-blue-600 outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                    </div>
+                </div>
+            `).join('');
+
+            const selectionContainer = document.getElementById('jobSelectionContainer');
+            selectionContainer.innerHTML = state.jobs.map(j => `
+                <div onclick="toggleJobSelection('${j.id}')" class="multi-select-job ${state.selectedJobsForNewEmp.includes(j.id) ? 'active' : ''}">
+                    ${j.title}
+                </div>
+            `).join('');
+
+            const table = document.getElementById('employeeTableBody');
+            table.innerHTML = state.employees.map(emp => `
+                <tr class="hover:bg-slate-50 transition-all border-b border-slate-50 text-sm">
+                    <td class="py-4 font-bold text-slate-800">${emp.name}</td>
+                    <td class="py-4">
+                        <div class="flex flex-wrap gap-1">
+                            ${emp.jobIds.map(jid => {
+                                const j = state.jobs.find(x => x.id === jid);
+                                return `<span class="bg-blue-50 text-blue-700 text-[9px] font-black px-2 py-0.5 rounded uppercase border border-blue-100 tracking-wider">${j ? j.title : '---'}</span>`;
+                            }).join('')}
+                        </div>
+                    </td>
+                    <td class="py-4 text-right">
+                        <button onclick="deleteEmployee('${emp.id}')" class="text-slate-300 hover:text-red-500 transition-colors"><i data-lucide="user-minus" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>`).join('');
+            lucide.createIcons();
+        }
+
+        function updateTargetNeed(jid, val) {
+            const job = state.jobs.find(j => j.id === jid);
+            if (job) { job.targetNeed = parseInt(val) || 0; saveToLocal(); }
+        }
+
+        function toggleJobSelection(jid) {
+            const idx = state.selectedJobsForNewEmp.indexOf(jid);
+            if(idx > -1) state.selectedJobsForNewEmp.splice(idx, 1);
+            else state.selectedJobsForNewEmp.push(jid);
+            renderDashboard();
+        }
+
+        function addJob() {
+            const input = document.getElementById('newJobInput');
+            if(!input.value.trim()) return;
+            state.jobs.push({ id: 'job-'+Date.now(), title: input.value.trim().toUpperCase(), targetNeed: 1, themes: [{id: Date.now(), name: "Savoir Faire", skills: []}] });
+            input.value = ''; saveToLocal(); renderDashboard();
+        }
+
+        function addEmployee() {
+            const name = document.getElementById('employeeNameInput');
+            if(!name.value.trim() || state.selectedJobsForNewEmp.length === 0) return;
+            state.employees.push({ id: 'emp-'+Date.now(), name: name.value.trim(), jobIds: [...state.selectedJobsForNewEmp] });
+            name.value = ''; state.selectedJobsForNewEmp = []; saveToLocal(); renderDashboard();
+        }
+
+        function deleteEmployee(id) {
+            if(confirm("Supprimer ce collaborateur et son historique ?")) {
+                state.employees = state.employees.filter(e => e.id !== id);
+                state.evaluations = state.evaluations.filter(ev => ev.employeeId !== id);
+                saveToLocal(); renderDashboard();
+            }
+        }
+
+        // --- MATRICE DE COMPÉTENCES ---
+        function renderMatrix() {
+            const selector = document.getElementById('matrixJobSelector');
+            const table = document.getElementById('skillsMatrixTable');
+            const emptyState = document.getElementById('emptyMatrixState');
+
+            if (selector.options.length === 0) {
+                selector.innerHTML = state.jobs.map(j => `<option value="${j.id}">${j.title}</option>`).join('');
+            }
+
+            const jobId = selector.value;
+            const job = state.jobs.find(j => j.id === jobId);
+            const employeesInJob = state.employees.filter(e => e.jobIds.includes(jobId));
+
+            if (!job || employeesInJob.length === 0) {
+                table.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            let skillHeaders = [];
+            job.themes.forEach((t, tIdx) => {
+                t.skills.forEach((s, sIdx) => {
+                    skillHeaders.push({ text: s, key: `${tIdx}-${sIdx}` });
+                });
+            });
+
+            let html = `<thead><tr><th class="sticky-col min-w-[200px] bg-slate-100">Collaborateur</th>`;
+            skillHeaders.forEach(sh => {
+                html += `<th class="min-w-[120px] text-center"><div class="line-clamp-2 leading-tight py-2" title="${sh.text}">${sh.text}</div></th>`;
+            });
+            html += `<th class="text-center bg-indigo-100 text-indigo-700 font-black min-w-[100px]">Maîtrise (%)</th></tr></thead><tbody>`;
+
+            const coverageCountPerSkill = {}; 
+            skillHeaders.forEach(sh => coverageCountPerSkill[sh.key] = 0);
+
+            employeesInJob.forEach(emp => {
+                const lastEv = state.evaluations
+                    .filter(ev => ev.employeeId === emp.id && ev.jobId === jobId)
+                    .sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+
+                let autonomousSkillsCount = 0;
+                html += `<tr><td class="sticky-col font-bold text-slate-800">${emp.name}</td>`;
+                
+                skillHeaders.forEach(sh => {
+                    const score = (lastEv && lastEv.scores[sh.key] !== undefined) ? lastEv.scores[sh.key] : null;
+                    if (score !== null && score >= 2) {
+                        autonomousSkillsCount++;
+                        coverageCountPerSkill[sh.key]++;
+                    }
+                    const scoreDisplay = score !== null ? score : "-";
+                    const badgeClass = score !== null ? `score-${score}` : 'bg-slate-50 text-slate-200';
+                    html += `<td class="text-center"><div class="score-badge ${badgeClass} mx-auto shadow-sm">${scoreDisplay}</div></td>`;
+                });
+
+                const skillRate = ((autonomousSkillsCount / skillHeaders.length) * 100).toFixed(0);
+                html += `<td class="text-center font-black text-indigo-600 bg-indigo-50/30 border-l border-indigo-100">${skillRate}%</td></tr>`;
+            });
+
+            html += `<tr class="footer-row">
+                <td class="sticky-col !bg-indigo-700 !text-white">COUVERTURE (%) <br><span class="text-[9px] font-normal uppercase italic opacity-80">Besoin: ${job.targetNeed}</span></td>`;
+            
+            skillHeaders.forEach(sh => {
+                const autonomousCount = coverageCountPerSkill[sh.key];
+                const coverageRate = job.targetNeed > 0 ? ((autonomousCount / job.targetNeed) * 100).toFixed(0) : 0;
+                let colorClass = "text-red-500";
+                if (coverageRate >= 100) colorClass = "text-emerald-700";
+                else if (coverageRate >= 70) colorClass = "text-blue-700";
+                html += `<td class="text-center font-black ${colorClass}">${coverageRate}%</td>`;
+            });
+            html += `<td class="bg-indigo-100"></td></tr></tbody>`;
+            table.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // --- IMPORT / EXPORT LOGIC ---
+        function triggerImport() { document.getElementById('importInput').click(); }
+
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedState = JSON.parse(e.target.result);
+                    if (importedState.jobs && importedState.employees) {
+                        state = { ...state, ...importedState };
+                        saveToLocal();
+                        renderDashboard();
+                        switchTab('dashboard');
+                    } else {
+                        alert("Format JSON invalide.");
+                    }
+                } catch (err) {
+                    alert("Erreur lors de l'importation.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", `kiho_export_${new Date().toISOString().split('T')[0]}.json`);
+            dl.click();
+        }
+
+        function saveToLocal() { localStorage.setItem('kiho_comp_v_final_full', JSON.stringify(state)); }
+        function loadFromLocal() {
+            const saved = localStorage.getItem('kiho_comp_v_final_full');
+            if (saved) state = JSON.parse(saved);
+            renderDashboard();
+        }
+
+        function renderEvaluationsList() {
+            const container = document.getElementById('evaluationList');
+            document.getElementById('evaluationFormContainer').classList.add('hidden');
+            container.classList.remove('hidden');
+            container.innerHTML = state.employees.map(emp => {
+                const lastEvaluationsPerJob = emp.jobIds.map(jid => {
+                    const job = state.jobs.find(j => j.id === jid);
+                    const lastEv = state.evaluations.filter(ev => ev.employeeId === emp.id && ev.jobId === jid).sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+                    return { job, lastEv };
+                });
+                return `
+                <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:border-indigo-200 transition-all group">
+                    <div class="p-6 border-b bg-slate-50"><h3 class="font-black text-slate-800 uppercase truncate leading-tight">${emp.name}</h3></div>
+                    <div class="p-6 flex-1 space-y-4">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dernier état par métier</p>
+                        <div class="space-y-3">
+                            ${lastEvaluationsPerJob.map(({job, lastEv}) => `
+                                <div class="bg-slate-50 border border-slate-100 rounded-2xl p-3">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-[10px] font-black text-indigo-600 uppercase tracking-wide truncate max-w-[120px]">${job ? job.title : '---'}</span>
+                                        <span class="text-[9px] text-slate-400 font-bold">${lastEv ? new Date(lastEv.date).toLocaleDateString() : 'N/A'}</span>
+                                    </div>
+                                    ${lastEv ? `
+                                        <div class="flex flex-wrap gap-1">
+                                            ${lastEv.globalThemeScores.map((s, idx) => {
+                                                const theme = job.themes[idx] ? job.themes[idx].name : "T";
+                                                return `<div class="flex items-center gap-1 bg-white px-2 py-0.5 rounded-lg border border-slate-200"><span class="text-[8px] font-bold text-slate-500 uppercase truncate max-w-[60px]">${theme}</span><span class="score-badge score-${s} !w-4 !h-4 !text-[8px]">${s}</span></div>`;
+                                            }).join('')}
+                                        </div>
+                                    ` : `<p class="text-[9px] text-slate-400 italic">En attente d'évaluation</p>`}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="p-6 bg-slate-50 border-t space-y-2">
+                        ${emp.jobIds.map(jid => {
+                            const j = state.jobs.find(x => x.id === jid);
+                            return `<button onclick="startNewEvaluation('${emp.id}', '${jid}')" class="w-full py-2 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 transition-all uppercase text-[10px] tracking-wide">Évaluer : ${j ? j.title : '---'}</button>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function startNewEvaluation(empId, jobId) {
+            state.currentEvaluatingEmployeeId = empId;
+            state.currentEvaluatingJobId = jobId;
+            const emp = state.employees.find(e => e.id === empId);
+            const job = state.jobs.find(j => j.id === jobId);
+            const history = state.evaluations.filter(ev => ev.employeeId === empId && ev.jobId === jobId).sort((a,b) => new Date(b.date) - new Date(a.date));
+            const lastEval = history[0] || null;
+            state.tempEvaluation = { scores: {}, comments: {} };
+            document.getElementById('evaluationList').classList.add('hidden');
+            document.getElementById('evaluationFormContainer').classList.remove('hidden');
+            document.getElementById('evalFormTitle').innerText = emp.name;
+            document.getElementById('evalFormJob').innerText = job.title;
+            document.getElementById('evalFormDate').innerText = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const content = document.getElementById('evalFormContent');
+            content.innerHTML = job.themes.map((theme, tIdx) => `
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between border-l-4 border-indigo-600 pl-4 py-1">
+                        <h3 class="text-xl font-black text-slate-800 uppercase tracking-tight">${theme.name}</h3>
+                        <div id="theme-score-${tIdx}" class="score-badge score-0">?</div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4">
+                        ${theme.skills.map((skill, sIdx) => {
+                            const key = `${tIdx}-${sIdx}`;
+                            const ps = lastEval && lastEval.scores[key] !== undefined ? lastEval.scores[key] : null;
+                            const pc = lastEval && lastEval.comments[key] ? lastEval.comments[key] : null;
+                            return `
+                            <div class="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
+                                <div class="flex flex-col md:flex-row gap-6 text-slate-700">
+                                    <div class="flex-1">
+                                        <p class="font-bold mb-1 leading-snug text-slate-900">${skill}</p>
+                                        ${ps !== null ? `<div class="prev-eval-box"><div class="flex items-center gap-2"><span class="font-black uppercase text-[8px] text-slate-400">Précédent :</span><span class="score-badge score-${ps} !w-5 !h-5 !text-[8px]">${ps}</span></div>${pc ? `<p class="leading-snug">"${pc}"</p>` : ''}</div>` : ''}
+                                        <textarea oninput="updateTempComment('${key}', this.value)" class="w-full h-16 p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none mt-4 font-medium" placeholder="Commentaires..."></textarea>
+                                    </div>
+                                    <div class="md:w-48 shrink-0">
+                                        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Note</label>
+                                        <select onchange="updateTempScore(${tIdx}, ${sIdx}, this.value)" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-indigo-700 outline-none text-sm cursor-pointer shadow-sm hover:bg-white transition-all"><option value="0">0 - Non acquis</option><option value="1">1 - Accompagné</option><option value="2">2 - Sait faire</option><option value="3">3 - Sait former</option></select>
+                                    </div>
+                                </div>
+                            </div>`}).join('')}
+                </div>`).join('');
+            job.themes.forEach((t, tIdx) => { t.skills.forEach((s, sIdx) => state.tempEvaluation.scores[`${tIdx}-${sIdx}`] = 0); updateThemeDisplayScore(tIdx); });
+            lucide.createIcons();
+        }
+
+        function updateTempScore(tIdx, sIdx, val) { state.tempEvaluation.scores[`${tIdx}-${sIdx}`] = parseInt(val); updateThemeDisplayScore(tIdx); }
+        function updateTempComment(key, val) { state.tempEvaluation.comments[key] = val; }
+        function updateThemeDisplayScore(tIdx) {
+            const scs = Object.entries(state.tempEvaluation.scores).filter(([k]) => k.startsWith(`${tIdx}-`)).map(([_, v]) => v);
+            const min = scs.length > 0 ? Math.min(...scs) : 0;
+            const b = document.getElementById(`theme-score-${tIdx}`);
+            if(b) { b.innerText = min; b.className = `score-badge score-${min}`; }
+        }
+        function saveEvaluation() {
+            const job = state.jobs.find(j => j.id === state.currentEvaluatingJobId);
+            const gts = job.themes.map((_, tIdx) => { const ts = Object.entries(state.tempEvaluation.scores).filter(([k]) => k.startsWith(`${tIdx}-`)).map(([_, v]) => v); return Math.min(...ts); });
+            state.evaluations.push({ id: 'eval-' + Date.now(), employeeId: state.currentEvaluatingEmployeeId, jobId: state.currentEvaluatingJobId, date: new Date().toISOString().split('T')[0], scores: { ...state.tempEvaluation.scores }, comments: { ...state.tempEvaluation.comments }, globalThemeScores: gts });
+            saveToLocal(); closeEvaluationForm();
+        }
+        function closeEvaluationForm() { document.getElementById('evaluationFormContainer').classList.add('hidden'); renderEvaluationsList(); }
+        function renderReferentiels() {
+            const grid = document.getElementById('jobsGrid');
+            grid.innerHTML = state.jobs.map(job => `
+                <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-xl transition-all group"><h4 class="font-black text-slate-800 uppercase text-lg mb-2 truncate">${job.title}</h4><p class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-6">${job.themes.reduce((acc, t) => acc + t.skills.length, 0)} points de contrôle</p><button onclick="openRefEditor('${job.id}')" class="w-full py-3 bg-slate-800 text-white font-bold rounded-2xl hover:bg-blue-600 transition-all uppercase text-xs tracking-wider">Configurer</button></div>`).join('');
+            lucide.createIcons();
+        }
+        function openRefEditor(jid) { state.currentEditingJobId = jid; const job = state.jobs.find(j => j.id === jid); document.getElementById('editRefTitle').innerText = job.title; document.getElementById('editRefModal').classList.remove('hidden'); renderRefEditor(); }
+        function renderRefEditor() {
+            const job = state.jobs.find(j => j.id === state.currentEditingJobId);
+            const container = document.getElementById('refEditorContent');
+            container.innerHTML = job.themes.map((theme, tIdx) => `
+                <div class="bg-slate-50 rounded-[2rem] p-6 border border-slate-200 space-y-4"><div class="flex items-center justify-between"><input type="text" value="${theme.name}" onchange="updateThemeName(${tIdx}, this.value)" class="bg-transparent text-lg font-black text-slate-800 border-b-2 border-transparent hover:border-slate-300 focus:border-blue-500 outline-none w-full uppercase"><button onclick="removeTheme(${tIdx})" class="text-slate-300 hover:text-red-500 ml-4 transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button></div><div class="space-y-2">${theme.skills.map((skill, sIdx) => `<div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm group"><input type="text" value="${skill}" onchange="updateSkillName(${tIdx}, ${sIdx}, this.value)" class="flex-1 text-sm text-slate-600 outline-none font-medium"><button onclick="removeSkill(${tIdx}, ${sIdx})" class="text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="x-circle" class="w-4 h-4"></i></button></div>`).join('')}<button onclick="addNewSkill(${tIdx})" class="w-full py-3 text-xs font-black text-blue-600 hover:bg-blue-50 border-2 border-dashed border-blue-100 rounded-xl mt-4 uppercase transition-all">+ Ajouter compétence</button></div></div>`).join('');
+            lucide.createIcons();
+        }
+        function addNewTheme() { const job = state.jobs.find(j => j.id === state.currentEditingJobId); job.themes.push({id: Date.now(), name: "Nouveau Thème", skills: []}); renderRefEditor(); }
+        function removeTheme(idx) { const job = state.jobs.find(j => j.id === state.currentEditingJobId); job.themes.splice(idx, 1); renderRefEditor(); }
+        function updateThemeName(idx, val) { const job = state.jobs.find(j => j.id === state.currentEditingJobId); job.themes[idx].name = val.toUpperCase(); }
+        function addNewSkill(tIdx) { const job = state.jobs.find(j => j.id === state.currentEditingJobId); job.themes[tIdx].skills.push(""); renderRefEditor(); }
+        function updateSkillName(tIdx, sIdx, val) { const job = state.jobs.find(j => j.id === state.currentEditingJobId); job.themes[tIdx].skills[sIdx] = val; }
+        function removeSkill(tIdx, sIdx) { const job = state.jobs.find(j => j.id === state.currentEditingJobId); job.themes[tIdx].skills.splice(sIdx, 1); renderRefEditor(); }
+        function deleteJob(id) { if(state.employees.some(e => e.jobIds.includes(id))) return alert("Métier utilisé."); if(confirm("Supprimer ?")) { state.jobs = state.jobs.filter(j => j.id !== id); saveToLocal(); renderDashboard(); }}
+        function resetData() { if(confirm("Réinitialiser avec les exemples parfaits ?")) { state = {...PERFECT_STATE, selectedJobsForNewEmp: [], currentEvaluatingEmployeeId: null, currentEvaluatingJobId: null, tempEvaluation: { scores: {}, comments: {} }}; saveToLocal(); location.reload(); } }
+
+        window.onload = () => { loadFromLocal(); lucide.createIcons(); const mb = document.getElementById('menuBtn'); const dm = document.getElementById('dropdownMenu'); mb.onclick = (e) => { e.stopPropagation(); dm.classList.toggle('hidden'); }; window.onclick = () => dm.classList.add('hidden'); };
+    </script>
+</body>
+</html>

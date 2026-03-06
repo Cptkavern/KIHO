@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIHO Audit - IA Collaborative</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel pour JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- SheetJS pour Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        @media print {
+            @page { margin: 1cm; size: A4; }
+            .print-hidden { display: none !important; }
+            #printable-report { border: none !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; }
+            .break-inside-avoid { page-break-inside: avoid; }
+            .break-inside-avoid-page { page-break-inside: avoid; }
+            input::placeholder { color: transparent; }
+        }
+        /* Animation de transition pour le mode mobile/desktop */
+        .view-transition {
+            transition: max-width 0.3s ease-in-out, border 0.3s ease, box-shadow 0.3s ease;
+        }
+        .sparkle-text {
+            background: linear-gradient(90deg, #2563eb, #9333ea, #2563eb);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+        }
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+    </style>
+</head>
+<body class="bg-slate-200 text-slate-900 flex justify-center min-h-screen">
+    <div id="root" class="w-full"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect, useRef } = React;
+
+        const defaultApiKey = ""; 
+        const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
+
+        async function fetchGemini(prompt, systemInstruction = "", customKey = "") {
+            const activeKey = customKey || defaultApiKey;
+            if (!activeKey) throw new Error("Clé API manquante. Veuillez entrer votre clé Gemini.");
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${activeKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined
+            };
+            
+            const maxRetries = 5;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text;
+                } catch (error) { 
+                    if (i === maxRetries - 1) throw error;
+                    const delay = Math.pow(2, i) * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const icons = {
+                BarChart: <path d="M3 3v18h18M18 17V9M13 17V5M8 17v-3" />,
+                Settings: <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />,
+                ClipboardCheck: <path d="m9 11 3 3L22 4M16 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9M8 2v4M12 2v4M16 2v4" />,
+                Award: <React.Fragment><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></React.Fragment>,
+                Plus: <path d="M12 5v14M5 12h14" />,
+                Printer: <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />,
+                Upload: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />,
+                Download: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />,
+                Trash2: <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />,
+                X: <path d="M18 6 6 18M6 6l12 12" />,
+                Target: <React.Fragment><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></React.Fragment>,
+                TrendingUp: <path d="m22 7-8.5 8.5L8 10l-6 6M22 7h-6M22 7v6" />,
+                Sparkles: <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z" />,
+                ShieldCheck: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" />,
+                Archive: <path d="M21 8v13H3V8M1 3h22v5H1V3zm10 8h2" />,
+                ChevronDown: <polyline points="6 9 12 15 18 9" />,
+                Eye: <React.Fragment><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></React.Fragment>,
+                EyeOff: <React.Fragment><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61M2 2l20 20"/></React.Fragment>,
+                CheckCircle2: <React.Fragment><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></React.Fragment>,
+                Wand2: <React.Fragment><path d="m19 2 2 2-2 2-2-2 2-2Z"/><path d="m14 7 3 3-3 3-3-3 3-3Z"/><path d="M13 14a6 6 0 1 0-8 8.46V22h8.5"/></React.Fragment>,
+                Key: <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />,
+                Monitor: <React.Fragment><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></React.Fragment>,
+                Smartphone: <React.Fragment><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></React.Fragment>
+            };
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {icons[name] || null}
+                </svg>
+            );
+        };
+
+        const MATURITY_STEPS = [
+            { id: 'reactif', label: 'RÉACTIF' },
+            { id: 'structure', label: 'STRUCTURÉ' },
+            { id: 'maitrise', label: 'MAÎTRISÉ' },
+            { id: 'optimise', label: 'OPTIMISÉ' }
+        ];
+
+        const App = () => {
+            const [viewMode, setViewMode] = useState('desktop'); 
+
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [standards, setStandards] = useState([]);
+            const [criteria, setCriteria] = useState([]);
+            const [targetLabel, setTargetLabel] = useState('reactif');
+            const [selectedAuditStandardId, setSelectedAuditStandardId] = useState('all');
+            const [newStandardName, setNewStandardName] = useState('');
+            const [isDataLoaded, setIsDataLoaded] = useState(false);
+            const [aiLoading, setAiLoading] = useState({});
+            const [status, setStatus] = useState({ show: false, message: '', type: 'info' });
+            const [showClearConfirm, setShowClearConfirm] = useState(false);
+            const [reportSummary, setReportSummary] = useState("");
+            const [reportInfo, setReportInfo] = useState({ 
+                site: "Site Client", 
+                filiale: "Filiale",
+                auditeur: "Auditeur KIHO", 
+                dateDebut: new Date().toISOString().split('T')[0],
+                dateFin: new Date().toISOString().split('T')[0],
+                perimetre: "Dépot / Centre / Service"
+            });
+            const [userApiKey, setUserApiKey] = useState("");
+
+            const [aiModal, setAiModal] = useState({ 
+                isOpen: false, 
+                context: null, 
+                originalText: '', 
+                userPrompt: '',
+                isLoading: false 
+            });
+
+            const fileInputRef = useRef(null);
+            const archiveInputRef = useRef(null);
+
+            useEffect(() => {
+                const s = localStorage.getItem('kiho_stds_v7');
+                const c = localStorage.getItem('kiho_crits_v7');
+                const i = localStorage.getItem('kiho_info_v7');
+                const m = localStorage.getItem('kiho_summary_v7');
+                const k = localStorage.getItem('kiho_user_api_key');
+                if (s) setStandards(JSON.parse(s));
+                if (c) setCriteria(JSON.parse(c));
+                if (i) setReportInfo(prev => ({...prev, ...JSON.parse(i)}));
+                if (m) setReportSummary(m);
+                if (k) setUserApiKey(k);
+                setIsDataLoaded(true);
+            }, []);
+
+            useEffect(() => {
+                if (isDataLoaded) {
+                    localStorage.setItem('kiho_stds_v7', JSON.stringify(standards));
+                    localStorage.setItem('kiho_crits_v7', JSON.stringify(criteria));
+                    localStorage.setItem('kiho_info_v7', JSON.stringify(reportInfo));
+                    localStorage.setItem('kiho_summary_v7', reportSummary);
+                    localStorage.setItem('kiho_user_api_key', userApiKey);
+                }
+            }, [standards, criteria, reportInfo, reportSummary, userApiKey, isDataLoaded]);
+
+            const showStatus = (message, type = 'info') => {
+                setStatus({ show: true, message, type });
+                setTimeout(() => setStatus({ show: false, message: '', type: 'info' }), 3000);
+            };
+
+            const evaluation = useMemo(() => {
+                return standards.map(s => {
+                    const rel = criteria.filter(c => c.standardId === s.id && c.active !== false);
+                    const score = rel.length > 0 ? Math.min(...rel.map(c => c.level)) : 4;
+                    return { ...s, currentLevel: score, isTargetMet: score >= (s.requirements[targetLabel] || 0) };
+                });
+            }, [standards, criteria, targetLabel]);
+
+            const globalLabel = useMemo(() => {
+                const labels = [...MATURITY_STEPS].reverse();
+                for (const l of labels) {
+                    const ok = standards.every(s => {
+                        const rel = criteria.filter(c => c.standardId === s.id && c.active !== false);
+                        const score = rel.length > 0 ? Math.min(...rel.map(c => c.level)) : 4;
+                        return score >= (s.requirements[l.id] || 0);
+                    });
+                    if (ok) return l.label;
+                }
+                return "INITIAL";
+            }, [standards, criteria]);
+
+            const globalLabelId = useMemo(() => {
+                const step = MATURITY_STEPS.find(s => s.label === globalLabel);
+                return step ? step.id : 'initial';
+            }, [globalLabel]);
+
+            // --- IA LOGIC ---
+            const openAiModalForRules = (critId, levelIdx, type) => {
+                const crit = criteria.find(c => c.id === critId);
+                const text = crit.levelsData[levelIdx]?.[type];
+                setAiModal({
+                    isOpen: true,
+                    context: { type: 'rule', critId, levelIdx, fieldType: type },
+                    originalText: text || "",
+                    userPrompt: text ? 'Corrige les fautes et reformule de manière professionnelle.' : 'Rédige une exigence standard pour ce niveau.',
+                    isLoading: false
+                });
+            };
+
+            const openAiModalForComment = (critId) => {
+                const crit = criteria.find(c => c.id === critId);
+                setAiModal({
+                    isOpen: true,
+                    context: { type: 'comment', critId },
+                    originalText: crit.comment || "",
+                    userPrompt: crit.comment ? 'Synthétise cette observation et rends le ton factuel.' : 'Génère une observation type pour ce critère.',
+                    isLoading: false
+                });
+            };
+
+            const executeAiAction = async () => {
+                if (!aiModal.userPrompt.trim()) return;
+                if (!defaultApiKey && !userApiKey) {
+                    showStatus("Clé API manquante. Veuillez configurer votre clé en haut de l'écran.", "error");
+                    return;
+                }
+                setAiModal(prev => ({ ...prev, isLoading: true }));
+                try {
+                    const systemPrompt = "Tu es un assistant expert KIHO en audit industriel. Ta tâche est de modifier ou générer le texte demandé en suivant STRICTEMENT les instructions de l'utilisateur. Retourne UNIQUEMENT le texte résultat, sans formatage Markdown, sans guillemets ni phrases d'introduction.";
+                    const fullPrompt = `INSTRUCTION: ${aiModal.userPrompt}\n\nCONTEXTE/TEXTE À TRAITER: "${aiModal.originalText}"`;
+                    
+                    const res = await fetchGemini(fullPrompt, systemPrompt, userApiKey);
+                    
+                    let cleanRes = res.trim();
+                    if (cleanRes.startsWith('"') && cleanRes.endsWith('"')) { cleanRes = cleanRes.slice(1, -1); }
+
+                    if (aiModal.context.type === 'rule') {
+                        setCriteria(prev => prev.map(c => {
+                            if (c.id === aiModal.context.critId) {
+                                const next = [...c.levelsData];
+                                next[aiModal.context.levelIdx] = { ...next[aiModal.context.levelIdx], [aiModal.context.fieldType]: cleanRes };
+                                return { ...c, levelsData: next };
+                            }
+                            return c;
+                        }));
+                    } else if (aiModal.context.type === 'comment') {
+                        setCriteria(prev => prev.map(c => c.id === aiModal.context.critId ? { ...c, comment: cleanRes } : c));
+                    }
+
+                    showStatus("Modification appliquée !", "success");
+                    setAiModal(prev => ({ ...prev, isOpen: false }));
+                } catch (e) {
+                    showStatus("Erreur IA: " + e.message, "error");
+                    setAiModal(prev => ({ ...prev, isLoading: false }));
+                }
+            };
+
+            const handleAIRewriteInRules = async (critId, levelIdx, type) => {
+                const crit = criteria.find(c => c.id === critId);
+                const text = crit.levelsData[levelIdx]?.[type];
+                
+                if (!text || !text.trim()) { showStatus(`Le champ est vide.`, "error"); return; }
+                if (!defaultApiKey && !userApiKey) { showStatus("Veuillez saisir votre clé API Gemini (en haut de l'écran).", "error"); return; }
+                
+                const loadingKey = `rewrite_rules_${critId}_${levelIdx}_${type}`;
+                setAiLoading(p => ({ ...p, [loadingKey]: true }));
+                try {
+                    const systemPrompt = "Tu es un expert KIHO en performance industrielle. Ton rôle est de corriger les fautes et de reformuler professionnellement le texte fourni. Retourne UNIQUEMENT le texte corrigé brut, sans aucun formatage Markdown, sans guillemets, et sans introduction.";
+                    const prompt = `Corrige et reformule : "${text}"`;
+                    
+                    const res = await fetchGemini(prompt, systemPrompt, userApiKey);
+                    let cleanRes = res.trim();
+                    if (cleanRes.startsWith('"') && cleanRes.endsWith('"')) { cleanRes = cleanRes.slice(1, -1); }
+
+                    setCriteria(prev => prev.map(c => {
+                        if (c.id === critId) {
+                            const next = [...c.levelsData];
+                            next[levelIdx] = { ...next[levelIdx], [type]: cleanRes };
+                            return { ...c, levelsData: next };
+                        }
+                        return c;
+                    }));
+                    showStatus("Texte reformulé avec succès !", "success");
+                } catch (e) { showStatus("Erreur IA: " + e.message, "error"); }
+                finally { setAiLoading(p => ({ ...p, [loadingKey]: false })); }
+            };
+
+            const handleAIRewriteComment = async (critId) => {
+                const crit = criteria.find(c => c.id === critId);
+                
+                if (!crit || !crit.comment || !crit.comment.trim()) { showStatus("L'observation est vide.", "error"); return; }
+                if (!defaultApiKey && !userApiKey) { showStatus("Veuillez saisir votre clé API Gemini (en haut de l'écran).", "error"); return; }
+                
+                const loadingKey = `rewrite_${critId}`;
+                setAiLoading(p => ({ ...p, [loadingKey]: true }));
+                try {
+                    const systemPrompt = "Tu es un assistant expert KIHO. Reformule cette observation terrain pour la rendre factuelle, professionnelle et concise. Retourne UNIQUEMENT le texte corrigé brut, sans aucun formatage Markdown, sans guillemets, et sans introduction.";
+                    const prompt = `Reformule l'observation suivante : "${crit.comment}"`;
+                    
+                    const res = await fetchGemini(prompt, systemPrompt, userApiKey);
+                    let cleanRes = res.trim();
+                    if (cleanRes.startsWith('"') && cleanRes.endsWith('"')) { cleanRes = cleanRes.slice(1, -1); }
+
+                    setCriteria(prev => prev.map(c => c.id === critId ? { ...c, comment: cleanRes } : c));
+                    showStatus("Observation reformulée !", "success");
+                } catch (e) { showStatus("Erreur IA: " + e.message, "error"); }
+                finally { setAiLoading(p => ({ ...p, [loadingKey]: false })); }
+            };
+
+            // --- EXPORTATION / IMPORTATION / RESET ---
+            const handleExportSession = () => {
+                try {
+                    const wb = XLSX.utils.book_new();
+
+                    // Feuille 1 : Infos Audit
+                    const infosData = [
+                        ["CHAMP", "VALEUR"],
+                        ["FILIALE", reportInfo.filiale],
+                        ["SITE", reportInfo.site],
+                        ["PERIMETRE", reportInfo.perimetre],
+                        ["DATE_DEBUT", reportInfo.dateDebut],
+                        ["DATE_FIN", reportInfo.dateFin],
+                        ["AUDITEUR", reportInfo.auditeur],
+                        ["LABEL_ACTUEL", globalLabel]
+                    ];
+                    const wsInfos = XLSX.utils.aoa_to_sheet(infosData);
+                    XLSX.utils.book_append_sheet(wb, wsInfos, "INFOS_AUDIT");
+
+                    // Feuille 2 : Référentiel
+                    const refHeader = ["ID_STANDARD", "NOM_STANDARD", "OBJ_REACTIF", "OBJ_STRUCTURE", "OBJ_MAITRISE", "OBJ_OPTIMISE"];
+                    const refRows = standards.map(s => [
+                        s.id, s.name, 
+                        s.requirements.reactif, s.requirements.structure, 
+                        s.requirements.maitrise, s.requirements.optimise
+                    ]);
+                    const wsRef = XLSX.utils.aoa_to_sheet([refHeader, ...refRows]);
+                    XLSX.utils.book_append_sheet(wb, wsRef, "REFERENTIEL");
+
+                    // Feuille 3 : Résultats et Preuves
+                    const resultsHeader = [
+                        "ID_CRITERE", "ID_STANDARD", "LIBELLE_CRITERE", "NIVEAU_ACTUEL", "OBSERVATIONS", 
+                        "E1_EXIGENCE", "E1_ACTION", "E2_EXIGENCE", "E2_ACTION", "E3_EXIGENCE", "E3_ACTION", "E4_EXIGENCE", "E4_ACTION",
+                        "PHOTOS_B64"
+                    ];
+                    const resultsRows = criteria.map(c => [
+                        c.id, c.standardId, c.label, c.level, c.comment,
+                        c.levelsData[0]?.requirement, c.levelsData[0]?.action,
+                        c.levelsData[1]?.requirement, c.levelsData[1]?.action,
+                        c.levelsData[2]?.requirement, c.levelsData[2]?.action,
+                        c.levelsData[3]?.requirement, c.levelsData[3]?.action,
+                        JSON.stringify(c.images || []) 
+                    ]);
+                    const wsResults = XLSX.utils.aoa_to_sheet([resultsHeader, ...resultsRows]);
+                    XLSX.utils.book_append_sheet(wb, wsResults, "RESULTATS_ET_PREUVES");
+
+                    XLSX.writeFile(wb, `Audit_KIHO_${reportInfo.site}_${reportInfo.dateDebut}.xlsx`);
+                    showStatus("Session d'audit exportée !", "success");
+                } catch (e) {
+                    showStatus("Erreur lors de l'exportation.", "error");
+                }
+            };
+
+            const handleImportSession = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const data = new Uint8Array(evt.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+
+                        const sheetInfos = XLSX.utils.sheet_to_json(workbook.Sheets["INFOS_AUDIT"]);
+                        const newInfos = { ...reportInfo };
+                        sheetInfos.forEach(row => {
+                            if (row.CHAMP === "FILIALE") newInfos.filiale = row.VALEUR;
+                            if (row.CHAMP === "SITE") newInfos.site = row.VALEUR;
+                            if (row.CHAMP === "PERIMETRE") newInfos.perimetre = row.VALEUR;
+                            if (row.CHAMP === "DATE_DEBUT") newInfos.dateDebut = row.VALEUR;
+                            if (row.CHAMP === "DATE_FIN") newInfos.dateFin = row.VALEUR;
+                            if (row.CHAMP === "AUDITEUR") newInfos.auditeur = row.VALEUR;
+                        });
+                        setReportInfo(newInfos);
+
+                        const sheetRef = XLSX.utils.sheet_to_json(workbook.Sheets["REFERENTIEL"]);
+                        const newStandards = sheetRef.map(row => ({
+                            id: row.ID_STANDARD,
+                            name: row.NOM_STANDARD,
+                            requirements: {
+                                reactif: parseInt(row.OBJ_REACTIF) || 0,
+                                structure: parseInt(row.OBJ_STRUCTURE) || 0,
+                                maitrise: parseInt(row.OBJ_MAITRISE) || 0,
+                                optimise: parseInt(row.OBJ_OPTIMISE) || 0
+                            }
+                        }));
+                        setStandards(newStandards);
+
+                        const sheetRes = XLSX.utils.sheet_to_json(workbook.Sheets["RESULTATS_ET_PREUVES"]);
+                        const newCriteria = sheetRes.map(row => ({
+                            id: row.ID_CRITERE,
+                            standardId: row.ID_STANDARD,
+                            label: row.LIBELLE_CRITERE,
+                            level: parseInt(row.NIVEAU_ACTUEL) || 0,
+                            comment: row.OBSERVATIONS || "",
+                            active: true,
+                            images: row.PHOTOS_B64 ? JSON.parse(row.PHOTOS_B64) : [],
+                            levelsData: [
+                                { requirement: row.E1_EXIGENCE || "", action: row.E1_ACTION || "" },
+                                { requirement: row.E2_EXIGENCE || "", action: row.E2_ACTION || "" },
+                                { requirement: row.E3_EXIGENCE || "", action: row.E3_ACTION || "" },
+                                { requirement: row.E4_EXIGENCE || "", action: row.E4_ACTION || "" }
+                            ]
+                        }));
+                        setCriteria(newCriteria);
+
+                        showStatus("Audit restauré !", "success");
+                        setActiveTab('audit');
+                    } catch (err) {
+                        showStatus("Fichier invalide.", "error");
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+                e.target.value = null;
+            };
+
+            const handleClearAudit = () => {
+                setCriteria(prev => prev.map(c => ({
+                    ...c,
+                    level: 0,
+                    comment: "",
+                    images: []
+                })));
+                setReportInfo({
+                    site: "Site Client",
+                    filiale: "Filiale",
+                    auditeur: "Auditeur KIHO",
+                    dateDebut: new Date().toISOString().split('T')[0],
+                    dateFin: new Date().toISOString().split('T')[0],
+                    perimetre: "Dépot / Centre / Service"
+                });
+                setShowClearConfirm(false);
+                showStatus("Audit réinitialisé avec succès.", "success");
+            };
+
+            // --- LOGIQUES STANDARDS (RÉFÉRENTIEL + OBJECTIFS) ---
+            const handleFileUpload = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const data = new Uint8Array(evt.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        let updatedStandards = standards.map(s => ({...s, requirements: {...s.requirements}}));
+                        
+                        // 1. Importer les objectifs si l'onglet existe
+                        if (workbook.Sheets["Objectifs"]) {
+                            const objJson = XLSX.utils.sheet_to_json(workbook.Sheets["Objectifs"]);
+                            objJson.forEach(row => {
+                                const stdName = row["Standard"]?.toString().trim();
+                                if (!stdName) return;
+                                let std = updatedStandards.find(s => s.name.toLowerCase() === stdName.toLowerCase());
+                                if (std) {
+                                    std.requirements = {
+                                        reactif: parseInt(row["Réactif"]) || 0,
+                                        structure: parseInt(row["Structuré"]) || 0,
+                                        maitrise: parseInt(row["Maîtrisé"]) || 0,
+                                        optimise: parseInt(row["Optimisé"]) || 0
+                                    };
+                                } else {
+                                    updatedStandards.push({
+                                        id: `S-IMP-${Date.now()}-${Math.random()}`,
+                                        name: stdName,
+                                        requirements: {
+                                            reactif: parseInt(row["Réactif"]) || 0,
+                                            structure: parseInt(row["Structuré"]) || 0,
+                                            maitrise: parseInt(row["Maîtrisé"]) || 0,
+                                            optimise: parseInt(row["Optimisé"]) || 0
+                                        }
+                                    });
+                                }
+                            });
+                        }
+
+                        // 2. Importer les critères
+                        const sheetRef = workbook.Sheets["Référentiel"] || workbook.Sheets[workbook.SheetNames[0]];
+                        const json = XLSX.utils.sheet_to_json(sheetRef, { header: 1 });
+                        const rows = json.slice(1);
+                        let newCriteria = [];
+
+                        rows.forEach((row, i) => {
+                            if (!row[0] || !row[1]) return;
+                            const stdName = row[0].toString().trim();
+                            const critLabel = row[1].toString().trim();
+                            
+                            let std = updatedStandards.find(s => s.name.toLowerCase() === stdName.toLowerCase());
+                            let stdId;
+                            if (!std) {
+                                stdId = `S-IMP-${Date.now()}-${i}`;
+                                std = { id: stdId, name: stdName, requirements: { reactif: 0, structure: 0, maitrise: 0, optimise: 0 } };
+                                updatedStandards.push(std);
+                            } else { stdId = std.id; }
+
+                            newCriteria.push({
+                                id: `C-IMP-${Date.now()}-${i}`,
+                                standardId: stdId,
+                                label: critLabel,
+                                level: 0,
+                                comment: "",
+                                images: [],
+                                active: true,
+                                levelsData: [
+                                    { requirement: row[2] || "", action: row[6] || "" },
+                                    { requirement: row[3] || "", action: row[7] || "" },
+                                    { requirement: row[4] || "", action: row[8] || "" },
+                                    { requirement: row[5] || "", action: row[9] || "" }
+                                ]
+                            });
+                        });
+
+                        setStandards(updatedStandards);
+                        setCriteria(prev => [...prev, ...newCriteria]);
+                        showStatus("Référentiel et objectifs mis à jour !", "success");
+                    } catch (err) { showStatus("Erreur d'importation.", "error"); }
+                };
+                reader.readAsArrayBuffer(file);
+                e.target.value = null;
+            };
+
+            const handleExportRules = () => {
+                try {
+                    const wb = XLSX.utils.book_new();
+
+                    // Onglet 1 : Référentiel
+                    const header = ["Standard", "Critère", "Niveau 1 (Exigence)", "Niveau 2 (Exigence)", "Niveau 3 (Exigence)", "Niveau 4 (Exigence)", "Niveau 1 (Action)", "Niveau 2 (Action)", "Niveau 3 (Action)", "Niveau 4 (Action)"];
+                    const dataRows = [];
+                    standards.forEach(std => {
+                        const stdCriteria = criteria.filter(c => c.standardId === std.id);
+                        stdCriteria.forEach(crit => {
+                            dataRows.push([
+                                std.name, crit.label,
+                                crit.levelsData[0]?.requirement || "NC",
+                                crit.levelsData[1]?.requirement || "NC",
+                                crit.levelsData[2]?.requirement || "NC",
+                                crit.levelsData[3]?.requirement || "NC",
+                                crit.levelsData[0]?.action || "A définir",
+                                crit.levelsData[1]?.action || "A définir",
+                                crit.levelsData[2]?.action || "A définir",
+                                crit.levelsData[3]?.action || "A définir"
+                            ]);
+                        });
+                    });
+                    const wsRef = XLSX.utils.aoa_to_sheet([header, ...dataRows]);
+                    XLSX.utils.book_append_sheet(wb, wsRef, "Référentiel");
+
+                    // Onglet 2 : Matrice des Objectifs
+                    const objHeader = ["Standard", "Réactif", "Structuré", "Maîtrisé", "Optimisé"];
+                    const objRows = standards.map(s => [
+                        s.name,
+                        s.requirements.reactif,
+                        s.requirements.structure,
+                        s.requirements.maitrise,
+                        s.requirements.optimise
+                    ]);
+                    const wsObj = XLSX.utils.aoa_to_sheet([objHeader, ...objRows]);
+                    XLSX.utils.book_append_sheet(wb, wsObj, "Objectifs");
+
+                    XLSX.writeFile(wb, `Referentiel_Complet_KIHO_${new Date().toISOString().split('T')[0]}.xlsx`);
+                    showStatus("Référentiel complet exporté !", "success");
+                } catch (err) { showStatus("Erreur d'exportation.", "error"); }
+            };
+
+            const handleExportReportExcel = () => {
+                try {
+                    const nextMaturityMap = { 'INITIAL': 'reactif', 'RÉACTIF': 'structure', 'STRUCTURÉ': 'maitrise', 'MAÎTRISÉ': 'optimise', 'OPTIMISÉ': null };
+                    const nextKey = nextMaturityMap[globalLabel];
+                    const nextLabel = MATURITY_STEPS.find(m => m.id === nextKey)?.label || "MAXIMUM";
+
+                    // 1. Calcul des conformités acquises (CORRECTION)
+                    const validatedCriteria = [];
+                    criteria.forEach(c => {
+                        const std = standards.find(s => s.id === c.standardId);
+                        if (std && c.active && c.level > 0) {
+                            // On vérifie l'exigence du standard pour le label global actuel
+                            const currentReq = globalLabelId !== 'initial' ? (std.requirements[globalLabelId] || 0) : 0;
+                            
+                            // Un critère est "conforme" pour le niveau actuel SEULEMENT SI :
+                            // 1. Le standard est exigé pour ce niveau (currentReq > 0) ou si on est en "Initial"
+                            // 2. Le niveau du critère atteint ou dépasse l'exigence
+                            if ((globalLabelId === 'initial' || currentReq > 0) && c.level >= currentReq) {
+                                const reqText = (c.levelsData[c.level - 1]?.requirement || "").trim().toUpperCase();
+                                if (reqText !== "" && reqText !== "NC") { 
+                                    validatedCriteria.push({ c, std }); 
+                                }
+                            }
+                        }
+                    });
+
+                    // 2. Calcul du Plan de Labellisation (Actions prioritaires)
+                    const priorityActions = [];
+                    if (nextKey) {
+                        criteria.forEach(c => {
+                            const std = standards.find(s => s.id === c.standardId);
+                            if (std && c.active && (std.requirements[nextKey] || 0) > 0 && c.level < std.requirements[nextKey]) {
+                                const actionText = (c.levelsData[std.requirements[nextKey] - 1]?.action || "").trim().toUpperCase();
+                                if (actionText !== "NC" && actionText !== "") { priorityActions.push({ c, std, target: std.requirements[nextKey] }); }
+                            }
+                        });
+                    }
+
+                    // 3. Calcul du Plan de Progression (Autres actions)
+                    const otherActions = [];
+                    criteria.forEach(c => {
+                        const std = standards.find(s => s.id === c.standardId);
+                        if (c.active && !priorityActions.some(p => p.c.id === c.id) && c.level < 4) {
+                            const targetLevel = c.level + 1;
+                            const actionText = (c.levelsData[targetLevel - 1]?.action || "").trim().toUpperCase();
+                            if (actionText !== "NC" && actionText !== "") { otherActions.push({ c, std, target: targetLevel }); }
+                        }
+                    });
+
+                    // Génération du fichier Excel
+                    const wb = XLSX.utils.book_new();
+
+                    // Onglet Infos
+                    const infosData = [
+                        ["Rapport", "KIHO Audit - Plan d'action"],
+                        ["Score Actuel", globalLabel],
+                        ["Objectif Cible", nextLabel],
+                        ["Filiale", reportInfo.filiale],
+                        ["Site", reportInfo.site],
+                        ["Périmètre", reportInfo.perimetre],
+                        ["Date Début", reportInfo.dateDebut],
+                        ["Date Fin", reportInfo.dateFin],
+                        ["Auditeur", reportInfo.auditeur]
+                    ];
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(infosData), "Général");
+
+                    // Onglet Conformités
+                    const confHeader = ["Standard", "Critère", "Niveau Atteint", "Exigence Validée", "Observations Terrain"];
+                    const confRows = validatedCriteria.map(item => [
+                        item.std.name,
+                        item.c.label,
+                        item.c.level,
+                        item.c.levelsData[item.c.level - 1]?.requirement || "",
+                        item.c.comment || ""
+                    ]);
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([confHeader, ...confRows]), "1. Conformités");
+
+                    // Onglet Labellisation
+                    const planHeader = ["Standard", "Critère", "Niveau Cible", "Exigence Attendue", "Action Corrective à mener", "Observations (Actuelles)"];
+                    const planRows = priorityActions.map(item => [
+                        item.std.name,
+                        item.c.label,
+                        item.target,
+                        item.c.levelsData[item.target - 1]?.requirement || "",
+                        item.c.levelsData[item.target - 1]?.action || "",
+                        item.c.comment || ""
+                    ]);
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([planHeader, ...planRows]), "2. Plan Labellisation");
+
+                    // Onglet Progression
+                    const progHeader = ["Standard", "Critère", "Niveau Cible (+1)", "Action de Progrès", "Observations (Actuelles)"];
+                    const progRows = otherActions.map(item => [
+                        item.std.name,
+                        item.c.label,
+                        item.target,
+                        item.c.levelsData[item.target - 1]?.action || "",
+                        item.c.comment || ""
+                    ]);
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([progHeader, ...progRows]), "3. Plan Progression");
+
+                    XLSX.writeFile(wb, `Plan_Action_KIHO_${reportInfo.site}_${reportInfo.dateDebut}.xlsx`);
+                    showStatus("Plan d'action Excel exporté avec succès !", "success");
+                } catch (err) {
+                    console.error(err);
+                    showStatus("Erreur lors de l'export Excel.", "error");
+                }
+            };
+
+            const addCriterion = (sid) => setCriteria(p => [...p, { id: `C${Date.now()}`, standardId: sid, label: 'Nouveau critère', level: 0, comment: "", images: [], active: true, levelsData: Array(4).fill({requirement: "", action: ""}) }]);
+            const updateCrit = (id, fields) => setCriteria(p => p.map(c => c.id === id ? { ...c, ...fields } : c));
+            const deleteCriterion = (id) => setCriteria(prev => prev.filter(c => c.id !== id));
+            const addStandard = (name) => { if (!name.trim()) return; setStandards(prev => [...prev, { id: `S${Date.now()}`, name, requirements: { reactif: 0, structure: 0, maitrise: 0, optimise: 0 } }]); setNewStandardName(''); };
+            const deleteStandard = (id) => { setStandards(prev => prev.filter(s => s.id !== id)); setCriteria(prev => prev.filter(c => c.standardId !== id)); };
+            const updateRequirement = (stdId, maturityKey, value) => setStandards(prev => prev.map(s => s.id === stdId ? { ...s, requirements: { ...s.requirements, [maturityKey]: parseInt(value) || 0 } } : s));
+
+            const ReportEvidence = ({ item, hidePhotos = false, hideComment = false }) => {
+                if ((hideComment || !item.comment) && (hidePhotos || !item.images || item.images.length === 0)) return null;
+                return (
+                    <div className="mt-4 space-y-3">
+                        {!hideComment && item.comment && (
+                            <div className="p-3 bg-slate-50 border-l-4 border-slate-300 rounded-r-lg text-[10px] italic text-slate-600">
+                                <span className="font-black text-[8px] uppercase block mb-1 text-slate-400 tracking-widest">Observations Terrain :</span>
+                                "{item.comment}"
+                            </div>
+                        )}
+                        {!hidePhotos && item.images && item.images.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                                {item.images.map((img, idx) => (
+                                    <div key={idx} className="w-16 h-16 rounded-lg border shadow-sm overflow-hidden bg-white">
+                                        <img src={img} className="w-full h-full object-cover" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            const viewClasses = viewMode === 'mobile' 
+                ? 'max-w-[480px] mx-auto bg-white border-x-8 border-slate-800 shadow-2xl min-h-screen relative' 
+                : 'w-full min-h-screen relative bg-slate-50';
+
+            return (
+                <div className={`${viewClasses} view-transition pb-12`}>
+                    {/* --- AI MODAL --- */}
+                    {aiModal.isOpen && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-white/50">
+                                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex justify-between items-center text-white">
+                                    <div className="flex items-center gap-2 font-black uppercase text-xs tracking-widest">
+                                        <Icon name="Sparkles" size={16} /> Assistant IA KIHO
+                                    </div>
+                                    <button onClick={() => setAiModal(p => ({...p, isOpen: false}))} className="hover:bg-white/20 p-1 rounded-lg transition-colors"><Icon name="X" size={16} /></button>
+                                </div>
+                                <div className="p-6 space-y-6">
+                                    {!defaultApiKey && (
+                                        <div className="bg-orange-50 p-3 rounded-xl border border-orange-200 space-y-2">
+                                            <label className="text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-2"><Icon name="Key" size={12} /> Clé API Gemini requise</label>
+                                            <input type="password" value={userApiKey} onChange={(e) => setUserApiKey(e.target.value)} className="w-full p-2 text-xs bg-white border border-orange-200 rounded-lg focus:outline-none focus:border-orange-500" placeholder="Collez votre clé API ici..." />
+                                        </div>
+                                    )}
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Texte original</label>
+                                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 italic max-h-32 overflow-y-auto min-h-[3rem]">"{aiModal.originalText || "Aucun texte"}"</div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">Votre instruction</label>
+                                        <textarea value={aiModal.userPrompt} onChange={(e) => setAiModal(p => ({...p, userPrompt: e.target.value}))} className="w-full h-24 p-4 bg-white border-2 border-blue-100 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-sm font-medium resize-none transition-all placeholder:text-slate-300" placeholder="Ex: Rends ce texte plus concis..." autoFocus />
+                                    </div>
+                                    <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+                                        <button onClick={() => setAiModal(p => ({...p, isOpen: false}))} className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition-colors">Annuler</button>
+                                        <button onClick={executeAiAction} disabled={aiModal.isLoading || !aiModal.userPrompt.trim() || (!defaultApiKey && !userApiKey)} className="px-6 py-2.5 rounded-xl text-xs font-black bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            {aiModal.isLoading ? <span className="animate-spin"><Icon name="Sparkles" size={14} /></span> : <Icon name="Wand2" size={14} />} {aiModal.isLoading ? "TRAITEMENT..." : "APPLIQUER"}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- CLEAR CONFIRM MODAL --- */}
+                    {showClearConfirm && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-white/50 p-6 text-center space-y-4">
+                                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                                    <Icon name="Trash2" size={32} />
+                                </div>
+                                <h3 className="font-black text-lg uppercase tracking-tight text-slate-800">Effacer l'audit ?</h3>
+                                <p className="text-xs text-slate-500 font-medium">Toutes les notes, observations et photos de cet audit seront effacées. Le référentiel (règles) sera conservé.</p>
+                                <div className="flex gap-3 pt-4">
+                                    <button onClick={() => setShowClearConfirm(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors uppercase">Annuler</button>
+                                    <button onClick={handleClearAudit} className="flex-1 py-3 rounded-xl text-xs font-black text-white bg-red-600 shadow-lg shadow-red-200 hover:bg-red-700 transition-all uppercase">Effacer</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <header className="bg-white border-b sticky top-0 z-40 print-hidden shadow-sm">
+                        <div className={`mx-auto px-4 py-3 flex flex-col ${viewMode === 'mobile' ? 'gap-4' : 'md:flex-row justify-between items-center max-w-7xl'}`}>
+                            <div className="flex justify-between items-center w-full md:w-auto gap-4">
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg">K</div>
+                                    <div><h1 className="font-black text-lg uppercase leading-none tracking-tight">KIHO <span className="text-blue-600">Audit</span></h1><p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Intelligence Industrielle</p></div>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                    {/* Champ de la clé API toujours visible */}
+                                    <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200 shadow-inner">
+                                        <Icon name="Key" size={14} className="text-slate-400 ml-1" />
+                                        <input 
+                                            type="password" 
+                                            value={userApiKey} 
+                                            onChange={(e) => setUserApiKey(e.target.value)} 
+                                            className="bg-transparent text-[10px] outline-none w-24 md:w-32 font-bold text-slate-600 placeholder:text-slate-400" 
+                                            placeholder="Clé API Gemini..." 
+                                            title="Entrez votre clé API Gemini pour débloquer l'IA"
+                                        />
+                                    </div>
+                                    
+                                    {/* Bouton de bascule Mobile/Desktop */}
+                                    <button onClick={() => setViewMode(viewMode === 'desktop' ? 'mobile' : 'desktop')} className="bg-slate-100 p-2 rounded-xl text-slate-600 hover:bg-slate-200 transition-colors flex items-center gap-2 font-bold text-[10px] uppercase border border-slate-200" title="Changer le mode d'affichage">
+                                        {viewMode === 'desktop' ? <><Icon name="Smartphone" size={16} /> <span className="hidden md:inline">Vue Mobile</span></> : <><Icon name="Monitor" size={16} /> <span className="hidden md:inline">Vue Bureau</span></>}
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <nav className={`flex bg-slate-100 p-1 rounded-2xl border mt-4 md:mt-0 ${viewMode === 'mobile' ? 'overflow-x-auto w-full' : ''}`}>
+                                {[{ id: 'dashboard', label: 'Dashboard', icon: 'BarChart' }, { id: 'audit', label: 'Audit', icon: 'ClipboardCheck' }, { id: 'report', label: 'Rapport', icon: 'Printer' }, { id: 'rules', label: 'Règles', icon: 'Settings' }].map(t => (
+                                    <button key={t.id} onClick={() => setActiveTab(t.id)} className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === t.id ? 'bg-white text-blue-600 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        <Icon name={t.icon} size={14}/> {t.label}
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+                    </header>
+                    
+                    <main className={`${viewMode === 'mobile' ? 'px-2' : 'max-w-7xl mx-auto px-4'} py-8`}>
+                        {status.show && <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-2xl font-black text-xs uppercase animate-in slide-in-from-bottom-10 flex items-center gap-2 border ${status.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>{status.message}</div>}
+                        
+                        {activeTab === 'dashboard' && (
+                            <div className="space-y-6">
+                                <div className={`bg-white p-6 rounded-2xl border flex ${viewMode === 'mobile' ? 'flex-col gap-4' : 'justify-between items-center'} shadow-sm`}>
+                                    <h2 className="text-xl font-black uppercase tracking-tight">Tableau de Bord</h2>
+                                    <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto">
+                                        {MATURITY_STEPS.map(m => (
+                                            <button key={m.id} onClick={() => setTargetLabel(m.id)} className={`px-4 py-2 text-[10px] font-black rounded-lg transition-all uppercase whitespace-nowrap ${targetLabel === m.id ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}>{m.label}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className={`grid ${viewMode === 'mobile' ? 'grid-cols-1' : 'grid-cols-3'} gap-6`}>
+                                    {evaluation.map(s => (
+                                        <div key={s.id} className="bg-white p-6 rounded-2xl border shadow-sm hover:scale-[1.01] transition-transform">
+                                            <h3 className="text-xs font-bold text-slate-500 mb-4 uppercase truncate">{s.name}</h3>
+                                            <div className="flex items-center gap-4">
+                                                <div className={`p-4 rounded-2xl border-2 font-black text-2xl ${s.isTargetMet ? 'border-green-200 text-green-600 bg-green-50' : 'border-blue-100 text-blue-600 bg-blue-50'}`}>{s.currentLevel}</div>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between text-[10px] font-black uppercase mb-1"><span>Progrès</span><span>Min: {s.requirements[targetLabel] || 0}</span></div>
+                                                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner"><div className={`h-full transition-all duration-700 ${s.isTargetMet ? 'bg-green-500' : 'bg-blue-600'}`} style={{width: `${(s.currentLevel/4)*100}%`}}></div></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'audit' && (
+                            <div className="space-y-6">
+                                <div className={`bg-white p-5 rounded-2xl border flex ${viewMode === 'mobile' ? 'flex-col items-stretch' : 'flex-row justify-between items-center'} sticky top-20 z-30 shadow-sm gap-4`}>
+                                    <div className={`flex ${viewMode === 'mobile' ? 'flex-col' : 'items-center'} gap-4`}>
+                                        <h2 className="font-black uppercase text-sm">Audit Terrain</h2>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setShowClearConfirm(true)} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-[10px] font-black flex items-center gap-2 hover:bg-red-100 transition-all uppercase justify-center flex-1"><Icon name="Trash2" size={14} /> Réinitialiser</button>
+                                            <button onClick={handleExportSession} className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-[10px] font-black flex items-center gap-2 hover:bg-blue-100 transition-all uppercase justify-center flex-1"><Icon name="Archive" size={14} /> Exporter</button>
+                                            <input type="file" ref={archiveInputRef} className="hidden" accept=".xlsx" onChange={handleImportSession} />
+                                            <button onClick={() => archiveInputRef.current?.click()} className="bg-slate-50 text-slate-600 px-4 py-2 rounded-xl text-[10px] font-black flex items-center gap-2 hover:bg-slate-100 transition-all uppercase justify-center flex-1"><Icon name="Upload" size={14} /> Importer</button>
+                                        </div>
+                                    </div>
+                                    <select value={selectedAuditStandardId} onChange={e => setSelectedAuditStandardId(e.target.value)} className="bg-slate-50 border rounded-xl px-4 py-3 text-xs font-black uppercase outline-none w-full md:min-w-[300px] focus:ring-2 focus:ring-blue-500">
+                                        <option value="all">Tous les standards</option>
+                                        {standards.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                    </select>
+                                </div>
+                                {(selectedAuditStandardId === 'all' ? standards : standards.filter(s => s.id === selectedAuditStandardId)).map(s => (
+                                    <div key={s.id} className="bg-white rounded-3xl border shadow-sm overflow-hidden mb-8">
+                                        <div className="p-4 bg-slate-50 border-b flex justify-between items-center font-black text-sm uppercase tracking-tight"><span>{s.name}</span> <span className="bg-blue-600 text-white px-5 py-1.5 rounded-xl shadow-lg">Score: {evaluation.find(e => e.id === s.id).currentLevel}</span></div>
+                                        <div className="p-6 space-y-8">
+                                            {criteria.filter(c => c.standardId === s.id).map(c => (
+                                                <div key={c.id} className={`space-y-4 ${!c.active ? 'opacity-40 grayscale' : ''}`}>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => updateCrit(c.id, {active: !c.active})} className="p-2 rounded-lg bg-slate-100 transition-colors hover:bg-slate-200">{c.active ? <Icon name="Eye" /> : <Icon name="EyeOff" />}</button>
+                                                        <h4 className="font-black uppercase text-sm tracking-tight text-slate-800">{c.label}</h4>
+                                                    </div>
+                                                    
+                                                    {/* Grille adaptative: 5 colonnes en desktop, 1 colonne en mobile */}
+                                                    <div className={`grid ${viewMode === 'mobile' ? 'grid-cols-1' : 'grid-cols-5'} gap-2`}>
+                                                        {[0, 1, 2, 3, 4].map(v => (
+                                                            <button key={v} onClick={() => updateCrit(c.id, {level: v})} className={`p-3 rounded-2xl border-2 text-left relative flex flex-col gap-2 transition-all ${viewMode === 'mobile' ? 'min-h-auto' : 'min-h-[6rem]'} ${c.level === v ? 'border-blue-600 bg-blue-50 shadow-md scale-[1.02]' : 'border-slate-100 hover:border-slate-200'}`}>
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="text-[8px] font-black uppercase text-slate-400">Niv.{v}</span>
+                                                                    {c.level === v && <Icon name="CheckCircle2" size={14} className="text-blue-600" />}
+                                                                </div>
+                                                                <p className="text-[10px] font-bold leading-tight">{v === 0 ? "INITIAL" : c.levelsData[v-1]?.requirement || "..."}</p>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+
+                                                    <div className={`grid ${viewMode === 'mobile' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-4`}>
+                                                        <div className="relative">
+                                                            <div className="flex justify-between items-center mb-1">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Observations terrain</label>
+                                                                <button onClick={() => handleAIRewriteComment(c.id)} disabled={aiLoading[`rewrite_${c.id}`] || !c.comment} className={`flex items-center gap-1 text-[9px] font-black text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50 ${aiLoading[`rewrite_${c.id}`] ? 'animate-pulse' : ''}`}><Icon name="Sparkles" size={12} /> REFORMULER</button>
+                                                            </div>
+                                                            <textarea className="bg-slate-50 border rounded-xl p-3 text-xs w-full h-24 resize-none outline-none focus:ring-1 focus:ring-blue-500 shadow-inner" placeholder="Observations..." value={c.comment} onChange={e => updateCrit(c.id, {comment: e.target.value})} />
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {c.images.map((img, idx) => (
+                                                                <div key={idx} className="relative w-24 h-24 rounded-lg overflow-hidden border shadow-sm">
+                                                                    <img src={img} className="w-full h-full object-cover" />
+                                                                    <button onClick={() => updateCrit(c.id, {images: c.images.filter((_, i) => i !== idx)})} className="absolute inset-0 bg-red-600/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"><Icon name="X" size={12} className="text-white" /></button>
+                                                                </div>
+                                                            ))}
+                                                            <label className="w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center text-slate-300 hover:text-blue-500 cursor-pointer transition-colors"><Icon name="Plus" /><input type="file" className="hidden" accept="image/*" multiple onChange={e => {
+                                                                const files = Array.from(e.target.files);
+                                                                files.forEach(f => {
+                                                                    const r = new FileReader();
+                                                                    r.onload = ev => updateCrit(c.id, {images: [...c.images, ev.target.result]});
+                                                                    r.readAsDataURL(f);
+                                                                });
+                                                            }} /></label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {activeTab === 'report' && (() => {
+                            const nextMaturityMap = { 'INITIAL': 'reactif', 'RÉACTIF': 'structure', 'STRUCTURÉ': 'maitrise', 'MAÎTRISÉ': 'optimise', 'OPTIMISÉ': null };
+                            const nextKey = nextMaturityMap[globalLabel];
+                            const nextLabel = MATURITY_STEPS.find(m => m.id === nextKey)?.label || "MAXIMUM";
+                            
+                            const priorityActions = [];
+                            if (nextKey) {
+                                criteria.forEach(c => {
+                                    const std = standards.find(s => s.id === c.standardId);
+                                    if (std && c.active && (std.requirements[nextKey] || 0) > 0 && c.level < std.requirements[nextKey]) {
+                                        const actionText = (c.levelsData[std.requirements[nextKey] - 1]?.action || "").trim().toUpperCase();
+                                        if (actionText !== "NC" && actionText !== "") { priorityActions.push({ c, std, target: std.requirements[nextKey] }); }
+                                    }
+                                });
+                            }
+                            const groupedPriority = priorityActions.reduce((acc, act) => {
+                                if (!acc[act.std.id]) acc[act.std.id] = { std: act.std, actions: [] };
+                                acc[act.std.id].actions.push(act);
+                                return acc;
+                            }, {});
+
+                            const otherActions = [];
+                            criteria.forEach(c => {
+                                const std = standards.find(s => s.id === c.standardId);
+                                if (c.active && !priorityActions.some(p => p.c.id === c.id) && c.level < 4) {
+                                    const targetLevel = c.level + 1;
+                                    const actionText = (c.levelsData[targetLevel - 1]?.action || "").trim().toUpperCase();
+                                    if (actionText !== "NC" && actionText !== "") { otherActions.push({ c, std, target: targetLevel }); }
+                                }
+                            });
+                            const groupedOther = otherActions.reduce((acc, act) => {
+                                if (!acc[act.std.id]) acc[act.std.id] = { std: act.std, actions: [] };
+                                acc[act.std.id].actions.push(act);
+                                return acc;
+                            }, {});
+
+                            // 1. Calcul des conformités acquises pour la vue Rapport (CORRECTION)
+                            const validatedCriteria = [];
+                            criteria.forEach(c => {
+                                const std = standards.find(s => s.id === c.standardId);
+                                if (std && c.active && c.level > 0) {
+                                    const currentReq = globalLabelId !== 'initial' ? (std.requirements[globalLabelId] || 0) : 0;
+                                    // Filtre strict : le standard doit être requis pour ce niveau, ET le critère doit atteindre ce niveau
+                                    if ((globalLabelId === 'initial' || currentReq > 0) && c.level >= currentReq) {
+                                        const reqText = (c.levelsData[c.level - 1]?.requirement || "").trim().toUpperCase();
+                                        if (reqText !== "" && reqText !== "NC") { 
+                                            validatedCriteria.push({ c, std }); 
+                                        }
+                                    }
+                                }
+                            });
+                            const groupedValidated = validatedCriteria.reduce((acc, item) => {
+                                if (!acc[item.std.id]) acc[item.std.id] = { std: item.std, criteria: [] };
+                                acc[item.std.id].criteria.push(item.c);
+                                return acc;
+                            }, {});
+
+                            return (
+                                <div className="max-w-4xl mx-auto space-y-8 pb-20">
+                                    <div className="bg-white p-8 rounded-2xl border shadow-sm print:hidden flex flex-col md:flex-row justify-between items-center transition-all gap-4">
+                                        <div><h2 className="text-xl font-black uppercase tracking-tight">Rapport de Maturité</h2><p className="text-sm text-slate-500 italic">Configurez les infos de l'audit sur le document.</p></div>
+                                        <div className="flex flex-wrap gap-3">
+                                            <button onClick={handleExportReportExcel} className="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-xl shadow-emerald-100 hover:bg-emerald-700 active:scale-95 transition-all"><Icon name="Download" size={20} /> PLAN EXCEL</button>
+                                            <button onClick={() => window.print()} className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-xl shadow-blue-100 hover:bg-blue-700 active:scale-95 transition-all"><Icon name="Printer" size={20} /> IMPRIMER / PDF</button>
+                                        </div>
+                                    </div>
+                                    <div id="printable-report" className="bg-white p-12 rounded-lg border border-slate-200 shadow-xl print:shadow-none print:border-none">
+                                        <div className="flex flex-col md:flex-row justify-between border-b-4 border-blue-600 pb-8 mb-8 gap-6">
+                                            <div className="flex-1">
+                                                <h1 className="text-4xl font-black text-slate-900 mb-2 uppercase tracking-tighter">Rapport KIHO</h1>
+                                                <p className="text-blue-600 font-black text-xs tracking-[0.3em] uppercase">Performance & Management</p>
+                                            </div>
+                                            <div className="w-full md:w-auto text-left md:text-right font-black uppercase space-y-1">
+                                                <div className="flex flex-col md:items-end">
+                                                    <div className="flex items-center md:justify-end gap-2 text-slate-400 text-[10px] tracking-widest font-bold">FILIALE</div>
+                                                    <input value={reportInfo.filiale} placeholder="Filiale" onChange={e => setReportInfo({...reportInfo, filiale: e.target.value})} className="text-sm md:text-right bg-blue-50/30 print:bg-transparent border-0 font-black focus:ring-0 w-full p-1 rounded" />
+                                                </div>
+                                                <div className="flex flex-col md:items-end">
+                                                    <div className="flex items-center md:justify-end gap-2 text-slate-400 text-[10px] tracking-widest font-bold uppercase">Site & Périmètre</div>
+                                                    <div className="flex flex-col md:flex-row md:items-center gap-1">
+                                                        <input value={reportInfo.site} placeholder="Site" onChange={e => setReportInfo({...reportInfo, site: e.target.value})} className="text-sm md:text-right bg-blue-50/30 print:bg-transparent border-0 font-black focus:ring-0 p-1 rounded" />
+                                                        <span className="hidden md:inline opacity-30 px-1">/</span>
+                                                        <input value={reportInfo.perimetre} placeholder="Dépôt..." onChange={e => setReportInfo({...reportInfo, perimetre: e.target.value})} className="text-sm md:text-right bg-blue-50/30 print:bg-transparent border-0 font-black focus:ring-0 p-1 rounded" />
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col md:items-end pt-2">
+                                                    <div className="flex items-center md:justify-end gap-2 text-slate-400 text-[10px] tracking-widest font-bold uppercase">Dates</div>
+                                                    <div className="flex items-center gap-1 md:justify-end text-[10px] font-black">
+                                                        <input type="date" value={reportInfo.dateDebut} onChange={e => setReportInfo({...reportInfo, dateDebut: e.target.value})} className="bg-blue-50/30 print:bg-transparent border-0 font-black focus:ring-0 p-1 rounded text-[10px] uppercase w-32" />
+                                                        <span className="opacity-40">→</span>
+                                                        <input type="date" value={reportInfo.dateFin} onChange={e => setReportInfo({...reportInfo, dateFin: e.target.value})} className="bg-blue-50/30 print:bg-transparent border-0 font-black focus:ring-0 p-1 rounded text-[10px] uppercase w-32" />
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col md:items-end pt-2">
+                                                    <div className="flex items-center md:justify-end gap-2 text-slate-400 text-[10px] tracking-widest font-bold uppercase">Auditeur</div>
+                                                    <input value={reportInfo.auditeur} placeholder="Auditeur" onChange={e => setReportInfo({...reportInfo, auditeur: e.target.value})} className="text-[11px] md:text-right bg-blue-50/30 print:bg-transparent border-0 font-black focus:ring-0 w-full p-1 rounded italic" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                                            <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                                                <h4 className="text-[10px] font-black text-slate-400 uppercase mb-4 border-b pb-1 tracking-widest">Analyse par Standard</h4>
+                                                <div className="space-y-3">
+                                                    {evaluation.map(s => (
+                                                        <div key={s.id} className="flex items-center gap-2">
+                                                            <span className="text-[8px] font-bold w-32 uppercase truncate text-slate-600">{s.name}</span>
+                                                            <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden shadow-inner"><div className={`h-full ${s.isTargetMet ? 'bg-green-600' : 'bg-blue-600'}`} style={{width: `${(s.currentLevel/4)*100}%`}}></div></div>
+                                                            <span className="text-[8px] font-black text-blue-600">Niv.{s.currentLevel}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="bg-blue-600 text-white p-8 rounded-3xl flex flex-col items-center justify-center text-center shadow-2xl relative overflow-hidden">
+                                                <Icon name="Award" size={48} className="mb-2 relative z-10" />
+                                                <p className="text-[10px] font-bold opacity-70 uppercase mb-1 tracking-widest relative z-10">Score Global Actuel</p>
+                                                <h2 className="text-4xl font-black uppercase tracking-tighter relative z-10">{globalLabel}</h2>
+                                                {nextKey && <div className="mt-4 px-4 py-1.5 bg-white/20 rounded-full text-[9px] font-black uppercase tracking-widest relative z-10">Objectif : {nextLabel}</div>}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-16">
+                                            <section className="break-inside-avoid-page">
+                                                <h3 className="text-lg font-black border-b-4 border-green-500 pb-1 mb-6 uppercase flex items-center gap-2"><Icon name="ShieldCheck" className="text-green-500" /> I. Bilan de Conformité - Niveau {globalLabel} acquis</h3>
+                                                {validatedCriteria.length === 0 ? <p className="text-xs text-slate-400 italic">Aucune conformité documentée.</p> : (
+                                                    Object.values(groupedValidated).map(group => (
+                                                        <div key={group.std.id} className="mb-8 break-inside-avoid">
+                                                            <div className="bg-green-50 px-4 py-2 rounded-xl mb-4 border-l-4 border-green-500 shadow-sm"><h4 className="text-[10px] font-black text-green-700 uppercase tracking-tight">{group.std.name}</h4></div>
+                                                            <div className="space-y-4">
+                                                                {group.criteria.map((c, i) => (
+                                                                    <div key={i} className="ml-4 p-5 border rounded-3xl bg-white shadow-sm border-l-8 border-l-green-100 break-inside-avoid">
+                                                                        <div className="flex gap-4">
+                                                                            <div className="w-10 h-10 bg-green-100 text-green-600 flex items-center justify-center rounded-xl font-black border-b-4 border-green-200 shrink-0 shadow-sm">{c.level}</div>
+                                                                            <div className="flex-1">
+                                                                                <p className="font-black uppercase text-[10px] mb-2 text-slate-800 tracking-tight leading-tight">{c.label}</p>
+                                                                                <div className="p-3 bg-green-50/30 border border-green-100 rounded-xl mb-2">
+                                                                                    <p className="text-[10px] italic leading-relaxed text-slate-700">"{c.levelsData[c.level-1]?.requirement}"</p>
+                                                                                </div>
+                                                                                <ReportEvidence item={c} />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </section>
+
+                                            <section className="break-inside-avoid-page">
+                                                <div className="flex items-center justify-between border-b-4 border-orange-500 pb-1 mb-6">
+                                                    <h3 className="text-lg font-black uppercase flex items-center gap-2"><Icon name="Target" className="text-orange-500" /> II. Plan de Labellisation</h3>
+                                                    <span className="bg-orange-100 text-orange-700 px-4 py-1 rounded-full text-[10px] font-black uppercase shadow-sm">Objectif : {nextLabel}</span>
+                                                </div>
+                                                {priorityActions.length === 0 ? <p className="text-xs text-slate-400 italic">Objectifs atteints.</p> : (
+                                                    Object.values(groupedPriority).map(group => (
+                                                        <div key={group.std.id} className="mb-8 break-inside-avoid">
+                                                            <div className="bg-orange-50 px-4 py-2 rounded-xl mb-4 border-l-4 border-orange-500 shadow-sm"><h4 className="text-xs font-black text-orange-700 uppercase">{group.std.name}</h4></div>
+                                                            <div className="space-y-8">
+                                                                {group.actions.map((a, i) => (
+                                                                    <div key={i} className="ml-4 p-6 border rounded-3xl bg-white shadow-sm break-inside-avoid">
+                                                                        <div className="flex gap-4">
+                                                                            <div className="w-10 h-10 bg-orange-100 text-orange-600 flex items-center justify-center rounded-xl font-black border-b-4 border-orange-200 shrink-0 shadow-sm">{a.target}</div>
+                                                                            <div className="flex-1">
+                                                                                <p className="font-black uppercase text-xs mb-3 text-slate-800 leading-tight tracking-tight">{a.c.label}</p>
+                                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                                    <div className="p-4 bg-white border border-slate-100 rounded-2xl shadow-inner"><p className="text-[8px] font-black text-slate-400 uppercase mb-2 tracking-widest">Exigence attendue</p><p className="text-[10px] italic text-slate-600">"{a.c.levelsData[a.target-1]?.requirement}"</p></div>
+                                                                                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl shadow-sm"><p className="text-[8px] font-black text-blue-500 uppercase mb-2 tracking-widest">Action corrective</p><p className="text-[10px] font-bold text-slate-800 italic">"{a.c.levelsData[a.target-1]?.action}"</p></div>
+                                                                                </div>
+                                                                                {a.target === 1 && <ReportEvidence item={a.c} />}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </section>
+
+                                            <section className="break-inside-avoid-page">
+                                                <h3 className="text-lg font-black border-b-4 border-blue-500 pb-1 mb-6 uppercase flex items-center gap-2"><Icon name="TrendingUp" className="text-blue-500" /> III. Plan de Progression (+1 Niveau)</h3>
+                                                {otherActions.length === 0 ? <p className="text-xs text-slate-400 italic">Aucune action de progrès.</p> : (
+                                                    Object.values(groupedOther).map(group => (
+                                                        <div key={group.std.id} className="mb-6 break-inside-avoid">
+                                                            <div className="bg-slate-100 px-4 py-2 rounded-xl mb-3 border-l-4 border-blue-600 shadow-sm"><h4 className="text-[10px] font-black text-slate-700 uppercase">{group.std.name}</h4></div>
+                                                            <div className="space-y-4">
+                                                                {group.actions.map((a, i) => (
+                                                                    <div key={i} className="ml-4 p-5 border rounded-3xl border-l-8 border-l-blue-100 bg-white shadow-sm break-inside-avoid transition-all">
+                                                                        <div className="flex gap-4">
+                                                                            <div className="w-8 h-8 bg-blue-50 text-blue-600 flex items-center justify-center rounded-lg font-black shrink-0 shadow-sm">{a.target}</div>
+                                                                            <div className="flex-1">
+                                                                                <p className="font-black uppercase text-[11px] text-slate-800 mb-2 leading-tight tracking-tight">{a.c.label}</p>
+                                                                                <p className="text-[10px] text-slate-500 italic mb-2 leading-relaxed"><span className="font-black text-blue-600 uppercase text-[9px]">Action :</span> {a.c.levelsData[a.target-1]?.action}</p>
+                                                                                <ReportEvidence item={a.c} hidePhotos={true} />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </section>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
+                        {activeTab === 'rules' && (
+                            <div className="space-y-8 pb-20">
+                                <div className="bg-white p-6 rounded-2xl border shadow-sm overflow-hidden animate-in fade-in duration-500">
+                                    <h3 className="font-black uppercase mb-4 text-blue-600 tracking-tight flex items-center gap-2">Matrice des Objectifs par Label</h3>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left">
+                                            <thead className="text-[10px] font-black uppercase border-b text-slate-400">
+                                                <tr><th className="p-2 border-r">Standard</th>{MATURITY_STEPS.map(m => <th key={m.id} className="p-2 text-center border-r last:border-0">{m.label}</th>)}</tr>
+                                            </thead>
+                                            <tbody>
+                                                {standards.map(s => (
+                                                    <tr key={s.id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
+                                                        <td className="p-2 text-[10px] font-bold uppercase truncate max-w-[200px] border-r">{s.name}</td>
+                                                        {MATURITY_STEPS.map((m, idx) => (
+                                                            <td key={m.id} className={`p-2 text-center ${idx < 3 ? 'border-r' : ''}`}>
+                                                                <input type="number" min="0" max="4" value={s.requirements[m.id] || 0} onChange={e => updateRequirement(s.id, m.id, e.target.value)} className="w-12 border rounded-lg text-center font-black p-1 text-[10px] focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-inner" />
+                                                            </td>
+                                                        ))}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-6 rounded-2xl border shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center transition-all">
+                                    <h3 className="font-black uppercase tracking-tight text-lg">Référentiel Critères</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx" onChange={handleFileUpload} />
+                                        <button onClick={() => fileInputRef.current?.click()} className="bg-slate-100 text-slate-700 px-6 py-2.5 rounded-xl text-[10px] font-black flex items-center gap-2 shadow-sm uppercase hover:bg-slate-200 transition-all active:scale-95"><Icon name="Upload" size={16} /> Importer Référentiel</button>
+                                        <button onClick={handleExportRules} className="bg-slate-100 text-slate-700 px-6 py-2.5 rounded-xl text-[10px] font-black flex items-center gap-2 shadow-sm uppercase hover:bg-slate-200 transition-all active:scale-95"><Icon name="Download" size={16} /> Exporter Référentiel</button>
+                                        <div className="flex gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
+                                            <input className="bg-white rounded-lg px-4 py-2 text-[10px] w-52 border-0 outline-none font-bold uppercase" placeholder="Standard..." value={newStandardName} onChange={e => setNewStandardName(e.target.value)} />
+                                            <button onClick={() => addStandard(newStandardName)} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-black text-xs uppercase shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95"><Icon name="Plus" size={18} /></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {standards.map(s => (
+                                    <div key={s.id} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm mb-8">
+                                        <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center font-black uppercase text-xs tracking-tight">
+                                            <input value={s.name} onChange={e => setStandards(p => p.map(st => st.id === s.id ? {...st, name: e.target.value} : st))} className="bg-transparent border-b-2 border-transparent focus:border-blue-500 focus:outline-none w-full p-1 transition-all" />
+                                            <button onClick={() => deleteStandard(s.id)} className="text-slate-300 hover:text-red-500 transition-all ml-4 p-2 rounded-lg hover:bg-red-50"><Icon name="Trash2" size={20} /></button>
+                                        </div>
+                                        <div className="p-6 space-y-8">
+                                            {criteria.filter(c => c.standardId === s.id).map(c => (
+                                                <div key={c.id} className="p-6 bg-slate-50/50 rounded-2xl border border-slate-100 relative group transition-all hover:bg-white hover:shadow-md">
+                                                    <div className="flex items-center justify-between mb-6">
+                                                        <input value={c.label} onChange={e => updateCrit(c.id, {label: e.target.value})} className="flex-1 text-sm font-black uppercase bg-transparent border-b-2 border-transparent focus:border-blue-300 focus:outline-none tracking-tight p-1" />
+                                                        <button onClick={() => deleteCriterion(c.id)} className="text-slate-300 hover:text-red-500 transition-opacity ml-4 p-1 rounded-lg hover:bg-red-50"><Icon name="X" size={20} /></button>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                                                        {[0, 1, 2, 3].map(i => (
+                                                            <div key={i} className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-sm">
+                                                                <span className="text-[9px] font-black bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg uppercase shadow-sm">Niveau {i+1}</span>
+                                                                <div className="space-y-2">
+                                                                    <div className="flex justify-between items-center px-1">
+                                                                        <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Exigence</label>
+                                                                        <button onClick={() => handleAIRewriteInRules(c.id, i, 'requirement')} disabled={aiLoading[`rewrite_rules_${c.id}_${i}_requirement`] || !c.levelsData[i]?.requirement} className={`flex items-center gap-1 text-[8px] font-black text-blue-600 hover:text-blue-800 disabled:opacity-30 p-1 rounded-md hover:bg-blue-50 transition-all ${aiLoading[`rewrite_rules_${c.id}_${i}_requirement`] ? 'animate-pulse' : ''}`}><Icon name="Sparkles" size={10} /> CORRIGER</button>
+                                                                    </div>
+                                                                    <textarea className="w-full text-[10px] font-bold h-20 resize-none border-0 bg-slate-50 p-2.5 rounded-xl focus:ring-1 focus:ring-blue-500 outline-none shadow-inner" placeholder="..." value={c.levelsData[i]?.requirement} onChange={e => {
+                                                                        const next = [...c.levelsData]; next[i] = {...next[i], requirement: e.target.value};
+                                                                        updateCrit(c.id, {levelsData: next});
+                                                                    }} />
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <div className="flex justify-between items-center px-1">
+                                                                        <label className="text-[8px] font-black text-blue-400 uppercase tracking-widest leading-none">Action terrain</label>
+                                                                        <button onClick={() => handleAIRewriteInRules(c.id, i, 'action')} disabled={aiLoading[`rewrite_rules_${c.id}_${i}_action`] || !c.levelsData[i]?.action} className={`flex items-center gap-1 text-[8px] font-black text-blue-600 hover:text-blue-800 disabled:opacity-30 p-1 rounded-md hover:bg-blue-50 transition-all ${aiLoading[`rewrite_rules_${c.id}_${i}_action`] ? 'animate-pulse' : ''}`}><Icon name="Sparkles" size={10} /> CORRIGER</button>
+                                                                    </div>
+                                                                    <textarea className="w-full text-[10px] font-bold h-20 resize-none border-0 bg-blue-50/20 p-2.5 rounded-xl focus:ring-1 focus:ring-blue-500 outline-none shadow-inner italic" placeholder="..." value={c.levelsData[i]?.action} onChange={e => {
+                                                                        const next = [...c.levelsData]; next[i] = {...next[i], action: e.target.value};
+                                                                        updateCrit(c.id, {levelsData: next});
+                                                                    }} />
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            <button onClick={() => addCriterion(s.id)} className="w-full py-5 border-2 border-dashed border-slate-200 rounded-3xl text-slate-300 font-black uppercase text-[11px] hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center gap-3"><Icon name="Plus" size={20} /> Ajouter un critère</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
