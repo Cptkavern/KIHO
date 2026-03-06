@@ -6,7 +6,8 @@
     <title>KIHO Bilan sécurité - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap');
+        /* Import des polices Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&family=Nunito:wght@800;900&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
@@ -16,9 +17,8 @@
             padding: 0;
         }
 
-        .title-font {
-            font-family: 'Bebas Neue', cursive;
-        }
+        .title-font { font-family: 'Bebas Neue', cursive; }
+        .font-nunito { font-family: 'Nunito', sans-serif; }
 
         /* --- BARRE D'APERÇU (FIXE) --- */
         #preview-bar {
@@ -195,6 +195,43 @@
 </head>
 <body>
 
+    <!-- FENÊTRE MODALE DE BIENVENUE -->
+    <div id="welcome-modal" class="fixed inset-0 z-[20000000] hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4 no-print-element">
+        <div class="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full overflow-hidden border-t-[10px] border-blue-600 animate-in fade-in zoom-in duration-300">
+            <div class="p-8 md:p-10">
+                <div class="flex items-center gap-5 mb-8">
+                    <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900 leading-tight uppercase tracking-tight">Bienvenue dans KIHO bus scan</h2>
+                        <p class="text-xs font-bold text-blue-500 uppercase tracking-widest mt-1">Confidentialité & Sauvegarde</p>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <p class="text-slate-600 leading-relaxed text-sm font-medium">
+                        Afin de garantir la stricte confidentialité de vos données, cette application <span class="text-slate-900 font-bold">ne transfère aucune information sur Internet</span>. Tout votre travail reste local.
+                    </p>
+                    <div class="bg-amber-50 border border-amber-100 p-5 rounded-3xl flex gap-4 items-start shadow-sm">
+                        <div class="text-amber-600 flex-shrink-0 mt-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        </div>
+                        <div>
+                            <p class="text-[13px] font-bold text-amber-900 leading-snug">
+                                Attention : Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues.
+                            </p>
+                            <p class="text-[11px] text-amber-700 mt-2 font-medium italic">Pensez à exporter votre projet régulièrement.</p>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="closeWelcomeModal()" class="mt-10 w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-[1.25rem] transition-all shadow-xl shadow-blue-200 flex items-center justify-center gap-3 uppercase tracking-[0.15em] text-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                    J'ai compris
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Barre d'aperçu dynamique -->
     <div id="preview-bar">
         <div class="flex items-center gap-3">
@@ -202,67 +239,91 @@
             <span class="font-black text-sm uppercase tracking-widest text-white">Bilan Carrosserie - Format Affiche</span>
         </div>
         <div class="h-8 w-px bg-slate-700"></div>
-        <button onclick="exitPreview()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-black uppercase transition-all flex items-center gap-2 border border-slate-600 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
+        <button onclick="exitPreview()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-black uppercase transition-all flex items-center gap-2 border border-slate-600 cursor-pointer text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Retour Saisie
         </button>
-        <button onclick="window.print()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-black uppercase transition-all shadow-xl shadow-blue-900/40 flex items-center gap-2 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
+        <button onclick="window.print()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-black uppercase transition-all shadow-xl shadow-blue-900/40 flex items-center gap-2 cursor-pointer text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
             Imprimer le Bilan
         </button>
     </div>
 
-    <!-- Interface Application KIHO -->
-    <header class="sticky top-0 z-50 bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between shadow-sm no-print-element">
-        <div class="flex items-center gap-4 text-left">
-            <div class="h-12 flex items-center justify-center">
-                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" alt="Logo Keolis" class="h-full object-contain">
+    <!-- HEADER REWORKED (Avec logo Keolis) -->
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 z-40 sticky top-0 no-print-element">
+        <!-- Bloc Logo et Titre (à gauche) -->
+        <div class="flex items-center gap-3">
+            <!-- Logo Keolis 2017 -->
+            <div class="h-[22px] flex items-center overflow-hidden">
+                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" 
+                     alt="Logo Keolis" 
+                     class="h-full w-auto object-contain"
+                     onerror="this.style.display='none'; document.getElementById('logo-fallback').classList.remove('hidden');">
+                <div id="logo-fallback" class="hidden text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8a2 2 0 012 2v10s0 2-2 2H8s-2 0-2-2V9a2 2 0 012-2zm0 0V5a2 2 0 012-2h4a2 2 0 012 2v2M9 17v1m6-1v1" /></svg>
+                </div>
             </div>
-            <div class="flex flex-col">
-                <h1 class="text-xl font-bold tracking-tight text-slate-900 leading-none">
-                    KIHO <span class="text-blue-600 uppercase">Bilan sécurité</span>
-                </h1>
-            </div>
+            <!-- Titre Applicatif -->
+            <h1 class="font-nunito text-[30px] font-[900] tracking-tighter leading-none select-none">
+                <span style="color: #005C7A">KIHO BUS</span>
+                <span style="color: #00A3A6">SCAN</span>
+            </h1>
         </div>
 
-        <div class="flex items-center gap-6">
-            <!-- Gestion des données -->
-            <div class="flex gap-2 border-r border-slate-200 pr-6">
-                <button onclick="exportData()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase rounded-lg transition-all border border-slate-200 flex items-center gap-1.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                    Exporter
-                </button>
-                <label class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase rounded-lg transition-all border border-slate-200 flex items-center gap-1.5 cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                    Importer
-                    <input type="file" accept=".json" class="hidden" onchange="importData(event)">
-                </label>
-            </div>
+        <!-- Bloc Menu (à droite) -->
+        <div class="relative">
+            <button onclick="toggleDropdown()" id="burger-btn" class="p-3 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all border border-slate-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
 
-            <div class="flex flex-col items-end">
-                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Semaine active</span>
-                <input type="text" id="week-label" oninput="updateGlobalTotals()" class="bg-slate-50 border border-slate-200 rounded-lg text-sm font-black text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 px-2 py-1 transition-all">
-            </div>
-            <div class="flex flex-col items-end border-l border-slate-200 pl-6">
-                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Référence cumul</span>
-                <input type="text" id="since-date" value="01 Janvier 2024" class="bg-slate-50 border border-slate-200 rounded-lg text-sm font-black text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-blue-500 w-40 px-2 py-1 transition-all">
+            <!-- Menu Déroulant -->
+            <div id="dropdown-menu" class="hidden absolute right-0 mt-4 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div class="p-3 space-y-1">
+                    <div class="px-4 py-2 mb-2 border-b border-slate-50">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Réglages Analyse</p>
+                        <div class="mt-2 space-y-2">
+                            <div class="flex flex-col">
+                                <label class="text-[8px] font-bold text-slate-500 uppercase ml-1">Semaine</label>
+                                <input type="text" id="week-label" oninput="updateGlobalTotals()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-black text-slate-700 focus:ring-1 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-[8px] font-bold text-slate-500 uppercase ml-1">Référence Cumul</label>
+                                <input type="text" id="since-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-black text-slate-700 focus:ring-1 focus:ring-blue-500 outline-none" value="01 Janvier 2024">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="newAnalysis()" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600 rounded-2xl transition-all group">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        <span class="text-sm font-bold">Nouvelle Analyse (Effacer)</span>
+                    </button>
+
+                    <button onclick="exportData()" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-slate-700 rounded-2xl transition-all group">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        <span class="text-sm font-bold">Sauvegarder (.json)</span>
+                    </button>
+
+                    <label class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-slate-700 rounded-2xl transition-all group cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        <span class="text-sm font-bold">Charger Projet</span>
+                        <input type="file" accept=".json" class="hidden" onchange="importData(event)">
+                    </label>
+                </div>
             </div>
         </div>
     </header>
 
     <div class="page-wrapper max-w-[1200px] mx-auto mt-6 px-4">
         
-        <!-- HEADER POSTER (Impression) -->
+        <!-- HEADER POSTER (Impression - Avec logo pour l'affiche) -->
         <header class="poster-header">
-            <!-- Logo Keolis à gauche -->
+            <!-- Logo Keolis à gauche sur l'affiche -->
             <div class="w-48 h-20 flex items-center justify-center border-r-2 border-slate-100 pr-6">
                 <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" alt="Logo Keolis" class="max-h-full max-w-full object-contain">
             </div>
-            <!-- Titre centré (compensé par un padding droit égal à la largeur du logo) -->
+            <!-- Titre centré -->
             <div class="flex-1 text-center pr-48">
                 <h2 class="text-6xl font-black title-font tracking-wider text-red-600 uppercase italic leading-none mb-3">Bilan Sécurité Carrosserie</h2>
                 <div class="flex justify-center gap-10 text-xl font-black text-slate-500 uppercase tracking-widest">
@@ -292,8 +353,8 @@
                         </div>
                     </div>
                 </div>
-                <div id="full-chocs-list" class="flex gap-4 overflow-x-auto pb-2 custom-scrollbar min-h-[60px] items-center">
-                    <p class="text-slate-300 italic text-xs w-full text-center">Aucun impact saisi.</p>
+                <div id="full-chocs-list" class="flex gap-4 overflow-x-auto pb-2 custom-scrollbar min-h-[60px] items-center text-slate-300 italic text-xs w-full text-center justify-center">
+                    Aucun impact saisi.
                 </div>
             </div>
             
@@ -435,12 +496,12 @@
                 const tspan1 = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
                 tspan1.setAttribute("id", `text1-${id}`);
                 tspan1.setAttribute("x", cx); tspan1.setAttribute("dy", "0");
-                tspan1.setAttribute("class", "text-main");
+                tspan1.setAttribute("class", "text-main font-bold");
                 
                 const tspan2 = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
                 tspan2.setAttribute("id", `text2-${id}`);
                 tspan2.setAttribute("x", cx); tspan2.setAttribute("dy", "24");
-                tspan2.setAttribute("class", "text-sub");
+                tspan2.setAttribute("class", "text-sub font-black");
                 
                 text.appendChild(tspan1); text.appendChild(tspan2);
                 g.appendChild(rect); g.appendChild(text); svgGrid.appendChild(g);
@@ -472,14 +533,27 @@
             renderImpactsList();
         }
 
+        function toggleDropdown() {
+            const menu = document.getElementById('dropdown-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('dropdown-menu');
+            const btn = document.getElementById('burger-btn');
+            if (!menu.contains(event.target) && !btn.contains(event.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
         function renderImpactsList() {
             const listEl = document.getElementById('existing-impacts');
             const impacts = pointsData[selectedId] || [];
-            if (impacts.length === 0) { listEl.innerHTML = `<p class="italic text-slate-300">Point vierge.</p>`; return; }
+            if (impacts.length === 0) { listEl.innerHTML = `<p class="italic text-slate-300 text-center">Point vierge.</p>`; return; }
             let html = '';
             impacts.forEach((imp, index) => {
                 html += `<div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg mb-1">
-                    <span class="font-bold uppercase text-slate-700">${imp.name} (${imp.date}) — <span class="text-red-600">${imp.cost}€</span></span>
+                    <span class="font-bold uppercase text-slate-700 text-[10px] text-left">${imp.name} (${imp.date}) — <span class="text-red-600">${imp.cost}€</span></span>
                     <button onclick="removeImpact(${index})" class="text-red-500 hover:font-bold">✕</button>
                 </div>`;
             });
@@ -559,9 +633,9 @@
                 const card = document.createElement('div');
                 card.className = "flex-shrink-0 bg-slate-50 border border-slate-100 p-2 rounded-xl flex flex-col min-w-[120px] cursor-pointer hover:bg-white transition-colors shadow-sm";
                 card.innerHTML = `
-                    <span class="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">${choc.week}</span>
-                    <span class="text-[10px] font-bold text-slate-800 uppercase leading-tight truncate">${choc.name}</span>
-                    <span class="text-xs font-black text-red-600 mt-1">${choc.cost}€</span>
+                    <span class="text-[8px] font-black text-slate-400 uppercase leading-none mb-1 text-left">${choc.week}</span>
+                    <span class="text-[10px] font-bold text-slate-800 uppercase leading-tight truncate text-left">${choc.name}</span>
+                    <span class="text-xs font-black text-red-600 mt-1 text-left">${choc.cost}€</span>
                 `;
                 card.onclick = () => selectPoint(choc.id);
                 summaryContainer.appendChild(card);
@@ -607,6 +681,22 @@
             if (val !== null) { historyBase = parseFloat(val) || 0; updateGlobalTotals(); }
         }
 
+        function newAnalysis() {
+            if(confirm("Êtes-vous sûr de vouloir effacer tous les chocs ? Cette action est irréversible.")) {
+                pointsData = {};
+                historyBase = 0;
+                document.querySelectorAll('.marker-dot').forEach(marker => {
+                    marker.classList.remove('active');
+                    const tip = document.getElementById(`tip-${marker.id}`);
+                    if(tip) { tip.classList.add('opacity-0'); tip.classList.remove('active-tooltip'); }
+                });
+                removeBusPhoto();
+                updateGlobalTotals();
+                renderGlobalSummary();
+                document.getElementById('dropdown-menu').classList.add('hidden');
+            }
+        }
+
         function exportData() {
             const data = {
                 pointsData,
@@ -623,6 +713,7 @@
             a.download = `kiho-bilan-securite-${new Date().toISOString().split('T')[0]}.json`;
             a.click();
             URL.revokeObjectURL(url);
+            document.getElementById('dropdown-menu').classList.add('hidden');
         }
 
         function importData(event) {
@@ -645,15 +736,13 @@
                         if (!pointsData[marker.id]) {
                             marker.classList.remove('active');
                             const tip = document.getElementById(`tip-${marker.id}`);
-                            if(tip) {
-                                tip.classList.add('opacity-0');
-                                tip.classList.remove('active-tooltip');
-                            }
+                            if(tip) { tip.classList.add('opacity-0'); tip.classList.remove('active-tooltip'); }
                         }
                     });
 
                     updateGlobalTotals();
                     renderGlobalSummary();
+                    document.getElementById('dropdown-menu').classList.add('hidden');
                 } catch (err) {
                     alert("Erreur lors de l'importation.");
                 }
@@ -674,6 +763,11 @@
         function exitPreview() {
             document.body.classList.remove('is-preview');
             document.getElementById('preview-bar').style.display = 'none';
+        }
+
+        function closeWelcomeModal() {
+            const modal = document.getElementById('welcome-modal');
+            if(modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
         }
 
         function closeEditor() {
@@ -716,10 +810,10 @@
         window.onload = function() { 
             const currentWeek = getWeekNumber(new Date());
             const weekLabelEl = document.getElementById('week-label');
-            if (weekLabelEl) {
-                weekLabelEl.value = "Semaine " + currentWeek;
-            }
+            if (weekLabelEl) { weekLabelEl.value = "Semaine " + currentWeek; }
             updateGlobalTotals(); 
+            const modal = document.getElementById('welcome-modal');
+            if(modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
         };
     </script>
 
