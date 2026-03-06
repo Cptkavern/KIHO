@@ -18,6 +18,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&display=swap');
+        
         body { font-family: 'Inter', sans-serif; overflow: hidden; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .step-active { border-bottom: 4px solid #2563eb; opacity: 1; background: white; }
@@ -79,14 +81,13 @@
             
             <!-- Header -->
             <header class="bg-white border-b border-slate-200 px-6 py-4 text-slate-900 flex items-center justify-between z-40 shrink-0">
-                <div class="flex items-center gap-4">
-                    <div class="logo-container shadow-lg bg-blue-600 border-none" style="border-radius: 0.5rem;">
-                        <img id="app-logo" src="logo blanc.png" alt="KIHO Logo" onerror="this.style.display='none'; document.getElementById('logo-fallback').classList.remove('hidden');">
-                        <div id="logo-fallback" class="hidden text-white"><i data-lucide="check-circle-2"></i></div>
+                <div class="flex items-center gap-3">
+                    <div class="h-[22px] flex items-center shrink-0">
+                        <img id="app-logo" src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" alt="Keolis Logo" class="h-full w-auto object-contain" onerror="this.style.display='none'; document.getElementById('logo-fallback').classList.remove('hidden');">
+                        <div id="logo-fallback" class="hidden text-blue-600"><i data-lucide="bus" class="w-6 h-6"></i></div>
                     </div>
-                    <div class="flex flex-col">
-                        <h1 class="text-xl font-black tracking-tight leading-none italic text-slate-900">KIHO <span class="text-blue-600 not-italic">8D</span></h1>
-                        <span class="text-[10px] font-bold text-slate-500 tracking-tight mt-1">solution proposée par les équipe du programme kiho, concepteur : ablancourt david</span>
+                    <div class="flex flex-col justify-center">
+                        <h1 class="text-[30px] tracking-tighter leading-none mt-0.5" style="font-family: 'Nunito', sans-serif; font-weight: 900; color: #005C7A;">KIHO <span style="color: #00A3A6;">8D</span></h1>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -125,9 +126,12 @@
                     <i data-lucide="chevron-left"></i> Précédent
                 </button>
                 <div class="hidden sm:flex gap-1.5" id="progress-dots"></div>
-                <button onclick="nextStep()" id="next-btn" class="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">
-                    Suivant <i data-lucide="chevron-right"></i>
-                </button>
+                <div class="flex flex-col items-end gap-1">
+                    <button onclick="nextStep()" id="next-btn" class="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">
+                        Suivant <i data-lucide="chevron-right"></i>
+                    </button>
+                    <span class="text-[8px] font-bold text-slate-400 tracking-tight text-right uppercase mt-1">Concepteur : D.Ablancourt</span>
+                </div>
             </footer>
         </div>
     </div>
@@ -166,27 +170,61 @@
                     <i data-lucide="shield-check" class="w-8 h-8"></i>
                 </div>
                 <div>
-                    <h3 class="text-xl font-black text-slate-800 tracking-tight">Bienvenue !</h3>
+                    <h3 class="text-xl font-black text-slate-800 tracking-tight">Bienvenue dans l'application Kiho 8D</h3>
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Confidentialité & Sauvegarde</p>
                 </div>
             </div>
             <div class="space-y-4 text-sm text-slate-600 font-medium">
-                <p>
-                    Afin de garantir la stricte confidentialité de vos analyses industrielles, <strong>cette application ne transfère aucune donnée sur Internet.</strong> Tout votre travail reste confiné localement sur votre ordinateur.
-                </p>
-                <div class="p-4 bg-orange-50 rounded-2xl border border-orange-200 text-orange-900 shadow-sm">
-                    <div class="flex items-center gap-2 mb-2 font-black text-orange-600 uppercase tracking-wider text-xs">
-                        <i data-lucide="alert-circle" class="w-4 h-4 text-orange-500"></i> Attention
+                <div class="p-5 bg-orange-50 rounded-2xl border border-orange-200 text-orange-900 shadow-sm">
+                    <div class="flex items-center gap-2 mb-3 font-black text-orange-600 uppercase tracking-wider text-xs">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-orange-500"></i> Important
                     </div>
-                    <p class="leading-relaxed">Pour ne pas perdre votre analyse à la fermeture de cette page, vous devez impérativement l'exporter via le menu <i data-lucide="menu" class="w-4 h-4 inline align-middle mx-1 text-slate-400"></i> en haut à droite :</p>
-                    <div class="mt-3 flex gap-2">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-orange-200 shadow-sm text-xs font-bold"><i data-lucide="download" class="w-3.5 h-3.5 text-blue-500"></i> Sauvegarder (.json)</span>
+                    <p class="leading-relaxed mb-4 font-bold text-slate-800">
+                        Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues.
+                    </p>
+                    <p class="leading-relaxed text-sm">
+                        Pensez à exporter régulièrement votre travail à l'aide du bouton <strong>Sauvegarder</strong> présent dans le menu <i data-lucide="menu" class="w-4 h-4 inline align-middle mx-1 text-slate-500"></i> situé en haut à droite de l'application.
+                    </p>
+                    <div class="mt-4 flex gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-white rounded-xl border border-orange-200 shadow-sm text-xs font-bold text-slate-700"><i data-lucide="download" class="w-4 h-4 text-blue-500"></i> Sauvegarder (.json)</span>
                     </div>
                 </div>
             </div>
             <div class="mt-8">
                 <button onclick="closeWelcomeModal()" class="w-full px-6 py-3.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95 flex justify-center items-center gap-2">
                     <i data-lucide="check" class="w-5 h-5"></i> J'ai compris
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL D'AIDE DE L'ÉTAPE -->
+    <div id="help-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[50000] backdrop-blur-sm fade-in">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-[550px] max-w-[90%] border border-slate-100 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
+            <button onclick="closeHelpModal()" class="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
+            <div class="flex items-center gap-4 mb-6">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl shadow-inner border border-blue-100">
+                    <i data-lucide="help-circle" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h3 id="help-modal-title" class="text-xl font-black text-slate-800 tracking-tight">Aide</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Guide de l'étape</p>
+                </div>
+            </div>
+            <div class="space-y-4 text-sm text-slate-600 font-medium">
+                <div class="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 text-blue-900 shadow-sm">
+                    <h4 class="font-black uppercase text-xs mb-2 flex items-center gap-2 text-blue-700"><i data-lucide="target" class="w-4 h-4"></i> Objectif de l'étape</h4>
+                    <p id="help-modal-objective" class="leading-relaxed"></p>
+                </div>
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm">
+                    <h4 class="font-black text-slate-800 uppercase text-xs mb-2 flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4"></i> Comment compléter le fichier ?</h4>
+                    <p id="help-modal-how" class="leading-relaxed"></p>
+                </div>
+            </div>
+            <div class="mt-8">
+                <button onclick="closeHelpModal()" class="w-full px-6 py-3.5 bg-slate-800 text-white hover:bg-slate-900 rounded-xl font-black uppercase tracking-widest shadow-lg transition-all active:scale-95 flex justify-center items-center gap-2">
+                    <i data-lucide="check" class="w-5 h-5"></i> C'est clair
                 </button>
             </div>
         </div>
@@ -227,6 +265,63 @@
             comment: "<strong>Questions :</strong> Dans quelles conditions ? Comment le défaut se manifeste ?<br><strong>Intérêt :</strong> Comprendre le mode d'apparition et le contexte.",
             combien: "<strong>Questions :</strong> Combien de pièces ? Quel coût ? Quel taux ?<br><strong>Intérêt :</strong> Mesurer l'ampleur et la gravité pour prioriser.",
             pourquoi: "<strong>Questions :</strong> Pourquoi est-ce inacceptable ? Quel standard n'est pas respecté ?<br><strong>Intérêt :</strong> Justifier l'ouverture du 8D par un écart au standard."
+        };
+
+        const ISHIKAWA_GUIDE = {
+            "Main d'œuvre": "Facteurs liés au personnel : Conducteur non familier avec la ligne, retard à la prise de service, fatigue, erreur de manipulation, mauvaise gestion d'un aléa commercial.",
+            "Matériel": "Facteurs liés aux bus/équipements : Pannes mécaniques, portes défectueuses, valideur de titres HS, girouette en panne, type de bus inadapté à la ligne (ex: articulé au lieu de standard).",
+            "Matière": "Facteurs liés aux composants/consommables : Rupture de rouleaux de tickets, manque de monnaie (fond de caisse), manque de pièces détachées ou fluides à l'atelier.",
+            "Méthode": "Facteurs liés à l'organisation/processus : Temps de parcours théorique sous-évalué, feuille de route obsolète, mauvaise planification des relèves, procédure de déviation imprécise.",
+            "Milieu": "Facteurs liés à l'environnement : Congestion du trafic routier, déviations/travaux sur la voirie, intempéries (neige, verglas), véhicules mal stationnés aux arrêts.",
+            "Mesure": "Facteurs liés aux systèmes/contrôles : Décalage GPS du SAEIV (Système d'Aide à l'Exploitation), compteurs de passagers défectueux, erreurs de pointage ou fausses alertes système."
+        };
+
+        const HELP_DATA = {
+            0: {
+                title: "Lancement",
+                objective: "Constituer une équipe compétente et définir les bases du projet. Une bonne préparation et une équipe pluridisciplinaire sont les clés d'une résolution efficace.",
+                how: "Remplissez le titre de votre résolution, la date de début et la liste des participants. Lisez bien les consignes générales à droite pour vous mettre dans le bon état d'esprit."
+            },
+            1: {
+                title: "Protéger (Mesures Conservatoires)",
+                objective: "Protéger immédiatement le client (interne ou externe) contre les effets indésirables du problème, en attendant d'en trouver et d'éliminer la cause racine.",
+                how: "Cliquez sur le bouton '+ Ajouter une mesure' sous le tableau pour créer une nouvelle ligne. Saisissez directement la description, le pilote et le délai dans les cases de la ligne. Une corbeille apparaît au survol de la ligne pour la supprimer."
+            },
+            2: {
+                title: "Définir (Problème)",
+                objective: "Décrire le problème de manière factuelle et précise via la méthode QQOQCCP. Un problème bien défini est à moitié résolu.",
+                how: "Survolez l'icône '?' pour voir l'aide de chaque champ QQOQCCP. Pour la 'Problématique' et l''Objectif', lisez et appuyez-vous sur les encarts d'astuces situés juste au-dessus des zones de saisie."
+            },
+            3: {
+                title: "Rechercher (Ishikawa)",
+                objective: "Identifier toutes les causes possibles et imaginables qui pourraient expliquer le problème, en balayant les 6M (Matière, Matériel, etc.).",
+                how: "Saisissez une idée dans le champ '+ Ajouter...' d'une catégorie et appuyez sur la touche Entrée. <strong>Astuce :</strong> Vous pouvez déplacer facilement une cause d'une catégorie à une autre en la faisant glisser (Drag & Drop) ! Survolez les titres des catégories pour afficher leur définition."
+            },
+            4: {
+                title: "Cibler (Regroupement)",
+                objective: "Trier et regrouper les causes similaires pour structurer l'analyse et focaliser les efforts d'investigation sur les familles les plus pertinentes.",
+                how: "Sélectionnez plusieurs causes à gauche (elles deviennent bleues), donnez un nom au groupe puis cliquez sur VALIDER. Vous pouvez aussi glisser-déposer (Drag & Drop) les causes directement dans les groupes."
+            },
+            5: {
+                title: "Analyser (5 Pourquoi)",
+                objective: "Remonter jusqu'à la cause racine (le 'vrai' coupable) en demandant 'Pourquoi ?' successivement pour chaque hypothèse retenue.",
+                how: "Saisissez vos 'Pourquoi' dans les cases (qui s'agrandissent automatiquement). Survolez le coin supérieur droit d'une case pour faire apparaître les boutons '+' (ajouter une branche) ou Corbeille. Cochez la case dans la colonne 'Cause retenue' pour la valider en cause racine."
+            },
+            6: {
+                title: "Agir (Plan d'Actions)",
+                objective: "Définir et mettre en œuvre des actions correctives permanentes pour éliminer la cause racine. Contrairement aux mesures conservatoires, ces actions visent le long terme.",
+                how: "Les causes racines sélectionnées sont déjà listées à gauche du tableau. Survolez une cause et cliquez sur le bouton '+' vert apparu pour lui ajouter une action. Remplissez ensuite l'action, le pilote et le délai directement dans la ligne. Un bouton en bas permet d'ajouter des actions générales."
+            },
+            7: {
+                title: "Standards (Standardisation)",
+                objective: "Pérenniser les résultats. Mettez à jour les standards, les procédures ou les modes opératoires pour verrouiller la solution et éviter la récidive.",
+                how: "Le tableau liste automatiquement toutes les actions définies à l'étape précédente. Rédigez directement dans la case 'Standardisation' comment cette action sera pérennisée (ex: mise à jour de document, formation, etc.)."
+            },
+            8: {
+                title: "Bilan",
+                objective: "Clore le 8D. C'est le moment de féliciter l'équipe, de valider l'efficacité finale et de partager les leçons apprises (Retours d'Expérience) avec le reste de l'organisation.",
+                how: "Remplissez les encarts pour détailler la preuve d'efficacité, les leçons apprises et les axes d'amélioration. Enfin, cochez les cases de la section 'Partage' pour confirmer la clôture de la communication."
+            }
         };
 
         // --- PRE-REMPLISSAGE DES DONNÉES DE DÉMONSTRATION ---
@@ -420,6 +515,9 @@
                     <div class="flex items-center gap-3">
                         <h2 class="text-xl md:text-2xl font-black text-slate-800 flex items-center gap-3">
                             <i data-lucide="${step.icon}" class="${step.color}"></i> ${step.title}
+                            <button onclick="openHelpModal()" class="ml-2 p-1.5 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700 transition-colors shadow-sm" title="Aide sur cette étape">
+                                <i data-lucide="help-circle" class="w-5 h-5"></i>
+                            </button>
                         </h2>
                     </div>
                 </div>
@@ -443,18 +541,55 @@
                     break;
                 case 1:
                     content = `
-                        <div class="space-y-6">
-                            <div class="p-5 bg-orange-50 border-l-4 border-orange-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-orange-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="shield-alert" class="w-3 h-3"></i> Protéger (Mesures Conservatoires)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Protéger immédiatement le client (interne ou externe) contre les effets indésirables du problème, en attendant d'en trouver et d'éliminer la cause racine. Ces mesures sont temporaires (ex: tri, mur qualité).</p></div>
-                            <div class="p-6 bg-slate-900 rounded-[2.5rem] text-white">
-                                <h3 class="text-xs font-black uppercase text-orange-400 mb-4 tracking-widest">Nouvelle Mesure</h3>
-                                <div class="grid grid-cols-1 gap-2"><input id="mes-desc" class="p-3 bg-slate-800 border-none rounded-xl text-sm" placeholder="Description de la mesure..."><div class="flex gap-2"><input id="mes-who" class="flex-1 p-3 bg-slate-800 border-none rounded-xl text-sm" placeholder="Qui ?"><input id="mes-when" type="date" class="flex-1 p-3 bg-slate-800 border-none rounded-xl text-sm"></div><button onclick="addMeasure()" class="w-full py-3 bg-orange-500 text-slate-900 font-bold rounded-xl mt-2 hover:bg-orange-400 shadow-lg">Ajouter</button></div>
+                        <div class="space-y-6 fade-in">
+                            <div class="p-5 bg-orange-50 border-l-4 border-orange-500 rounded-r-[1.5rem] mb-6 shadow-sm">
+                                <h4 class="text-[10px] font-black uppercase text-orange-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="shield-alert" class="w-3 h-3"></i> Protéger (Mesures Conservatoires)</h4>
+                                <p class="text-sm text-slate-700"><strong>Objectif :</strong> Protéger immédiatement le client (interne ou externe) contre les effets indésirables du problème, en attendant d'en trouver et d'éliminer la cause racine. Ces mesures sont temporaires (ex: tri, mur qualité).</p>
                             </div>
-                            <div class="space-y-3">${formData.measuresList.length === 0 ? '<div class="text-center p-10 text-slate-400 italic">Aucune mesure définie.</div>' : formData.measuresList.map((m, i) => `<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border border-slate-200 rounded-2xl shadow-sm"><div class="flex-1"><div class="font-bold text-sm text-slate-800 mb-1">${m.description}</div><div class="text-[10px] text-slate-400 uppercase font-black">${m.who} | ${m.date || 'Non daté'}</div></div><button onclick="removeMeasure(${i})" class="p-2 text-red-400 hover:text-red-600 ml-auto sm:ml-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('')}</div>
+                            
+                            <div class="bg-white border-2 border-slate-100 rounded-[2rem] overflow-hidden shadow-sm">
+                                <div class="hidden md:grid grid-cols-12 gap-4 p-5 bg-slate-50 border-b border-slate-100 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    <div class="col-span-6">Action / Mesure</div>
+                                    <div class="col-span-3">Pilote (Qui)</div>
+                                    <div class="col-span-2">Délai (Quand)</div>
+                                    <div class="col-span-1 text-center">Suppr.</div>
+                                </div>
+                                
+                                <div class="divide-y divide-slate-50">
+                                    ${formData.measuresList.length === 0 ? '<div class="p-10 text-center text-slate-400 italic font-medium">Aucune mesure pour le moment. Cliquez sur "Ajouter une mesure" pour commencer.</div>' : formData.measuresList.map((m, i) => `
+                                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 p-5 items-center hover:bg-slate-50/50 transition-colors group">
+                                            <div class="col-span-1 md:col-span-6 flex flex-col gap-1">
+                                                <label class="md:hidden text-[10px] font-black uppercase text-slate-400">Action</label>
+                                                <input type="text" value="${m.description.replace(/"/g, '&quot;')}" oninput="updateMeasureField(${i}, 'description', this.value)" placeholder="Que faut-il faire ?" class="w-full bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-orange-400 outline-none transition-colors text-sm font-medium py-1 text-slate-800" />
+                                            </div>
+                                            <div class="col-span-1 md:col-span-3 flex flex-col gap-1">
+                                                <label class="md:hidden text-[10px] font-black uppercase text-slate-400">Pilote</label>
+                                                <input type="text" value="${m.who.replace(/"/g, '&quot;')}" oninput="updateMeasureField(${i}, 'who', this.value)" placeholder="Nom du responsable" class="w-full bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-orange-400 outline-none transition-colors text-sm font-bold text-slate-600 py-1" />
+                                            </div>
+                                            <div class="col-span-1 md:col-span-2 flex flex-col gap-1">
+                                                <label class="md:hidden text-[10px] font-black uppercase text-slate-400">Délai</label>
+                                                <input type="date" value="${m.date}" onchange="updateMeasureField(${i}, 'date', this.value)" class="w-full bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-orange-400 outline-none transition-colors text-xs font-black uppercase text-slate-500 py-1 cursor-pointer" />
+                                            </div>
+                                            <div class="col-span-1 md:col-span-1 flex justify-end md:justify-center mt-2 md:mt-0">
+                                                <button onclick="removeMeasure(${i})" class="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100" title="Supprimer">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                
+                                <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-center">
+                                    <button onclick="addEmptyMeasure()" class="px-5 py-2.5 bg-orange-100 text-orange-600 font-bold rounded-xl hover:bg-orange-200 active:scale-95 transition-all flex items-center gap-2 shadow-sm">
+                                        <i data-lucide="plus" class="w-4 h-4"></i> Ajouter une mesure
+                                    </button>
+                                </div>
+                            </div>
                         </div>`;
                     break;
                 case 2:
                     content = `
-                        <div class="space-y-6">
+                        <div class="space-y-6 fade-in">
                             <div class="p-5 bg-blue-50 border-l-4 border-blue-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-blue-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="search" class="w-3 h-3"></i> Définir (Problème)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Décrire le problème de manière factuelle et précise (QQOQCCP). Un problème bien défini est un problème à moitié résolu. Évitez les suppositions à ce stade, concentrez-vous sur l'observation de l'écart.</p></div>
                             
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -463,14 +598,22 @@
                                     ${Object.keys(formData.qqoqccp).map(k => `<div class="space-y-1 group relative"><div class="flex items-center gap-1 ml-2"><label class="text-[9px] font-black uppercase text-slate-400">${k}</label><i data-lucide="help-circle" class="w-3 h-3 text-slate-300 cursor-help"></i><div class="hidden group-hover:block absolute bottom-full left-0 mb-2 w-64 p-2 bg-slate-800 text-white text-[10px] rounded-lg shadow-xl z-10 pointer-events-none">${QQOQCCP_GUIDE[k]}</div></div><textarea class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-200 outline-none transition-all shadow-sm resize-y" rows="2" oninput="formData.qqoqccp['${k}'] = this.value" placeholder="...">${formData.qqoqccp[k].replace(/"/g, '&quot;')}</textarea></div>`).join('')}
                                 </div>
 
-                                <div class="flex flex-col gap-5">
-                                    <div class="flex-1 flex flex-col">
+                                <div class="flex flex-col gap-4">
+                                    <div class="flex flex-col">
                                         <label class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-1 flex items-center gap-1.5"><i data-lucide="target" class="w-3 h-3"></i> Problématique</label>
-                                        <textarea class="w-full flex-1 min-h-[160px] p-5 border-2 border-slate-100 rounded-[2rem] outline-none text-sm focus:border-blue-300 resize-none shadow-sm transition-all bg-white" oninput="formData.problemStatement = this.value" placeholder="Faites une phrase de synthèse décrivant précisément le problème...">${formData.problemStatement}</textarea>
+                                        <div class="bg-blue-50 border-2 border-blue-100 text-blue-800 text-[10px] rounded-t-[1.5rem] rounded-b-sm p-2.5 flex gap-2 items-center z-10">
+                                            <i data-lucide="lightbulb" class="w-4 h-4 shrink-0 text-blue-500"></i>
+                                            <p class="leading-tight"><strong>Astuce :</strong> Résumez le QQOQCCP en une phrase. <span class="italic text-blue-600">Ex: "Depuis [Quand], [Qui] constate [Quoi] sur [Où], causant [Combien]."</span></p>
+                                        </div>
+                                        <textarea class="w-full h-[100px] p-4 border-2 border-slate-100 border-t-0 rounded-b-[1.5rem] rounded-t-sm outline-none text-sm focus:border-blue-300 resize-y shadow-sm transition-all bg-white -mt-1" oninput="formData.problemStatement = this.value" placeholder="Faites une phrase de synthèse décrivant précisément le problème...">${formData.problemStatement}</textarea>
                                     </div>
-                                    <div class="flex-1 flex flex-col">
+                                    <div class="flex flex-col">
                                         <label class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-1 flex items-center gap-1.5"><i data-lucide="flag" class="w-3 h-3"></i> Objectifs</label>
-                                        <textarea class="w-full flex-1 min-h-[160px] p-5 border-2 border-slate-100 rounded-[2rem] outline-none text-sm focus:border-blue-300 resize-none shadow-sm transition-all bg-white" oninput="formData.objectives = this.value" placeholder="Objectif(s) à atteindre (soyez SMART : Spécifique, Mesurable, Atteignable, Réaliste, Temporel)...">${formData.objectives || ''}</textarea>
+                                        <div class="bg-emerald-50 border-2 border-emerald-100 text-emerald-800 text-[10px] rounded-t-[1.5rem] rounded-b-sm p-2.5 flex gap-2 items-center z-10">
+                                            <i data-lucide="lightbulb" class="w-4 h-4 shrink-0 text-emerald-500"></i>
+                                            <p class="leading-tight">Un objectif <strong>S.M.A.R.T</strong> est : <strong>S</strong>pécifique, <strong>M</strong>esurable (chiffré), <strong>A</strong>tteignable, <strong>R</strong>éaliste et <strong>T</strong>emporel.</p>
+                                        </div>
+                                        <textarea class="w-full h-[100px] p-4 border-2 border-slate-100 border-t-0 rounded-b-[1.5rem] rounded-t-sm outline-none text-sm focus:border-emerald-300 resize-y shadow-sm transition-all bg-white -mt-1" oninput="formData.objectives = this.value" placeholder="Objectif(s) à atteindre...">${formData.objectives || ''}</textarea>
                                     </div>
                                 </div>
                             </div>
@@ -483,7 +626,28 @@
                         const causes = formData.ishikawa[catName] || [];
                         const catIdSafe = catName.replace(/'/g, "\\'");
                         const inputId = `add-input-${catName.replace(/[^a-zA-Z0-9]/g, '')}`;
-                        return `<div class="flex-1 min-w-[180px] p-2 fish-category-box"><div class="bg-purple-50 rounded-xl border border-purple-200 shadow-sm flex flex-col relative h-full"><div class="${isTop ? 'fish-connector-up' : 'fish-connector-down'}"></div><div class="p-2 bg-purple-100 rounded-t-xl border-b border-purple-200 text-center"><span class="text-[10px] font-black text-purple-700 uppercase tracking-widest block truncate" title="${catName}">${catName}</span></div><div class="space-y-1 p-2 flex-1 max-h-[150px] overflow-y-auto scrollbar-hide">${causes.length === 0 ? '<div class="text-[9px] text-purple-300 italic text-center py-2">Aucune cause</div>' : causes.map((c, i) => `<div class="bg-white p-1.5 rounded-lg text-[10px] flex justify-between items-center shadow-sm border border-purple-100 group"><span class="flex-1 pr-1 truncate" title="${c.text}">${c.text}</span><button onclick="removeIshikawaItem('${catIdSafe}', ${i})" class="text-red-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="x" class="w-3 h-3"></i></button></div>`).join('')}</div><div class="p-1 border-t border-purple-100 bg-white rounded-b-xl"><input type="text" id="${inputId}" class="w-full text-[10px] p-1 outline-none text-center bg-transparent" placeholder="+ Ajouter..." onkeydown="if(event.key === 'Enter') { addIshikawaItemManual('${catIdSafe}', '${inputId}') }"></div></div></div>`;
+                        const tooltipPosition = isTop ? 'top-full mt-2' : 'bottom-full mb-2';
+                        return `
+                        <div class="flex-1 min-w-[180px] p-2 fish-category-box">
+                            <div ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dropIshikawaCause(event, '${catIdSafe}')" class="bg-purple-50 rounded-xl border border-purple-200 shadow-sm flex flex-col relative h-full transition-all">
+                                <div class="${isTop ? 'fish-connector-up' : 'fish-connector-down'}"></div>
+                                <div class="p-2 bg-purple-100 rounded-t-xl border-b border-purple-200 text-center relative group cursor-help">
+                                    <span class="text-[10px] font-black text-purple-700 uppercase tracking-widest block truncate pointer-events-none">${catName}</span>
+                                    <div class="hidden group-hover:block absolute ${tooltipPosition} left-1/2 -translate-x-1/2 w-56 p-3 bg-slate-800 text-white text-[10px] font-normal normal-case tracking-normal rounded-xl shadow-2xl z-[100] pointer-events-none text-left leading-relaxed">
+                                        <strong class="text-purple-300 block mb-1 uppercase tracking-widest text-[9px]">${catName}</strong>
+                                        ${ISHIKAWA_GUIDE[catName]}
+                                    </div>
+                                </div>
+                                <div class="space-y-1 p-2 flex-1 max-h-[150px] overflow-y-auto scrollbar-hide">
+                                    ${causes.length === 0 ? '<div class="text-[9px] text-purple-300 italic text-center py-2 pointer-events-none">Aucune cause</div>' : causes.map((c, i) => `
+                                    <div draggable="true" ondragstart="dragIshikawaCause(event, '${c.id}', '${catIdSafe}')" class="bg-white p-1.5 rounded-lg text-[10px] flex justify-between items-center shadow-sm border border-purple-100 group cursor-grab active:cursor-grabbing hover:border-purple-300 transition-colors">
+                                        <span class="flex-1 pr-1 truncate pointer-events-none" title="${c.text}">${c.text}</span>
+                                        <button onclick="removeIshikawaItem('${catIdSafe}', ${i})" class="text-red-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10"><i data-lucide="x" class="w-3 h-3"></i></button>
+                                    </div>`).join('')}
+                                </div>
+                                <div class="p-1 border-t border-purple-100 bg-white rounded-b-xl"><input type="text" id="${inputId}" class="w-full text-[10px] p-1 outline-none text-center bg-transparent" placeholder="+ Ajouter..." onkeydown="if(event.key === 'Enter') { addIshikawaItemManual('${catIdSafe}', '${inputId}') }"></div>
+                            </div>
+                        </div>`;
                     };
                     content = `<div class="fade-in"><div class="p-5 bg-purple-50 border-l-4 border-purple-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-purple-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="brain-circuit" class="w-3 h-3"></i> Rechercher (Ishikawa)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Identifier toutes les causes possibles et imaginables (brainstorming) qui pourraient expliquer le problème. Utilisez les 6M (Matière, Matériel, etc.) pour balayer large et n'oublier aucune piste potentielle.</p></div><div class="overflow-x-auto pb-6"><div class="min-w-[800px] relative py-10 px-4"><div class="fishbone-spine"></div><div class="flex items-center"><div class="flex-1 flex flex-col gap-16 relative z-10 mr-4"><div class="flex gap-4">${categoriesTop.map(cat => renderCategoryBox(cat, true)).join('')}</div><div class="flex gap-4">${categoriesBottom.map(cat => renderCategoryBox(cat, false)).join('')}</div></div><div class="w-64 h-32 bg-purple-600 text-white rounded-[4rem_1rem_1rem_4rem] border-4 border-purple-800 shadow-xl flex flex-col items-center justify-center p-6 text-center relative z-20 shrink-0"><div class="absolute -left-3 top-1/2 -translate-y-1/2 w-4 h-4 bg-purple-800 rounded-full"></div><span class="text-[10px] font-black uppercase text-purple-200 mb-1">Problématique</span><div class="text-xs font-bold leading-tight line-clamp-4">${formData.problemStatement || "À définir à l'étape 2"}</div></div></div></div><div class="md:hidden text-center text-[10px] text-slate-400 mt-2 italic"><i data-lucide="move-horizontal" class="w-3 h-3 inline"></i> Faites défiler horizontalement</div></div></div>`;
                     break;
@@ -492,16 +656,181 @@
                     content = `<div class="space-y-8 fade-in"><div class="p-5 bg-red-50 border-l-4 border-red-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-red-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="target" class="w-3 h-3"></i> Cibler (Regroupement)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Trier et regrouper les causes similaires pour structurer l'analyse. Cela permet de simplifier la recherche et de focaliser les efforts d'investigation sur les familles de causes les plus pertinentes.</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="space-y-4"><div class="flex flex-col gap-2 mb-4"><h3 class="text-xs font-black uppercase text-slate-400">Causes à trier</h3>${formData.tempSelectionIds.length > 0 ? `<div class="flex gap-2 p-2 bg-blue-50 rounded-xl animate-fade-in border border-blue-100"><input id="group-name-input" class="flex-1 p-2 text-xs rounded-lg border border-blue-200 focus:outline-none" placeholder="Nom du groupe..."><button onclick="groupSelection()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700">VALIDER</button></div>` : '<p class="text-[10px] text-slate-400 italic">Glissez une cause ou cliquez pour grouper.</p>'}</div><div class="space-y-2 max-h-[500px] overflow-y-auto pr-2 scrollbar-hide">${available.length === 0 ? '<div class="p-8 border-2 border-dashed rounded-3xl text-center text-slate-300 italic">Vide.</div>' : available.map(c => `<div draggable="true" ondragstart="dragCause(event, '${c.id}')" onclick="toggleCauseSelection('${c.id}')" class="cause-chip p-4 bg-white border-2 rounded-2xl text-xs ${formData.tempSelectionIds.includes(c.id) ? 'cause-chip-selected' : 'border-slate-100 text-slate-600 hover:border-slate-300'}">${c.text}</div>`).join('')}</div></div><div class="space-y-4"><h3 class="text-xs font-black uppercase text-red-600 flex items-center gap-2 h-10"><i data-lucide="layers"></i> Groupes</h3><div class="space-y-4">${formData.customFamilies.length === 0 ? '<div class="p-8 border-2 border-dashed rounded-[2rem] text-center text-slate-300 italic text-xs uppercase font-black">Aucun groupe</div>' : formData.customFamilies.map((f, idx) => `<div ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dropCause(event, '${f.id}')" class="p-5 bg-slate-50 rounded-[2rem] border-2 transition-all ${idx === 0 ? 'border-red-400 bg-red-50 shadow-md' : 'border-slate-200'}"><div class="flex justify-between items-center mb-3"><span class="font-black text-slate-800 text-sm uppercase tracking-tight">${f.name}</span><div class="flex gap-1"><button onclick="moveFamilyUp(${idx})" class="p-1 text-slate-400 hover:text-slate-900"><i data-lucide="arrow-up" class="w-4 h-4"></i></button><button onclick="deleteFamily('${f.id}')" class="p-1 text-red-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><div class="flex flex-wrap gap-2">${f.causes.map(c => `<span draggable="true" ondragstart="dragCause(event, '${c.id}')" class="px-2 py-1 bg-white border rounded-lg text-[10px] text-slate-600 shadow-sm flex items-center gap-2 cursor-grab hover:bg-slate-100 transition-colors">${c.text}<button onclick="removeCauseFromGroup('${f.id}', '${c.id}')" class="text-red-300 hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></button></span>`).join('')}</div></div>`).join('')}</div></div></div></div>`;
                     break;
                 case 5:
-                    const currentAnalysis = formData.analyses[currentAnalysisIndex];
                     const availableFamilies = formData.customFamilies.filter(f => !formData.analyses.find(a => a.familyId === f.id));
-                    content = `<div class="space-y-6"><div class="p-5 bg-indigo-50 border-l-4 border-indigo-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-indigo-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="zoom-in" class="w-3 h-3"></i> Analyser (5 Pourquoi)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Remonter jusqu'à la <strong>cause racine</strong> (le 'vrai' coupable) en demandant 'Pourquoi ?' successivement pour chaque hypothèse retenue. Ne vous arrêtez pas aux symptômes, cherchez la cause systémique.</p></div><div class="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">${formData.analyses.map((a, idx) => `<button onclick="switchAnalysis(${idx})" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${idx === currentAnalysisIndex ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}">${a.familyName}</button>`).join('')}${availableFamilies.length > 0 ? `<div class="relative group"><select onchange="createNewAnalysis(this)" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 cursor-pointer outline-none appearance-none pr-8"><option value="">+ Analyser un autre groupe</option>${availableFamilies.map(f => `<option value="${f.id}">${f.name}</option>`).join('')}</select></div>` : ''}</div>${currentAnalysis ? `<div class="p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 overflow-x-auto min-h-[400px]">${renderWhyTreeUI(currentAnalysisIndex, currentAnalysis.tree)}</div>` : '<div class="p-10 text-center text-slate-400 italic">Aucune analyse disponible.</div>'}<div class="mt-8 p-6 bg-indigo-900 text-white rounded-3xl"><label class="text-[10px] font-black opacity-60 uppercase flex items-center gap-2 mb-2"><i data-lucide="check-square" class="w-3 h-3"></i> Validation des Causes Racines</label><div id="root-causes-list-container" class="space-y-2"></div></div></div>`;
-                    setTimeout(renderRootCausesListOnly, 0);
+                    
+                    let analysesHtml = formData.analyses.length > 0 
+                        ? `
+                        <div class="bg-slate-50 rounded-[2rem] border-2 border-slate-200 shadow-inner p-4 pb-8 overflow-x-auto">
+                            <div class="rounded-xl overflow-hidden border border-slate-300 shadow-sm bg-white min-w-max">
+                                <table class="w-full border-collapse text-left bg-white">
+                                    <thead>
+                                        <tr class="bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest text-center">
+                                            <th class="p-3 w-[180px] border-r border-slate-700">Sujet (Famille)</th>
+                                            <th class="p-3 w-[200px] border-r border-slate-700">Pourquoi 1</th>
+                                            <th class="p-3 w-[200px] border-r border-slate-700">Pourquoi 2</th>
+                                            <th class="p-3 w-[200px] border-r border-slate-700">Pourquoi 3</th>
+                                            <th class="p-3 w-[200px] border-r border-slate-700">Pourquoi 4</th>
+                                            <th class="p-3 w-[200px] border-r border-slate-700">Pourquoi 5</th>
+                                            <th class="p-3 w-[250px] bg-indigo-600 border-l border-indigo-700">Cause retenue</th>
+                                        </tr>
+                                    </thead>
+                                    ${formData.analyses.map((a, idx) => `
+                                        <tbody id="analysis-block-${idx}" class="transition-all duration-500 ${idx < formData.analyses.length - 1 ? 'border-b-8 border-slate-200' : ''}">
+                                            ${renderWhyTreeRows(idx, a.tree)}
+                                        </tbody>
+                                    `).join('')}
+                                </table>
+                            </div>
+                        </div>`
+                        : '<div class="p-10 text-center text-slate-400 italic">Aucune analyse disponible.</div>';
+
+                    content = `<div class="space-y-6"><div class="p-5 bg-indigo-50 border-l-4 border-indigo-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-indigo-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="zoom-in" class="w-3 h-3"></i> Analyser (5 Pourquoi)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Remonter jusqu'à la <strong>cause racine</strong> (le 'vrai' coupable) en demandant 'Pourquoi ?' successivement pour chaque hypothèse retenue. Ne vous arrêtez pas aux symptômes, cherchez la cause systémique.</p></div><div class="flex flex-wrap gap-2 pb-2">${formData.analyses.map((a, idx) => `<button onclick="scrollToAnalysis(${idx})" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 shadow-sm"><i data-lucide="target" class="w-3 h-3 inline mr-1"></i> ${a.familyName}</button>`).join('')}${availableFamilies.length > 0 ? `<div class="relative group"><select onchange="createNewAnalysis(this)" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer outline-none appearance-none shadow-md pr-8"><option value="">+ Analyser un autre groupe</option>${availableFamilies.map(f => `<option value="${f.id}">${f.name}</option>`).join('')}</select></div>` : ''}</div>${analysesHtml}</div>`;
+                    setTimeout(() => {
+                        autoResizeAllTextareas();
+                    }, 50);
                     break;
                 case 6:
                     const rootNodes = getAllRootCauseNodes();
                     const selectedRoots = rootNodes.filter(n => formData.selectedRootIds.includes(n.id));
-                    const causesPending = selectedRoots.filter(r => !formData.actions.some(a => a.linkedRootId === r.id));
-                    content = `<div class="space-y-4"><div class="p-5 bg-green-50 border-l-4 border-green-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-green-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="list-todo" class="w-3 h-3"></i> Agir (Plan d'Actions)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Définir et mettre en œuvre des <strong>actions correctives permanentes</strong> pour éliminer la cause racine. Contrairement aux mesures conservatoires, ces actions visent le long terme pour empêcher le problème de réapparaître.</p></div><div class="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl mb-4"><h3 class="text-xs font-bold text-indigo-800 mb-2 flex items-center gap-2"><i data-lucide="target" class="w-3 h-3"></i> A traiter</h3><div class="flex flex-wrap gap-2">${causesPending.length === 0 ? '<span class="text-xs text-indigo-400 italic">Tout est couvert !</span>' : causesPending.map(r => `<span class="px-2 py-1 bg-white border border-indigo-200 rounded-lg text-xs text-indigo-700 font-medium shadow-sm animate-pulse">${r.text}</span>`).join('')}</div></div><div class="p-6 bg-slate-900 rounded-[2.5rem] text-white"><h3 class="text-xs font-black uppercase text-green-400 mb-4 tracking-widest">Nouvelle Action</h3><div class="grid grid-cols-1 gap-2"><div class="mb-2"><label class="text-[10px] uppercase font-bold text-slate-400 ml-1">Cause liée</label><select id="act-root-id" class="w-full p-3 bg-slate-800 border-none rounded-xl text-sm outline-none mt-1"><option value="" disabled selected>Choisir...</option>${selectedRoots.map(r => `<option value="${r.id}">${r.text.substring(0,50)}</option>`).join('')}</select></div><input id="act-task" class="p-3 bg-slate-800 border-none rounded-xl text-sm" placeholder="Action..."><div class="flex gap-2"><input id="act-who" class="flex-1 p-3 bg-slate-800 border-none rounded-xl text-sm" placeholder="Qui ?"><input id="act-when" type="date" class="flex-1 p-3 bg-slate-800 border-none rounded-xl text-sm"></div><button onclick="addAction()" class="w-full py-3 bg-green-500 text-slate-900 font-bold rounded-xl mt-2 hover:bg-green-400 shadow-lg">Ajouter</button></div></div><div class="space-y-3">${formData.actions.map((a, i) => { const statusObj = ACTION_STATUSES.find(s => s.id === a.status) || ACTION_STATUSES[0]; return `<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border rounded-2xl shadow-sm gap-3"><div class="flex-1 w-full"><div class="text-[10px] font-bold text-indigo-500 mb-1 flex items-center gap-1"><i data-lucide="link" class="w-3 h-3"></i> ${a.linkedRootText || 'Aucune'}</div><input class="font-bold text-sm text-slate-800 w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 outline-none py-1 transition-colors" value="${a.task.replace(/"/g, '&quot;')}" oninput="updateActionField(${i}, 'task', this.value)" placeholder="Tâche à réaliser..."><div class="flex items-center gap-2 mt-1"><input class="text-[10px] text-slate-500 uppercase font-black bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 outline-none w-1/3 min-w-[80px]" value="${a.who.replace(/"/g, '&quot;')}" oninput="updateActionField(${i}, 'who', this.value)" placeholder="Pilote"><span class="text-slate-300">•</span><input type="date" class="text-[10px] text-slate-500 uppercase font-black bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 outline-none" value="${a.when}" onchange="updateActionField(${i}, 'when', this.value)"></div></div><div class="flex items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0"><select onchange="updateActionStatus(${i}, this.value)" class="text-xs font-bold p-2 rounded-xl border-2 outline-none cursor-pointer ${statusObj.color}">${ACTION_STATUSES.map(s => `<option value="${s.id}" ${a.status === s.id ? 'selected' : ''}>${s.label}</option>`).join('')}</select><button onclick="removeAction(${i})" class="p-2 text-red-400 hover:text-red-600 transition-colors ml-auto sm:ml-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`; }).join('')}</div></div>`;
+                    const orphanActions = formData.actions.filter(a => !a.linkedRootId || !selectedRoots.find(r => r.id === a.linkedRootId));
+                    
+                    content = `
+                    <div class="space-y-6 fade-in">
+                        <div class="p-5 bg-green-50 border-l-4 border-green-500 rounded-r-[1.5rem] mb-6 shadow-sm">
+                            <h4 class="text-[10px] font-black uppercase text-green-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="list-todo" class="w-3 h-3"></i> Agir (Plan d'Actions)</h4>
+                            <p class="text-sm text-slate-700"><strong>Objectif :</strong> Définir et mettre en œuvre des <strong>actions correctives permanentes</strong> pour éliminer la cause racine. Contrairement aux mesures conservatoires, ces actions visent le long terme pour empêcher le problème de réapparaître.</p>
+                        </div>
+
+                        <div class="bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[900px]">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-100 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                        <th class="p-5 w-1/3 border-r border-slate-100">Cause racine liée</th>
+                                        <th class="p-5 flex-1">Action Corrective</th>
+                                        <th class="p-5 w-32">Pilote</th>
+                                        <th class="p-5 w-32">Délai</th>
+                                        <th class="p-5 w-28">Statut</th>
+                                        <th class="p-5 w-12 text-center"></th>
+                                    </tr>
+                                </thead>
+                                
+                                ${selectedRoots.length === 0 && orphanActions.length === 0 ? '<tbody><tr><td colspan="6" class="p-10 text-center text-slate-400 italic font-medium">Aucune cause sélectionnée à l\'étape précédente.</td></tr></tbody>' : ''}
+                                
+                                ${selectedRoots.map(root => {
+                                    const rootActions = formData.actions.filter(a => a.linkedRootId === root.id);
+                                    const rowSpan = Math.max(1, rootActions.length);
+                                    const safeRootText = root.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                                    let rowsHtml = '';
+
+                                    if (rootActions.length === 0) {
+                                        rowsHtml = `
+                                        <tr class="border-b border-slate-100 group">
+                                            <td class="p-5 border-r border-slate-100 bg-indigo-50/30 relative align-top" rowspan="1">
+                                                <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                    <button onclick="addActionToRoot('${root.id}', '${safeRootText}')" class="p-1.5 bg-white text-green-600 border border-green-200 hover:bg-green-50 rounded-lg shadow-sm" title="Ajouter une action à cette cause"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                                                </div>
+                                                <span class="text-xs font-bold text-indigo-900 leading-tight block pr-6">${root.text}</span>
+                                            </td>
+                                            <td colspan="5" class="p-5 text-center text-slate-400 italic bg-slate-50/50">
+                                                Aucune action définie pour cette cause. Survolez la cause (à gauche) et cliquez sur <i data-lucide="plus" class="w-4 h-4 inline bg-white text-green-600 border border-green-200 rounded shadow-sm p-0.5 align-middle mx-1"></i> pour en ajouter.
+                                            </td>
+                                        </tr>`;
+                                    } else {
+                                        rootActions.forEach((a, index) => {
+                                            const isFirst = index === 0;
+                                            const globalActionIndex = formData.actions.findIndex(ga => ga.id === a.id);
+                                            const statusObj = ACTION_STATUSES.find(s => s.id === a.status) || ACTION_STATUSES[0];
+                                            
+                                            rowsHtml += `<tr class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">`;
+                                            
+                                            if (isFirst) {
+                                                rowsHtml += `
+                                                <td class="p-5 border-r border-slate-100 bg-indigo-50/30 relative align-top group" rowspan="${rowSpan}">
+                                                    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                        <button onclick="addActionToRoot('${root.id}', '${safeRootText}')" class="p-1.5 bg-white text-green-600 border border-green-200 hover:bg-green-50 rounded-lg shadow-sm" title="Ajouter une action à cette cause"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                                                    </div>
+                                                    <span class="text-xs font-bold text-indigo-900 leading-tight block pr-6">${root.text}</span>
+                                                </td>`;
+                                            }
+                                            
+                                            rowsHtml += `
+                                                <td class="p-3">
+                                                    <input type="text" value="${a.task.replace(/"/g, '&quot;')}" oninput="updateActionField(${globalActionIndex}, 'task', this.value)" placeholder="Que faut-il faire ?" class="w-full bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-green-400 outline-none transition-colors text-sm font-medium py-1 text-slate-800" />
+                                                </td>
+                                                <td class="p-3">
+                                                    <input type="text" value="${a.who.replace(/"/g, '&quot;')}" oninput="updateActionField(${globalActionIndex}, 'who', this.value)" placeholder="Responsable" class="w-full bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-green-400 outline-none transition-colors text-sm font-bold text-slate-600 py-1" />
+                                                </td>
+                                                <td class="p-3">
+                                                    <input type="date" value="${a.when}" onchange="updateActionField(${globalActionIndex}, 'when', this.value)" class="w-full bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-green-400 outline-none transition-colors text-xs font-black uppercase text-slate-500 py-1 cursor-pointer" />
+                                                </td>
+                                                <td class="p-3">
+                                                    <select onchange="updateActionStatus(${globalActionIndex}, this.value)" class="w-full text-xs font-bold py-1.5 px-2 rounded-lg border-2 outline-none cursor-pointer ${statusObj.color}">
+                                                        ${ACTION_STATUSES.map(s => `<option value="${s.id}" ${a.status === s.id ? 'selected' : ''}>${s.label}</option>`).join('')}
+                                                    </select>
+                                                </td>
+                                                <td class="p-3 text-center">
+                                                    <button onclick="removeAction(${globalActionIndex})" class="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="Supprimer l'action">
+                                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>`;
+                                        });
+                                    }
+                                    return `<tbody class="border-b-4 border-slate-200">${rowsHtml}</tbody>`;
+                                }).join('')}
+
+                                ${orphanActions.length > 0 ? `
+                                <tbody class="border-b-4 border-slate-200">
+                                    ${orphanActions.map((a, index) => {
+                                        const isFirst = index === 0;
+                                        const globalActionIndex = formData.actions.findIndex(ga => ga.id === a.id);
+                                        const statusObj = ACTION_STATUSES.find(s => s.id === a.status) || ACTION_STATUSES[0];
+                                        const rowSpan = orphanActions.length;
+                                        let rowHtml = `<tr class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">`;
+                                        
+                                        if (isFirst) {
+                                            rowHtml += `
+                                            <td class="p-5 border-r border-slate-100 bg-slate-50 relative align-top group" rowspan="${rowSpan}">
+                                                <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                    <button onclick="addGeneralAction()" class="p-1.5 bg-white text-green-600 border border-green-200 hover:bg-green-50 rounded-lg shadow-sm" title="Ajouter une action générale"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                                                </div>
+                                                <span class="text-xs font-bold text-slate-500 italic block pr-6">Actions Générales / Autres</span>
+                                            </td>`;
+                                        }
+                                        rowHtml += `
+                                            <td class="p-3">
+                                                <input type="text" value="${a.task.replace(/"/g, '&quot;')}" oninput="updateActionField(${globalActionIndex}, 'task', this.value)" placeholder="Que faut-il faire ?" class="w-full bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-green-400 outline-none transition-colors text-sm font-medium py-1 text-slate-800" />
+                                            </td>
+                                            <td class="p-3">
+                                                <input type="text" value="${a.who.replace(/"/g, '&quot;')}" oninput="updateActionField(${globalActionIndex}, 'who', this.value)" placeholder="Responsable" class="w-full bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-green-400 outline-none transition-colors text-sm font-bold text-slate-600 py-1" />
+                                            </td>
+                                            <td class="p-3">
+                                                <input type="date" value="${a.when}" onchange="updateActionField(${globalActionIndex}, 'when', this.value)" class="w-full bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-green-400 outline-none transition-colors text-xs font-black uppercase text-slate-500 py-1 cursor-pointer" />
+                                            </td>
+                                            <td class="p-3">
+                                                <select onchange="updateActionStatus(${globalActionIndex}, this.value)" class="w-full text-xs font-bold py-1.5 px-2 rounded-lg border-2 outline-none cursor-pointer ${statusObj.color}">
+                                                    ${ACTION_STATUSES.map(s => `<option value="${s.id}" ${a.status === s.id ? 'selected' : ''}>${s.label}</option>`).join('')}
+                                                </select>
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                <button onclick="removeAction(${globalActionIndex})" class="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="Supprimer l'action">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            </td>
+                                        </tr>`;
+                                        return rowHtml;
+                                    }).join('')}
+                                </tbody>
+                                ` : ''}
+                            </table>
+                            
+                            <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-center">
+                                <button onclick="addGeneralAction()" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-100 active:scale-95 transition-all flex items-center gap-2 shadow-sm text-xs">
+                                    <i data-lucide="plus" class="w-4 h-4"></i> Ajouter une action libre (sans cause associée)
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
                     break;
                 case 7:
                     content = `<div class="space-y-6"><div class="p-5 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-emerald-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="shield-check" class="w-3 h-3"></i> Standardisation</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Pérenniser les résultats. Mettez à jour les standards, les procédures, les modes opératoires ou les règles de conception pour verrouiller la solution et éviter la récidive, ici ou sur des lignes similaires.</p></div><div class="space-y-4">${formData.actions.length === 0 ? '<div class="text-center p-10 text-slate-400 italic">Aucune action définie.</div>' : formData.actions.map((a, i) => { const safeStd = a.standardization ? a.standardization.replace(/"/g, '&quot;') : ""; return `<div class="bg-white border border-slate-200 rounded-2xl p-5 transition-all"><div class="flex items-start gap-4"><div class="flex-1"><p class="text-sm font-bold text-slate-800 mb-1">${a.task}</p></div><div class="flex-1 border-l pl-4 border-slate-100"><label class="text-[10px] font-black text-emerald-600 uppercase mb-1 block">Standardisation</label><textarea class="w-full p-3 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-200 outline-none h-20 resize-none" placeholder="Comment pérenniser ?" oninput="updateStandardization(${i}, this.value)">${safeStd}</textarea></div></div></div>` }).join('')}</div></div>`;
@@ -552,14 +881,15 @@
 
         // --- 5. LOGIQUE MÉTIER ---
 
-        function addMeasure() {
-            const desc = document.getElementById('mes-desc').value;
-            const who = document.getElementById('mes-who').value;
-            const when = document.getElementById('mes-when').value;
-            if (desc) {
-                formData.measuresList.push({ id: generateId('mes'), description: desc, who: who || "Non défini", date: when || "" });
-                renderContent();
-            } else { showToast("Veuillez décrire la mesure.", "error"); }
+        function addEmptyMeasure() {
+            formData.measuresList.push({ id: generateId('mes'), description: "", who: "", date: "" });
+            renderContent();
+        }
+
+        function updateMeasureField(index, field, value) {
+            if (formData.measuresList[index]) {
+                formData.measuresList[index][field] = value;
+            }
         }
         
         function removeMeasure(index) {
@@ -617,6 +947,38 @@
         }
 
         // --- NOUVELLES FONCTIONS DRAG & DROP ---
+        
+        // Drag & Drop pour l'étape 3 (Ishikawa)
+        function dragIshikawaCause(ev, causeId, sourceCat) {
+            ev.dataTransfer.setData("ishikawaCauseId", causeId);
+            ev.dataTransfer.setData("ishikawaSourceCat", sourceCat);
+            ev.dataTransfer.effectAllowed = "move";
+        }
+
+        function dropIshikawaCause(ev, targetCat) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('drop-zone-active');
+            
+            const causeId = ev.dataTransfer.getData("ishikawaCauseId");
+            const sourceCat = ev.dataTransfer.getData("ishikawaSourceCat");
+            
+            if (!causeId || !sourceCat || sourceCat === targetCat) return;
+
+            const sourceArray = formData.ishikawa[sourceCat];
+            const targetArray = formData.ishikawa[targetCat];
+            
+            if (sourceArray && targetArray) {
+                const causeIndex = sourceArray.findIndex(c => c.id === causeId);
+                if (causeIndex !== -1) {
+                    const causeObj = sourceArray[causeIndex];
+                    sourceArray.splice(causeIndex, 1);
+                    targetArray.push(causeObj);
+                    renderContent();
+                }
+            }
+        }
+
+        // Drag & Drop pour l'étape 4 (Regroupement)
         function dragCause(ev, causeId) {
             ev.dataTransfer.setData("causeId", causeId);
             ev.dataTransfer.effectAllowed = "move";
@@ -738,17 +1100,32 @@
             }
         }
 
-        function switchAnalysis(index) {
-            currentAnalysisIndex = index;
-            renderContent();
+        function scrollToAnalysis(index) {
+            const block = document.getElementById(`analysis-block-${index}`);
+            if (block) {
+                block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Met en surbrillance temporaire les cases de l'analyse sélectionnée
+                const boxes = block.querySelectorAll('.inner-box');
+                boxes.forEach(b => {
+                    b.classList.remove('border-slate-200');
+                    b.classList.add('ring-4', 'ring-indigo-400', 'border-indigo-400', 'scale-[1.02]');
+                });
+                setTimeout(() => {
+                    boxes.forEach(b => {
+                        b.classList.remove('ring-4', 'ring-indigo-400', 'border-indigo-400', 'scale-[1.02]');
+                        b.classList.add('border-slate-200');
+                    });
+                }, 1500);
+            }
         }
 
         function createNewAnalysis(selectElement) {
             const familyId = selectElement.value;
             if (familyId) {
                 addAnalysisForFamily(familyId);
-                currentAnalysisIndex = formData.analyses.length - 1; 
+                const newIndex = formData.analyses.length - 1; 
                 renderContent();
+                setTimeout(() => scrollToAnalysis(newIndex), 100);
             }
         }
 
@@ -760,9 +1137,20 @@
                 return false;
             };
             findAndUpdate(tree);
-            // On s'assure que renderRootCausesListOnly existe et est appelée avec précaution
-            if (typeof renderRootCausesListOnly === "function") {
-                renderRootCausesListOnly();
+            
+            // Mise à jour de la cause retenue en direct, sans perdre le focus du curseur !
+            const leafTextEl = document.getElementById(`leaf-text-${nodeId}`);
+            if (leafTextEl) {
+                const isEmpty = !text || text.trim() === "";
+                if(isEmpty) {
+                    leafTextEl.innerHTML = '<span class="italic text-slate-400 font-normal">Saisissez une cause...</span>';
+                    leafTextEl.parentElement.classList.add('cursor-not-allowed', 'opacity-60');
+                    leafTextEl.parentElement.removeAttribute('onclick');
+                } else {
+                    leafTextEl.textContent = text;
+                    leafTextEl.parentElement.classList.remove('cursor-not-allowed', 'opacity-60');
+                    leafTextEl.parentElement.setAttribute('onclick', `toggleRootSelection('${nodeId}')`);
+                }
             }
         }
 
@@ -772,7 +1160,7 @@
         }
 
         function addWhyChild(analysisIndex, nodeId, depth) {
-            if (depth > 6) return showToast("Limite de 6 niveaux atteinte !", "error");
+            if (depth > 5) return showToast("Limite de 5 niveaux de Pourquoi atteinte !", "error");
             const tree = formData.analyses[analysisIndex].tree;
             const findAndAdd = (node) => {
                 if (node.id === nodeId) {
@@ -798,6 +1186,14 @@
             renderContent();
         }
 
+        // Nouvelle fonction pour agrandir automatiquement les zones de texte
+        function autoResizeAllTextareas() {
+            document.querySelectorAll('textarea.auto-resize').forEach(ta => {
+                ta.style.height = 'auto';
+                ta.style.height = ta.scrollHeight + 'px';
+            });
+        }
+
         function calculateRowSpan(node) {
             if (!node.children || node.children.length === 0) {
                 node.rowSpan = 1;
@@ -811,29 +1207,10 @@
             return span;
         }
 
-        function renderWhyTreeUI(analysisIndex, treeRoot) {
+        function renderWhyTreeRows(analysisIndex, treeRoot) {
             calculateRowSpan(treeRoot);
             const currentAnalysis = formData.analyses[analysisIndex];
             const familyObj = formData.customFamilies.find(f => f.id === currentAnalysis.familyId);
-
-            let html = `
-            <div class="bg-slate-50 rounded-[2rem] border-2 border-slate-200 shadow-inner p-4 pb-8 overflow-x-auto">
-                <div class="rounded-xl overflow-hidden border border-slate-300 shadow-sm bg-white min-w-max">
-                    <table class="w-full border-collapse text-left bg-white">
-                        <thead>
-                            <tr class="bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest text-center">
-                                <th class="p-3 w-[180px] border-r border-slate-700">Sujet (Famille)</th>
-                                <th class="p-3 w-[220px] border-r border-slate-700">Pourquoi 1</th>
-                                <th class="p-3 w-[220px] border-r border-slate-700">Pourquoi 2</th>
-                                <th class="p-3 w-[220px] border-r border-slate-700">Pourquoi 3</th>
-                                <th class="p-3 w-[220px] border-r border-slate-700">Pourquoi 4</th>
-                                <th class="p-3 w-[220px] border-r border-slate-700">Pourquoi 5</th>
-                                <th class="p-3 w-[220px]">Pourquoi 6</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-            `;
             
             function renderNode(node, depth, isFirstChild) {
                 let res = '';
@@ -845,47 +1222,48 @@
                 let inputHtml = '';
                 
                 if (depth === 0) {
-                     inputHtml = `<div class="p-3 text-slate-800 font-black text-sm text-center flex-1 bg-slate-100 rounded-lg border border-slate-200">${familyObj ? familyObj.name : 'Analyse'}</div>`;
+                     inputHtml = `<div class="w-full h-full min-h-[60px] flex items-center justify-center p-3 text-indigo-900 font-black text-sm text-center bg-indigo-50">${familyObj ? familyObj.name : 'Analyse'}</div>`;
                 } 
                 else if (depth === 1 && familyObj && familyObj.causes.length > 0) {
                     const usedCauses = treeRoot.children.map(child => child.text).filter(t => t);
                     const availableCauses = familyObj.causes.filter(c => c.text === node.text || !usedCauses.includes(c.text));
 
                     inputHtml = `
-                        <select class="flex-1 w-full p-2 text-sm outline-none bg-transparent cursor-pointer font-bold text-blue-800" onchange="updateWhySelect(${analysisIndex}, '${node.id}', this.value)">
+                        <select class="w-full h-full min-h-[60px] p-3 text-sm outline-none bg-transparent cursor-pointer font-bold text-blue-800" onchange="updateWhySelect(${analysisIndex}, '${node.id}', this.value)">
                             <option value="" disabled ${!node.text ? 'selected' : ''}>Choisir une cause...</option>
                             ${availableCauses.map(c => `<option value="${c.text.replace(/"/g, '&quot;')}" ${node.text === c.text ? 'selected' : ''}>${c.text}</option>`).join('')}
                         </select>`;
                 } 
                 else {
-                    inputHtml = `<textarea class="flex-1 w-full p-2 text-sm outline-none bg-transparent resize-none h-[60px] font-medium text-slate-700" oninput="updateWhyText(${analysisIndex}, '${node.id}', this.value)" placeholder="Pourquoi ?">${safeText}</textarea>`;
+                    inputHtml = `<textarea rows="1" class="w-full p-3 text-sm outline-none bg-transparent resize-none overflow-hidden min-h-[60px] font-medium text-slate-700 auto-resize block" oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px'; updateWhyText(${analysisIndex}, '${node.id}', this.value)" placeholder="Pourquoi ?">${safeText}</textarea>`;
                 }
 
+                // Boutons d'action flottants (totalement à l'extérieur de la case en haut à droite)
                 let buttonsHtml = '';
                 if (depth === 0) {
-                    buttonsHtml = `<button onclick="addWhyChild(${analysisIndex}, '${node.id}', ${depth + 1})" class="p-2 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-lg transition-colors shadow-sm ml-2" title="Ajouter un chemin"><i data-lucide="plus" class="w-4 h-4"></i></button>`;
+                    buttonsHtml = `
+                    <div class="absolute -top-3 -right-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all duration-200 z-40 bg-white border border-slate-300 rounded-lg shadow-lg flex items-center p-0.5">
+                        <button onclick="addWhyChild(${analysisIndex}, '${node.id}', ${depth + 1})" class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition-colors" title="Ajouter un chemin"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    </div>`;
                 } else {
-                    buttonsHtml += `<div class="flex flex-col border-l border-slate-200 bg-slate-50 h-full w-8 shrink-0">`;
-                    if (depth < 6) {
-                        buttonsHtml += `<button onclick="addWhyChild(${analysisIndex}, '${node.id}', ${depth + 1})" class="flex-1 flex items-center justify-center text-blue-500 hover:text-blue-700 hover:bg-blue-100 border-b border-slate-200 transition-colors" title="Ajouter une suite ou ramification"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>`;
+                    buttonsHtml = `
+                    <div class="absolute -top-3 -right-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all duration-200 z-40 bg-white border border-slate-300 rounded-lg shadow-lg flex items-center p-0.5 gap-0.5">`;
+                    if (depth < 5) {
+                        buttonsHtml += `<button onclick="addWhyChild(${analysisIndex}, '${node.id}', ${depth + 1})" class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition-colors" title="Ajouter une suite ou ramification"><i data-lucide="plus" class="w-4 h-4"></i></button>`;
                     }
-                    buttonsHtml += `<button onclick="removeWhyNode(${analysisIndex}, '${node.id}')" class="flex-1 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-100 transition-colors" title="Supprimer ce nœud"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>`;
+                    buttonsHtml += `<button onclick="removeWhyNode(${analysisIndex}, '${node.id}')" class="p-1.5 text-red-500 hover:bg-red-100 rounded-md transition-colors" title="Supprimer ce nœud"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>`;
                 }
 
-                // Flèche de liaison (style logigramme orange)
                 const arrowHtml = node.children.length > 0 
                     ? `<div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center z-20 shadow-md border-2 border-white"><i data-lucide="arrow-right" class="w-3 h-3"></i></div>` 
                     : '';
 
                 res += `
-                    <td rowspan="${node.rowSpan}" class="border-r border-slate-200 p-3 align-middle bg-white relative">
-                        <div class="flex items-stretch bg-white border-2 border-slate-200 rounded-xl overflow-visible shadow-sm focus-within:ring-2 focus-within:ring-blue-400 focus-within:border-blue-400 h-full min-h-[60px] relative z-10 transition-all hover:border-blue-200">
-                            <div class="flex-1 flex flex-col justify-center relative">
-                                ${depth === 0 ? '' : `<span class="absolute top-1 left-2 text-[8px] font-black text-slate-300 uppercase">P${depth}</span><div class="pt-4 h-full">`}
-                                ${inputHtml}
-                                ${depth === 0 ? '' : `</div>`}
-                            </div>
-                            ${buttonsHtml}
+                    <td rowspan="${node.rowSpan}" class="border-r border-slate-200 p-3 align-middle bg-white relative group">
+                        ${buttonsHtml}
+                        <div class="inner-box flex flex-col w-full h-full bg-white border-2 border-slate-200 rounded-xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-blue-400 focus-within:border-blue-400 relative z-10 transition-all hover:border-blue-300">
+                            ${inputHtml}
                         </div>
                         ${arrowHtml}
                     </td>`;
@@ -896,17 +1274,31 @@
                         res += renderNode(node.children[i], depth + 1, false);
                     }
                 } else {
-                    for (let d = depth + 1; d <= 6; d++) {
+                    for (let d = depth + 1; d <= 5; d++) {
                         res += `<td class="border-r border-slate-100 bg-slate-50/50 p-3"><div class="w-full h-full border-2 border-dashed border-slate-200 rounded-xl opacity-30 min-h-[60px]"></div></td>`;
                     }
-                    res += `</tr>`;
+                    
+                    const isSelected = formData.selectedRootIds.includes(node.id);
+                    const isEmpty = !node.text || node.text.trim() === "";
+                    const leafText = isEmpty ? '<span class="italic text-slate-400 font-normal">Saisissez une cause...</span>' : node.text.replace(/"/g, '&quot;');
+                    const clickHandler = isEmpty ? '' : `onclick="toggleRootSelection('${node.id}')"`;
+                    const cursorClass = isEmpty ? 'cursor-not-allowed opacity-60' : 'cursor-pointer';
+
+                    // Colonne de Validation Cause Retenue
+                    res += `
+                    <td class="p-3 align-middle bg-indigo-50/30 border-l-2 border-indigo-200">
+                        <div class="flex items-center gap-3 p-3 ${isSelected ? 'bg-indigo-100 border-indigo-400 shadow-md' : 'bg-white border-slate-200 hover:border-indigo-300'} border-2 rounded-xl transition-all ${cursorClass}" ${clickHandler}>
+                            <div class="relative flex items-center justify-center w-5 h-5 border-2 ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 bg-white'} rounded transition-colors shrink-0">
+                                ${isSelected ? '<i data-lucide="check" class="w-3 h-3 text-white font-bold"></i>' : ''}
+                            </div>
+                            <span id="leaf-text-${node.id}" class="text-xs font-bold ${isSelected ? 'text-indigo-900' : 'text-slate-600'} line-clamp-3 break-words">${leafText}</span>
+                        </div>
+                    </td></tr>`;
                 }
                 return res;
             }
 
-            html += renderNode(treeRoot, 0, true);
-            html += `</tbody></table></div></div>`;
-            return html;
+            return `<tr>${renderNode(treeRoot, 0, true)}`;
         }
 
         function getRootCauseNodes(node) {
@@ -929,57 +1321,39 @@
             return allNodes;
         }
 
-        // --- FONCTION RESTAURÉE ---
-        function renderRootCausesListOnly() {
-            const container = document.getElementById('root-causes-list-container');
-            if (!container) return; 
-            const rootNodes = getAllRootCauseNodes();
-            if (rootNodes.length === 0) {
-                container.innerHTML = '<span class="text-sm italic opacity-50">Complétez l\'arbre pour voir les racines potentielles...</span>';
-                return;
-            }
-            container.innerHTML = rootNodes.map(node => {
-                const isSelected = formData.selectedRootIds.includes(node.id);
-                const safeText = node.text ? node.text.replace(/"/g, '&quot;') : ""; 
-                return `
-                <div class="flex items-center gap-3 p-3 bg-indigo-800/50 rounded-xl text-sm border border-indigo-700 transition-all hover:bg-indigo-700 cursor-pointer" onclick="toggleRootSelection('${node.id}')">
-                    <div class="relative flex items-center justify-center w-5 h-5 border-2 border-green-400 rounded transition-colors ${isSelected ? 'bg-green-400' : 'bg-transparent'}">
-                        ${isSelected ? '<i data-lucide="check" class="w-3 h-3 text-indigo-900 font-bold"></i>' : ''}
-                    </div>
-                    <span class="${isSelected ? 'font-bold text-white' : 'text-indigo-200'}">${safeText}</span>
-                </div>
-            `}).join('');
-            if(window.lucide) lucide.createIcons();
-        }
-
         function toggleRootSelection(nodeId) {
             const index = formData.selectedRootIds.indexOf(nodeId);
             if (index === -1) formData.selectedRootIds.push(nodeId);
             else formData.selectedRootIds.splice(index, 1);
-            if (typeof renderRootCausesListOnly === "function") {
-                renderRootCausesListOnly(); 
-            }
+            renderContent(); 
         }
 
-        function addAction() {
-            const task = document.getElementById('act-task').value;
-            const who = document.getElementById('act-who').value;
-            const when = document.getElementById('act-when').value;
-            const rootSelect = document.getElementById('act-root-id');
-            let linkedRootId = null;
-            let linkedRootText = "";
+        function addActionToRoot(rootId, rootText) {
+            formData.actions.push({ 
+                id: generateId('act'), 
+                task: "", 
+                who: "", 
+                when: "", 
+                linkedRootId: rootId, 
+                linkedRootText: rootText, 
+                status: 'attente', 
+                standardization: "" 
+            });
+            renderContent();
+        }
 
-            if (rootSelect && rootSelect.value) {
-                linkedRootId = rootSelect.value;
-                const allRoots = getAllRootCauseNodes();
-                const found = allRoots.find(n => n.id === linkedRootId);
-                if(found) linkedRootText = found.text;
-            }
-
-            if (task) { 
-                formData.actions.push({ id: generateId('act'), task, who, when, linkedRootId, linkedRootText, status: 'attente', standardization: "" }); 
-                renderContent(); 
-            } else { showToast("Veuillez saisir une action.", "error"); }
+        function addGeneralAction() {
+            formData.actions.push({ 
+                id: generateId('act'), 
+                task: "", 
+                who: "", 
+                when: "", 
+                linkedRootId: null, 
+                linkedRootText: "Action Générale / Autres", 
+                status: 'attente', 
+                standardization: "" 
+            });
+            renderContent();
         }
 
         function updateActionField(index, field, value) {
@@ -1051,6 +1425,24 @@
 
         function closeWelcomeModal() {
             const modal = document.getElementById('welcome-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openHelpModal() {
+            const data = HELP_DATA[currentStep];
+            if (!data) return;
+            document.getElementById('help-modal-title').textContent = data.title;
+            document.getElementById('help-modal-objective').innerHTML = data.objective;
+            document.getElementById('help-modal-how').innerHTML = data.how;
+            
+            const modal = document.getElementById('help-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeHelpModal() {
+            const modal = document.getElementById('help-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
