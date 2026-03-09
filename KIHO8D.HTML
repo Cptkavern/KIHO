@@ -87,7 +87,7 @@
                         <div id="logo-fallback" class="hidden text-blue-600"><i data-lucide="bus" class="w-6 h-6"></i></div>
                     </div>
                     <div class="flex flex-col justify-center">
-                        <h1 class="text-[30px] tracking-tighter leading-none mt-0.5" style="font-family: 'Nunito', sans-serif; font-weight: 900; color: #005C7A;">KIHO <span style="color: #00A3A6;">8D</span></h1>
+                        <h1 class="text-[30px] tracking-tighter leading-none mt-0.5" style="font-family: 'Nunito', sans-serif; font-weight: 900; color: #005C7A;">KIHO <span id="app-variant-badge" style="color: #00A3A6;">8D</span></h1>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -235,19 +235,20 @@
 
     <script>
         // --- 1. CONFIGURATION & DONNÉES ---
+        let appMode = '8D'; // '8D' ou 'FLASH'
         let currentStep = 0; 
         let currentAnalysisIndex = 0; 
 
         const steps = [
-            { id: 0, title: "Lancement", icon: "flag", color: "text-slate-700" },
-            { id: 1, title: "Protéger", icon: "alert-circle", color: "text-orange-500" },
-            { id: 2, title: "Définir", icon: "search", color: "text-blue-500" },
-            { id: 3, title: "Rechercher", icon: "brain-circuit", color: "text-purple-500" },
-            { id: 4, title: "Cibler", icon: "target", color: "text-red-500" },
-            { id: 5, title: "Analyser", icon: "zoom-in", color: "text-indigo-500" },
-            { id: 6, title: "Agir", icon: "list-todo", color: "text-green-500" },
-            { id: 7, title: "Standards", icon: "shield-check", color: "text-emerald-500" },
-            { id: 8, title: "Bilan", icon: "award", color: "text-yellow-500" }
+            { id: 0, title: "Lancement", icon: "flag", color: "text-slate-700", modes: ['8D', 'FLASH'] },
+            { id: 1, title: "Protéger", icon: "alert-circle", color: "text-orange-500", modes: ['8D'] },
+            { id: 2, title: "Définir", icon: "search", color: "text-blue-500", modes: ['8D', 'FLASH'] },
+            { id: 3, title: "Rechercher", icon: "brain-circuit", color: "text-purple-500", modes: ['8D'] },
+            { id: 4, title: "Cibler", icon: "target", color: "text-red-500", modes: ['8D'] },
+            { id: 5, title: "Analyser", icon: "zoom-in", color: "text-indigo-500", modes: ['8D', 'FLASH'] },
+            { id: 6, title: "Agir", icon: "list-todo", color: "text-green-500", modes: ['8D', 'FLASH'] },
+            { id: 7, title: "Standards", icon: "shield-check", color: "text-emerald-500", modes: ['8D'] },
+            { id: 8, title: "Bilan", icon: "award", color: "text-yellow-500", modes: ['8D'] }
         ];
 
         const ACTION_STATUSES = [
@@ -502,8 +503,71 @@
         // --- 2. OUTILS TECHNIQUES ---
         function generateId(prefix = 'id') { return prefix + '_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(); }
 
-        // --- 3. FONCTIONS PRINCIPALES (UI & LOGIQUE) ---
+        // --- 3. GESTION DE LA NAVIGATION ET DU MODE ---
+        function getVisibleSteps() {
+            return steps.filter(s => s.modes.includes(appMode));
+        }
 
+        function setMode(mode) {
+            appMode = mode;
+            document.getElementById('app-variant-badge').textContent = mode === '8D' ? '8D' : 'FLASH';
+            
+            if (mode === 'FLASH') {
+                if (formData.analyses.length === 0 || formData.analyses[0].familyId !== 'flash_mode') {
+                    formData.analyses = [{
+                        familyId: 'flash_mode',
+                        familyName: "Problématique (Issue de l'étape Définir)",
+                        tree: { id: generateId('root'), text: formData.problemStatement || "", children: [] }
+                    }];
+                }
+            } else {
+                normalizeData();
+            }
+            
+            renderStepper();
+            renderContent();
+            showToast(`Mode ${mode === '8D' ? 'Complet' : 'Flash'} activé`, 'success');
+        }
+
+        function renderStepper() {
+            const visibleSteps = getVisibleSteps();
+            const stepper = document.getElementById('stepper');
+            stepper.innerHTML = visibleSteps.map(s => `
+                <button onclick="goToStep(${s.id})" class="flex-1 min-w-[110px] p-5 flex flex-col items-center gap-1 transition-all snap-center ${currentStep === s.id ? 'step-active' : 'opacity-40'}">
+                    <i data-lucide="${s.icon}" class="${currentStep === s.id ? s.color : 'text-slate-400'}"></i>
+                    <span class="text-[9px] font-black uppercase tracking-tighter ${currentStep === s.id ? 'text-slate-900' : 'text-slate-400'}">${s.title}</span>
+                </button>
+            `).join('');
+            
+            const dots = document.getElementById('progress-dots');
+            if(dots) dots.innerHTML = visibleSteps.map(s => `
+                <div class="h-1.5 rounded-full transition-all duration-500 ${currentStep === s.id ? 'w-8 bg-blue-600 shadow-sm' : 'w-1.5 bg-slate-300'}"></div>
+            `).join('');
+            if(window.lucide) lucide.createIcons();
+        }
+
+        function goToStep(id) {
+            currentStep = id;
+            if (id === 1 || id === 4 || id === 5 || id === 7 || id === 8) normalizeData();
+            if (id === 4) formData.tempSelectionIds = [];
+            renderStepper();
+            renderContent();
+        }
+
+        function nextStep() {
+            const visible = getVisibleSteps();
+            const currentIndex = visible.findIndex(s => s.id === currentStep);
+            if (currentIndex < visible.length - 1) goToStep(visible[currentIndex + 1].id);
+            else exportCSV();
+        }
+
+        function prevStep() {
+            const visible = getVisibleSteps();
+            const currentIndex = visible.findIndex(s => s.id === currentStep);
+            if (currentIndex > 0) goToStep(visible[currentIndex - 1].id);
+        }
+
+        // --- 4. FONCTIONS PRINCIPALES (UI & LOGIQUE) ---
         function renderContent() {
             const container = document.getElementById('main-content');
             if(!container) return;
@@ -527,8 +591,21 @@
             switch(currentStep) {
                 case 0:
                     content = `
-                        <div class="space-y-6">
+                        <div class="space-y-6 fade-in">
                             <div class="p-5 bg-slate-50 border-l-4 border-slate-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-slate-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="info" class="w-3 h-3"></i> Bienvenue dans KIHO 8D</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Constituer une équipe compétente et définir les bases du projet. Une bonne préparation et une équipe pluridisciplinaire sont les clés d'une résolution efficace.</p></div>
+                            
+                            <!-- MODE SELECTOR -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                                <div onclick="setMode('8D')" class="cursor-pointer p-5 rounded-2xl border-2 transition-all ${appMode === '8D' ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-slate-200 bg-white hover:border-blue-300'}">
+                                    <div class="font-black text-blue-800 flex items-center gap-2 mb-1"><i data-lucide="layers" class="w-5 h-5"></i> Modèle 8D Complet</div>
+                                    <p class="text-xs text-slate-600">Résolution approfondie en 8 étapes (Ishikawa, 5 Pourquoi, Standardisation). Idéal pour les problèmes complexes.</p>
+                                </div>
+                                <div onclick="setMode('FLASH')" class="cursor-pointer p-5 rounded-2xl border-2 transition-all ${appMode === 'FLASH' ? 'border-emerald-500 bg-emerald-50 shadow-md' : 'border-slate-200 bg-white hover:border-emerald-300'}">
+                                    <div class="font-black text-emerald-800 flex items-center gap-2 mb-1"><i data-lucide="zap" class="w-5 h-5"></i> Analyse Flash (3 Étapes)</div>
+                                    <p class="text-xs text-slate-600">Définition > 5 Pourquoi > Plan d'Action. Idéal pour les irritants et corrections rapides.</p>
+                                </div>
+                            </div>
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-4">
                                     <div><label class="text-[10px] font-black uppercase text-slate-400 ml-2">Titre de la Résolution</label><input class="w-full p-4 border-2 border-slate-100 rounded-2xl outline-none text-sm font-bold focus:border-blue-500 transition-colors" value="${formData.resolutionTitle}" oninput="formData.resolutionTitle = this.value" placeholder="Ex: Rayures sur Capot Modèle X..."></div>
@@ -656,7 +733,19 @@
                     content = `<div class="space-y-8 fade-in"><div class="p-5 bg-red-50 border-l-4 border-red-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-red-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="target" class="w-3 h-3"></i> Cibler (Regroupement)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Trier et regrouper les causes similaires pour structurer l'analyse. Cela permet de simplifier la recherche et de focaliser les efforts d'investigation sur les familles de causes les plus pertinentes.</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="space-y-4"><div class="flex flex-col gap-2 mb-4"><h3 class="text-xs font-black uppercase text-slate-400">Causes à trier</h3>${formData.tempSelectionIds.length > 0 ? `<div class="flex gap-2 p-2 bg-blue-50 rounded-xl animate-fade-in border border-blue-100"><input id="group-name-input" class="flex-1 p-2 text-xs rounded-lg border border-blue-200 focus:outline-none" placeholder="Nom du groupe..."><button onclick="groupSelection()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700">VALIDER</button></div>` : '<p class="text-[10px] text-slate-400 italic">Glissez une cause ou cliquez pour grouper.</p>'}</div><div class="space-y-2 max-h-[500px] overflow-y-auto pr-2 scrollbar-hide">${available.length === 0 ? '<div class="p-8 border-2 border-dashed rounded-3xl text-center text-slate-300 italic">Vide.</div>' : available.map(c => `<div draggable="true" ondragstart="dragCause(event, '${c.id}')" onclick="toggleCauseSelection('${c.id}')" class="cause-chip p-4 bg-white border-2 rounded-2xl text-xs ${formData.tempSelectionIds.includes(c.id) ? 'cause-chip-selected' : 'border-slate-100 text-slate-600 hover:border-slate-300'}">${c.text}</div>`).join('')}</div></div><div class="space-y-4"><h3 class="text-xs font-black uppercase text-red-600 flex items-center gap-2 h-10"><i data-lucide="layers"></i> Groupes</h3><div class="space-y-4">${formData.customFamilies.length === 0 ? '<div class="p-8 border-2 border-dashed rounded-[2rem] text-center text-slate-300 italic text-xs uppercase font-black">Aucun groupe</div>' : formData.customFamilies.map((f, idx) => `<div ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dropCause(event, '${f.id}')" class="p-5 bg-slate-50 rounded-[2rem] border-2 transition-all ${idx === 0 ? 'border-red-400 bg-red-50 shadow-md' : 'border-slate-200'}"><div class="flex justify-between items-center mb-3"><span class="font-black text-slate-800 text-sm uppercase tracking-tight">${f.name}</span><div class="flex gap-1"><button onclick="moveFamilyUp(${idx})" class="p-1 text-slate-400 hover:text-slate-900"><i data-lucide="arrow-up" class="w-4 h-4"></i></button><button onclick="deleteFamily('${f.id}')" class="p-1 text-red-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><div class="flex flex-wrap gap-2">${f.causes.map(c => `<span draggable="true" ondragstart="dragCause(event, '${c.id}')" class="px-2 py-1 bg-white border rounded-lg text-[10px] text-slate-600 shadow-sm flex items-center gap-2 cursor-grab hover:bg-slate-100 transition-colors">${c.text}<button onclick="removeCauseFromGroup('${f.id}', '${c.id}')" class="text-red-300 hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></button></span>`).join('')}</div></div>`).join('')}</div></div></div></div>`;
                     break;
                 case 5:
-                    const availableFamilies = formData.customFamilies.filter(f => !formData.analyses.find(a => a.familyId === f.id));
+                    if (appMode === 'FLASH') {
+                        if (formData.analyses.length === 0 || formData.analyses[0].familyId !== 'flash_mode') {
+                            formData.analyses = [{
+                                familyId: 'flash_mode',
+                                familyName: "Problématique (Issue de l'étape Définir)",
+                                tree: { id: generateId('root'), text: formData.problemStatement || "Problème non défini", children: [] }
+                            }];
+                        } else {
+                            formData.analyses[0].tree.text = formData.problemStatement || "Problème non défini";
+                        }
+                    }
+
+                    const availableFamilies = appMode === '8D' ? formData.customFamilies.filter(f => !formData.analyses.find(a => a.familyId === f.id)) : [];
                     
                     let analysesHtml = formData.analyses.length > 0 
                         ? `
@@ -684,10 +773,15 @@
                         </div>`
                         : '<div class="p-10 text-center text-slate-400 italic">Aucune analyse disponible.</div>';
 
-                    content = `<div class="space-y-6"><div class="p-5 bg-indigo-50 border-l-4 border-indigo-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-indigo-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="zoom-in" class="w-3 h-3"></i> Analyser (5 Pourquoi)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Remonter jusqu'à la <strong>cause racine</strong> (le 'vrai' coupable) en demandant 'Pourquoi ?' successivement pour chaque hypothèse retenue. Ne vous arrêtez pas aux symptômes, cherchez la cause systémique.</p></div><div class="flex flex-wrap gap-2 pb-2">${formData.analyses.map((a, idx) => `<button onclick="scrollToAnalysis(${idx})" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 shadow-sm"><i data-lucide="target" class="w-3 h-3 inline mr-1"></i> ${a.familyName}</button>`).join('')}${availableFamilies.length > 0 ? `<div class="relative group"><select onchange="createNewAnalysis(this)" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer outline-none appearance-none shadow-md pr-8"><option value="">+ Analyser un autre groupe</option>${availableFamilies.map(f => `<option value="${f.id}">${f.name}</option>`).join('')}</select></div>` : ''}</div>${analysesHtml}</div>`;
-                    setTimeout(() => {
-                        autoResizeAllTextareas();
-                    }, 50);
+                    let topBarHtml = '';
+                    if (appMode === '8D') {
+                        topBarHtml = `<div class="flex flex-wrap gap-2 pb-2">${formData.analyses.map((a, idx) => `<button onclick="scrollToAnalysis(${idx})" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 shadow-sm"><i data-lucide="target" class="w-3 h-3 inline mr-1"></i> ${a.familyName}</button>`).join('')}${availableFamilies.length > 0 ? `<div class="relative group"><select onchange="createNewAnalysis(this)" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer outline-none appearance-none shadow-md pr-8"><option value="">+ Analyser un autre groupe</option>${availableFamilies.map(f => `<option value="${f.id}">${f.name}</option>`).join('')}</select></div>` : ''}</div>`;
+                    } else {
+                        topBarHtml = `<div class="pb-2"><span class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-emerald-100 text-emerald-800 border border-emerald-200"><i data-lucide="zap" class="w-3 h-3 inline mr-1"></i> Mode Flash : Analyse de la problématique en ligne directe</span></div>`;
+                    }
+
+                    content = `<div class="space-y-6"><div class="p-5 bg-indigo-50 border-l-4 border-indigo-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-indigo-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="zoom-in" class="w-3 h-3"></i> Analyser (5 Pourquoi)</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Remonter jusqu'à la <strong>cause racine</strong> (le 'vrai' coupable) en demandant 'Pourquoi ?' successivement pour chaque hypothèse retenue. Ne vous arrêtez pas aux symptômes, cherchez la cause systémique.</p></div>${topBarHtml}${analysesHtml}</div>`;
+                    setTimeout(() => { autoResizeAllTextareas(); }, 50);
                     break;
                 case 6:
                     const rootNodes = getAllRootCauseNodes();
@@ -843,8 +937,10 @@
             if(window.lucide) lucide.createIcons();
         }
 
-        // --- 4. DATA NORMALIZATION ---
+        // --- 5. DATA NORMALIZATION & HELPERS ---
         function normalizeData() {
+            if (appMode === 'FLASH') return; // En mode flash, l'analyse est forcée, ne pas normaliser les groupes
+            
             if (typeof formData.resolutionTitle === 'undefined') formData.resolutionTitle = "";
             if (typeof formData.startDate === 'undefined') formData.startDate = new Date().toISOString().split('T')[0];
             if (typeof formData.participants === 'undefined') formData.participants = "";
@@ -869,9 +965,6 @@
                 if (!a.standardization) a.standardization = "";
             });
             if (!formData.checklist) formData.checklist = { informed: false, applicable: false, congratulated: false };
-            if (typeof formData.lessonsLearned === 'undefined') formData.lessonsLearned = "";
-            if (typeof formData.improvements === 'undefined') formData.improvements = "";
-            if (typeof formData.objectives === 'undefined') formData.objectives = "";
             
             if ((!formData.analyses || formData.analyses.length === 0) && formData.customFamilies.length > 0) {
                 formData.analyses = [];
@@ -879,37 +972,17 @@
             }
         }
 
-        // --- 5. LOGIQUE MÉTIER ---
-
-        function addEmptyMeasure() {
-            formData.measuresList.push({ id: generateId('mes'), description: "", who: "", date: "" });
-            renderContent();
-        }
-
-        function updateMeasureField(index, field, value) {
-            if (formData.measuresList[index]) {
-                formData.measuresList[index][field] = value;
-            }
-        }
-        
-        function removeMeasure(index) {
-            formData.measuresList.splice(index, 1);
-            renderContent();
-        }
+        // --- 6. LOGIQUE MÉTIER & ACTIONS DIVERSES ---
+        function addEmptyMeasure() { formData.measuresList.push({ id: generateId('mes'), description: "", who: "", date: "" }); renderContent(); }
+        function updateMeasureField(index, field, value) { if (formData.measuresList[index]) formData.measuresList[index][field] = value; }
+        function removeMeasure(index) { formData.measuresList.splice(index, 1); renderContent(); }
 
         function addIshikawaItemManual(cat, inputId) {
             const input = document.getElementById(inputId);
             const val = input.value.trim();
-            if (val) {
-                formData.ishikawa[cat].push({ id: generateId('c'), text: val });
-                renderContent();
-            }
+            if (val) { formData.ishikawa[cat].push({ id: generateId('c'), text: val }); renderContent(); }
         }
-
-        function removeIshikawaItem(cat, index) {
-            formData.ishikawa[cat].splice(index, 1);
-            renderContent();
-        }
+        function removeIshikawaItem(cat, index) { formData.ishikawa[cat].splice(index, 1); renderContent(); }
 
         function getAvailableCauses() {
             let available = [];
@@ -946,27 +1019,18 @@
             } else { showToast("Veuillez nommer le groupe.", "error"); }
         }
 
-        // --- NOUVELLES FONCTIONS DRAG & DROP ---
-        
-        // Drag & Drop pour l'étape 3 (Ishikawa)
         function dragIshikawaCause(ev, causeId, sourceCat) {
             ev.dataTransfer.setData("ishikawaCauseId", causeId);
             ev.dataTransfer.setData("ishikawaSourceCat", sourceCat);
             ev.dataTransfer.effectAllowed = "move";
         }
-
         function dropIshikawaCause(ev, targetCat) {
-            ev.preventDefault();
-            ev.currentTarget.classList.remove('drop-zone-active');
-            
+            ev.preventDefault(); ev.currentTarget.classList.remove('drop-zone-active');
             const causeId = ev.dataTransfer.getData("ishikawaCauseId");
             const sourceCat = ev.dataTransfer.getData("ishikawaSourceCat");
-            
             if (!causeId || !sourceCat || sourceCat === targetCat) return;
-
             const sourceArray = formData.ishikawa[sourceCat];
             const targetArray = formData.ishikawa[targetCat];
-            
             if (sourceArray && targetArray) {
                 const causeIndex = sourceArray.findIndex(c => c.id === causeId);
                 if (causeIndex !== -1) {
@@ -978,35 +1042,15 @@
             }
         }
 
-        // Drag & Drop pour l'étape 4 (Regroupement)
-        function dragCause(ev, causeId) {
-            ev.dataTransfer.setData("causeId", causeId);
-            ev.dataTransfer.effectAllowed = "move";
-        }
-
-        function allowDrop(ev) {
-            ev.preventDefault();
-            ev.dataTransfer.dropEffect = "move";
-        }
-
-        function dragEnter(ev) {
-            ev.preventDefault();
-            ev.currentTarget.classList.add('drop-zone-active');
-        }
-
-        function dragLeave(ev) {
-            ev.currentTarget.classList.remove('drop-zone-active');
-        }
-
+        function dragCause(ev, causeId) { ev.dataTransfer.setData("causeId", causeId); ev.dataTransfer.effectAllowed = "move"; }
+        function allowDrop(ev) { ev.preventDefault(); ev.dataTransfer.dropEffect = "move"; }
+        function dragEnter(ev) { ev.preventDefault(); ev.currentTarget.classList.add('drop-zone-active'); }
+        function dragLeave(ev) { ev.currentTarget.classList.remove('drop-zone-active'); }
         function dropCause(ev, familyId) {
-            ev.preventDefault();
-            ev.currentTarget.classList.remove('drop-zone-active');
-            
+            ev.preventDefault(); ev.currentTarget.classList.remove('drop-zone-active');
             const causeId = ev.dataTransfer.getData("causeId");
             if (!causeId) return;
 
-            // Si on déplace une cause qui fait partie de notre sélection multiple, 
-            // on déplace TOUTES les causes sélectionnées d'un coup !
             let causesToMoveIds = [causeId];
             if (formData.tempSelectionIds.includes(causeId)) {
                 causesToMoveIds = [...new Set([...formData.tempSelectionIds, causeId])];
@@ -1015,18 +1059,11 @@
             const targetFamily = formData.customFamilies.find(f => f.id === familyId);
             if (targetFamily) {
                 let moved = false;
-                
                 causesToMoveIds.forEach(id => {
-                    // Empêcher l'ajout si la cause est déjà dans ce groupe cible
                     if(targetFamily.causes.some(c => c.id === id)) return;
-                    
                     let causeObj = null;
-                    
-                    // 1. Chercher dans les causes disponibles (à gauche)
                     const available = getAvailableCauses();
                     causeObj = available.find(c => c.id === id);
-                    
-                    // 2. Si introuvable, chercher dans les autres groupes existants (déplacement inter-groupes)
                     if (!causeObj) {
                         for (let i = 0; i < formData.customFamilies.length; i++) {
                             const f = formData.customFamilies[i];
@@ -1034,27 +1071,19 @@
                                 const idx = f.causes.findIndex(c => c.id === id);
                                 if (idx !== -1) {
                                     causeObj = f.causes[idx];
-                                    f.causes.splice(idx, 1); // Retirer de l'ancien groupe
-                                    
-                                    // Nettoyage: Si l'ancien groupe devient vide, on le supprime
+                                    f.causes.splice(idx, 1);
                                     if (f.causes.length === 0) {
                                         formData.customFamilies.splice(i, 1);
                                         formData.analyses = formData.analyses.filter(a => a.familyId !== f.id);
-                                        i--; // Réajuster l'index après suppression
+                                        i--;
                                     }
                                     break;
                                 }
                             }
                         }
                     }
-                    
-                    // Si on a bien trouvé la cause, on l'ajoute au groupe cible
-                    if (causeObj) {
-                        targetFamily.causes.push(causeObj);
-                        moved = true;
-                    }
+                    if (causeObj) { targetFamily.causes.push(causeObj); moved = true; }
                 });
-                
                 if (moved) {
                     formData.tempSelectionIds = formData.tempSelectionIds.filter(id => !causesToMoveIds.includes(id));
                     renderContent();
@@ -1104,7 +1133,6 @@
             const block = document.getElementById(`analysis-block-${index}`);
             if (block) {
                 block.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Met en surbrillance temporaire les cases de l'analyse sélectionnée
                 const boxes = block.querySelectorAll('.inner-box');
                 boxes.forEach(b => {
                     b.classList.remove('border-slate-200');
@@ -1138,7 +1166,6 @@
             };
             findAndUpdate(tree);
             
-            // Mise à jour de la cause retenue en direct, sans perdre le focus du curseur !
             const leafTextEl = document.getElementById(`leaf-text-${nodeId}`);
             if (leafTextEl) {
                 const isEmpty = !text || text.trim() === "";
@@ -1156,7 +1183,7 @@
 
         function updateWhySelect(analysisIndex, nodeId, text) {
             updateWhyText(analysisIndex, nodeId, text);
-            renderContent(); // Rafraîchit l'UI pour que la cause sélectionnée disparaisse des autres listes (uniquement sur le P1)
+            renderContent(); 
         }
 
         function addWhyChild(analysisIndex, nodeId, depth) {
@@ -1186,7 +1213,6 @@
             renderContent();
         }
 
-        // Nouvelle fonction pour agrandir automatiquement les zones de texte
         function autoResizeAllTextareas() {
             document.querySelectorAll('textarea.auto-resize').forEach(ta => {
                 ta.style.height = 'auto';
@@ -1195,14 +1221,9 @@
         }
 
         function calculateRowSpan(node) {
-            if (!node.children || node.children.length === 0) {
-                node.rowSpan = 1;
-                return 1;
-            }
+            if (!node.children || node.children.length === 0) { node.rowSpan = 1; return 1; }
             let span = 0;
-            for (let child of node.children) {
-                span += calculateRowSpan(child);
-            }
+            for (let child of node.children) { span += calculateRowSpan(child); }
             node.rowSpan = span;
             return span;
         }
@@ -1214,20 +1235,17 @@
             
             function renderNode(node, depth, isFirstChild) {
                 let res = '';
-                if (!isFirstChild) {
-                    res += `<tr class="border-t border-slate-200">`;
-                }
+                if (!isFirstChild) { res += `<tr class="border-t border-slate-200">`; }
                 
                 const safeText = node.text ? node.text.replace(/"/g, '&quot;') : "";
                 let inputHtml = '';
                 
                 if (depth === 0) {
-                     inputHtml = `<div class="w-full h-full min-h-[60px] flex items-center justify-center p-3 text-indigo-900 font-black text-sm text-center bg-indigo-50">${familyObj ? familyObj.name : 'Analyse'}</div>`;
+                     inputHtml = `<div class="w-full h-full min-h-[60px] flex items-center justify-center p-3 text-indigo-900 font-black text-sm text-center bg-indigo-50">${appMode === '8D' && familyObj ? familyObj.name : currentAnalysis.familyName}</div>`;
                 } 
-                else if (depth === 1 && familyObj && familyObj.causes.length > 0) {
+                else if (depth === 1 && appMode === '8D' && familyObj && familyObj.causes.length > 0) {
                     const usedCauses = treeRoot.children.map(child => child.text).filter(t => t);
                     const availableCauses = familyObj.causes.filter(c => c.text === node.text || !usedCauses.includes(c.text));
-
                     inputHtml = `
                         <select class="w-full h-full min-h-[60px] p-3 text-sm outline-none bg-transparent cursor-pointer font-bold text-blue-800" onchange="updateWhySelect(${analysisIndex}, '${node.id}', this.value)">
                             <option value="" disabled ${!node.text ? 'selected' : ''}>Choisir une cause...</option>
@@ -1238,7 +1256,6 @@
                     inputHtml = `<textarea rows="1" class="w-full p-3 text-sm outline-none bg-transparent resize-none overflow-hidden min-h-[60px] font-medium text-slate-700 auto-resize block" oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px'; updateWhyText(${analysisIndex}, '${node.id}', this.value)" placeholder="Pourquoi ?">${safeText}</textarea>`;
                 }
 
-                // Boutons d'action flottants (totalement à l'extérieur de la case en haut à droite)
                 let buttonsHtml = '';
                 if (depth === 0) {
                     buttonsHtml = `
@@ -1284,7 +1301,6 @@
                     const clickHandler = isEmpty ? '' : `onclick="toggleRootSelection('${node.id}')"`;
                     const cursorClass = isEmpty ? 'cursor-not-allowed opacity-60' : 'cursor-pointer';
 
-                    // Colonne de Validation Cause Retenue
                     res += `
                     <td class="p-3 align-middle bg-indigo-50/30 border-l-2 border-indigo-200">
                         <div class="flex items-center gap-3 p-3 ${isSelected ? 'bg-indigo-100 border-indigo-400 shadow-md' : 'bg-white border-slate-200 hover:border-indigo-300'} border-2 rounded-xl transition-all ${cursorClass}" ${clickHandler}>
@@ -1329,132 +1345,55 @@
         }
 
         function addActionToRoot(rootId, rootText) {
-            formData.actions.push({ 
-                id: generateId('act'), 
-                task: "", 
-                who: "", 
-                when: "", 
-                linkedRootId: rootId, 
-                linkedRootText: rootText, 
-                status: 'attente', 
-                standardization: "" 
-            });
+            formData.actions.push({ id: generateId('act'), task: "", who: "", when: "", linkedRootId: rootId, linkedRootText: rootText, status: 'attente', standardization: "" });
             renderContent();
         }
 
         function addGeneralAction() {
-            formData.actions.push({ 
-                id: generateId('act'), 
-                task: "", 
-                who: "", 
-                when: "", 
-                linkedRootId: null, 
-                linkedRootText: "Action Générale / Autres", 
-                status: 'attente', 
-                standardization: "" 
-            });
+            formData.actions.push({ id: generateId('act'), task: "", who: "", when: "", linkedRootId: null, linkedRootText: "Action Générale / Autres", status: 'attente', standardization: "" });
             renderContent();
         }
 
-        function updateActionField(index, field, value) {
-            if (formData.actions[index]) {
-                formData.actions[index][field] = value;
-            }
-        }
-
-        function updateActionStatus(index, newStatus) {
-            formData.actions[index].status = newStatus;
-            renderContent();
-        }
-
-        function updateStandardization(index, text) {
-            formData.actions[index].standardization = text;
-        }
-        
-        function updateChecklist(key, value) {
-            if (!formData.checklist) formData.checklist = {};
-            formData.checklist[key] = value;
-        }
-
+        function updateActionField(index, field, value) { if (formData.actions[index]) formData.actions[index][field] = value; }
+        function updateActionStatus(index, newStatus) { formData.actions[index].status = newStatus; renderContent(); }
+        function updateStandardization(index, text) { formData.actions[index].standardization = text; }
+        function updateChecklist(key, value) { if (!formData.checklist) formData.checklist = {}; formData.checklist[key] = value; }
         function removeAction(i) { formData.actions.splice(i, 1); renderContent(); }
 
         function toggleMenu() { document.getElementById('main-menu').classList.toggle('hidden'); }
-
-        function resetData() {
-            document.getElementById('main-menu').classList.add('hidden');
-            const modal = document.getElementById('reset-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeResetModal() {
-            const modal = document.getElementById('reset-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
+        function resetData() { document.getElementById('main-menu').classList.add('hidden'); const modal = document.getElementById('reset-modal'); modal.classList.remove('hidden'); modal.classList.add('flex'); }
+        function closeResetModal() { const modal = document.getElementById('reset-modal'); modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        
         function executeResetData() {
             formData = {
-                resolutionTitle: "",
-                startDate: new Date().toISOString().split('T')[0],
-                participants: "",
-                measuresList: [], 
-                qqoqccp: { qui: "", quoi: "", ou: "", quand: "", comment: "", combien: "", pourquoi: "" },
-                problemStatement: "",
-                objectives: "", 
+                resolutionTitle: "", startDate: new Date().toISOString().split('T')[0], participants: "",
+                measuresList: [], qqoqccp: { qui: "", quoi: "", ou: "", quand: "", comment: "", combien: "", pourquoi: "" },
+                problemStatement: "", objectives: "", 
                 ishikawa: { "Main d'œuvre": [], "Matériel": [], "Matière": [], "Méthode": [], "Milieu": [], "Mesure": [] },
-                customFamilies: [],
-                tempSelectionIds: [], 
-                analyses: [], 
-                selectedRootIds: [], 
-                actions: [], 
-                effectiveness: "",
-                standards: "", 
-                lessonsLearned: "", 
-                improvements: "", 
-                checklist: { informed: false, applicable: false, congratulated: false }
+                customFamilies: [], tempSelectionIds: [], analyses: [], selectedRootIds: [], actions: [], 
+                effectiveness: "", standards: "", lessonsLearned: "", improvements: "", checklist: { informed: false, applicable: false, congratulated: false }
             };
-            currentStep = 0;
-            currentAnalysisIndex = 0;
-            normalizeData();
-            renderStepper();
-            renderContent();
-            closeResetModal();
+            currentStep = 0; currentAnalysisIndex = 0;
+            normalizeData(); renderStepper(); renderContent(); closeResetModal();
             showToast("Analyse réinitialisée avec succès.", "success");
         }
 
-        function closeWelcomeModal() {
-            const modal = document.getElementById('welcome-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
+        function closeWelcomeModal() { const modal = document.getElementById('welcome-modal'); modal.classList.add('hidden'); modal.classList.remove('flex'); }
         function openHelpModal() {
             const data = HELP_DATA[currentStep];
             if (!data) return;
             document.getElementById('help-modal-title').textContent = data.title;
             document.getElementById('help-modal-objective').innerHTML = data.objective;
             document.getElementById('help-modal-how').innerHTML = data.how;
-            
-            const modal = document.getElementById('help-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            const modal = document.getElementById('help-modal'); modal.classList.remove('hidden'); modal.classList.add('flex');
         }
-
-        function closeHelpModal() {
-            const modal = document.getElementById('help-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
+        function closeHelpModal() { const modal = document.getElementById('help-modal'); modal.classList.add('hidden'); modal.classList.remove('flex'); }
 
         function exportJSON() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(formData));
             const safeTitle = formData.resolutionTitle ? formData.resolutionTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_').substring(0, 50) : 'KIHO_8D';
-            const dl = document.createElement('a');
-            dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", `${safeTitle}_${new Date().toISOString().split('T')[0]}.json`);
-            dl.click();
-            toggleMenu();
+            const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", `${safeTitle}_${new Date().toISOString().split('T')[0]}.json`);
+            dl.click(); toggleMenu();
         }
 
         function importJSON(event) {
@@ -1462,8 +1401,7 @@
             if(!file) return;
             const reader = new FileReader();
             reader.onload = function(e) { try { formData = JSON.parse(e.target.result); normalizeData(); renderContent(); showToast("Projet chargé avec succès !", "success"); } catch(err) { showToast("Erreur lors du chargement du fichier.", "error"); } };
-            reader.readAsText(file);
-            toggleMenu();
+            reader.readAsText(file); toggleMenu();
         }
 
         function exportCSV() {
@@ -1495,41 +1433,6 @@
             toggleMenu();
         }
 
-        // --- 6. NAVIGATION FUNCTIONS (NEW) ---
-        function goToStep(id) {
-            currentStep = id;
-            if (id === 1 || id === 4 || id === 5 || id === 7 || id === 8) normalizeData();
-            if (id === 4) formData.tempSelectionIds = [];
-            renderStepper();
-            renderContent();
-        }
-
-        function nextStep() {
-            if (currentStep < 8) goToStep(currentStep + 1);
-            else exportCSV();
-        }
-
-        function prevStep() {
-            if (currentStep > 0) goToStep(currentStep - 1);
-        }
-
-        // --- 7. RENDER HELPERS ---
-
-        function renderStepper() {
-            const stepper = document.getElementById('stepper');
-            stepper.innerHTML = steps.map(s => `
-                <button onclick="goToStep(${s.id})" class="flex-1 min-w-[110px] p-5 flex flex-col items-center gap-1 transition-all snap-center ${currentStep === s.id ? 'step-active' : 'opacity-40'}">
-                    <i data-lucide="${s.icon}" class="${currentStep === s.id ? s.color : 'text-slate-400'}"></i>
-                    <span class="text-[9px] font-black uppercase tracking-tighter ${currentStep === s.id ? 'text-slate-900' : 'text-slate-400'}">${s.title}</span>
-                </button>
-            `).join('');
-            const dots = document.getElementById('progress-dots');
-            if(dots) dots.innerHTML = steps.map(s => `
-                <div class="h-1.5 rounded-full transition-all duration-500 ${currentStep === s.id ? 'w-8 bg-blue-600 shadow-sm' : 'w-1.5 bg-slate-300'}"></div>
-            `).join('');
-            if(window.lucide) lucide.createIcons();
-        }
-
         function printReport() {
             const rootNodes = getAllRootCauseNodes();
             const selectedRoots = rootNodes.filter(n => formData.selectedRootIds.includes(n.id));
@@ -1547,12 +1450,7 @@
                             <div class="print-header">1. Description du Problème (QQOQCCP)</div>
                             <div class="print-content">
                                 <ul class="list-none space-y-1">
-                                    <li><strong>Qui:</strong> ${formData.qqoqccp.qui}</li>
-                                    <li><strong>Quoi:</strong> ${formData.qqoqccp.quoi}</li>
-                                    <li><strong>Où:</strong> ${formData.qqoqccp.ou}</li>
-                                    <li><strong>Quand:</strong> ${formData.qqoqccp.quand}</li>
-                                    <li><strong>Comment:</strong> ${formData.qqoqccp.comment}</li>
-                                    <li><strong>Combien:</strong> ${formData.qqoqccp.combien}</li>
+                                    <li><strong>Qui:</strong> ${formData.qqoqccp.qui}</li><li><strong>Quoi:</strong> ${formData.qqoqccp.quoi}</li><li><strong>Où:</strong> ${formData.qqoqccp.ou}</li><li><strong>Quand:</strong> ${formData.qqoqccp.quand}</li><li><strong>Comment:</strong> ${formData.qqoqccp.comment}</li><li><strong>Combien:</strong> ${formData.qqoqccp.combien}</li>
                                 </ul>
                                 <div class="mt-2 pt-2 border-t"><strong>Problématique:</strong><br> ${formData.problemStatement}</div>
                                 <div class="mt-2 pt-2 border-t text-blue-800"><strong>Objectifs:</strong><br> ${formData.objectives}</div>
@@ -1602,28 +1500,21 @@
                 renderStepper();
                 renderContent();
                 
-                if(window.lucide) {
-                    lucide.createIcons();
-                }
+                if(window.lucide) { lucide.createIcons(); }
                 
-                // Afficher le message de bienvenue à chaque chargement
                 const welcomeModal = document.getElementById('welcome-modal');
                 if (welcomeModal) {
                     welcomeModal.classList.remove('hidden');
                     welcomeModal.classList.add('flex');
                 }
-                
             } catch (e) {
                 console.error("Erreur d'initialisation:", e);
                 showToast("Erreur au chargement : " + e.message, "error");
             }
         }
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
-        }
+        if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } 
+        else { init(); }
     </script>
 </body>
 </html>
