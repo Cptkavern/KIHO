@@ -151,7 +151,7 @@
         .print-content.landscape { width: 297mm !important; height: 210mm !important; min-width: 297mm !important; min-height: 210mm !important; }
         .print-content.portrait { width: 210mm !important; height: 297mm !important; min-width: 210mm !important; min-height: 297mm !important; }
 
-        .print-content * { min-width: 0 !important; min-height: 0 !important; }
+        .print-content * { min-width: 0 !important; }
         .print-content .font-black { font-weight: 700 !important; }
         .print-content .font-bold { font-weight: 500 !important; }
         
@@ -176,7 +176,7 @@
         .print-content .mt-4, .print-content .mt-2 { margin-top: 2px !important; }
 
         .print-content .header-viz { flex-shrink: 0 !important; margin-bottom: 4px !important; padding-bottom: 4px !important; border-bottom: 2px solid #e2e8f0; }
-        .print-content #viz-mapping-render { flex: 1 1 0% !important; display: flex !important; flex-direction: column !important; justify-content: space-evenly !important; }
+        .print-content #viz-mapping-render { flex: 1 1 0% !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; padding: 10px 0 !important; }
         .print-content .macro-box { border-width: 1px !important; padding: 4px !important; border-radius: 8px !important; }
         .print-content .inter-box { padding: 2px !important; border-radius: 4px !important; }
         .print-content .norm-bar { width: 25px !important; writing-mode: vertical-rl; transform: rotate(180deg); display: flex; align-items: center; justify-content: center; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px !important; }
@@ -1286,25 +1286,55 @@
         // ================= VIZ FULL (PRINT) =================
         function getPrintProcHTML(proc) {
             const bg = proc.isExcluded ? '#f8fafc' : 'white'; const border = proc.isExcluded ? '1px dashed #cbd5e1' : '1px solid #e2e8f0'; const textColor = proc.isExcluded ? 'text-slate-400' : 'text-slate-800'; const exclText = proc.isExcluded ? '<br>(Hors Périmètre)' : '';
-            return `<div class="text-center w-full" style="background-color:${bg}; border:${border}; border-radius:4px; padding:3px;"><div class="text-[8px] font-black uppercase ${textColor} leading-tight">${proc.name} ${exclText}</div></div>`;
+            return `<div class="text-center w-full shrink-0" style="background-color:${bg}; border:${border}; border-radius:4px; padding:4px;"><div class="text-[8px] font-black uppercase ${textColor} leading-tight">${proc.name} ${exclText}</div></div>`;
         }
         function getPrintInterHTML(inter) {
-            let procGrid = `<div class="flex flex-row gap-2 justify-center w-full">`;
-            for (let i = 0; i < inter.processes.length; i += 5) { procGrid += `<div class="flex flex-col gap-2 flex-1">${inter.processes.slice(i, i + 5).map(p => getPrintProcHTML(p)).join('')}</div>`; }
-            return `<div class="inter-box flex flex-col items-center h-full w-full text-center" style="background-color:#f8fafc;"><div class="text-[7px] font-bold text-slate-500 uppercase mb-2">${inter.name}</div>${procGrid}</div>`;
+            const procsHtml = inter.processes.map(p => getPrintProcHTML(p)).join('');
+            return `<div class="inter-box flex flex-col items-center text-center min-w-[130px] max-w-[200px]" style="background-color:#f8fafc;"><div class="text-[7px] font-bold text-slate-500 uppercase mb-2 shrink-0">${inter.name}</div><div class="flex flex-col gap-2 w-full items-center">${procsHtml}</div></div>`;
         }
         function getPrintMacroHTML(macro) {
-            const groupedInters = {}; macro.intermediaries.forEach(inter => { const o = inter.order || 1; if(!groupedInters[o]) groupedInters[o] = []; groupedInters[o].push(inter); });
-            const intersCols = Object.keys(groupedInters).sort((a,b)=>a-b).map(order => `<div class="flex flex-col gap-3 flex-1">${groupedInters[order].map(i => getPrintInterHTML(i)).join('')}</div>`).join('');
-            return `<div class="macro-box flex flex-col items-center h-full"><div class="text-[8px] font-black text-slate-500 uppercase mb-4 italic tracking-widest">${macro.name}</div><div class="flex flex-row gap-3 w-full justify-center flex-1">${intersCols}</div></div>`;
+            const inters = [...macro.intermediaries].sort((a,b) => (a.order || 1) - (b.order || 1));
+            const intersHtml = inters.map(i => getPrintInterHTML(i)).join('');
+            return `<div class="macro-box flex flex-col items-center shrink-0 w-auto"><div class="text-[8px] font-black text-slate-500 uppercase mb-3 italic tracking-widest shrink-0">${macro.name}</div><div class="flex flex-row flex-wrap gap-3 justify-center items-start">${intersHtml}</div></div>`;
         }
         function renderVizFull() {
             populateHeader(); const container = document.getElementById('viz-mapping-render'); if(!container) return;
-            container.innerHTML = appData.categories.map(cat => {
-                const groupedMacros = {}; cat.macros.forEach(m => { const o = m.order || 1; if(!groupedMacros[o]) groupedMacros[o] = []; groupedMacros[o].push(m); });
-                const macrosCols = Object.keys(groupedMacros).sort((a,b)=>a-b).map(order => `<div class="flex flex-col gap-4 flex-1">${groupedMacros[order].map(m => getPrintMacroHTML(m)).join('')}</div>`).join('');
-                return `<div class="flex flex-col items-center gap-4"><div class="px-8 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-full" style="background-color:#f1f5f9; color:#475569; border: 1px solid #e2e8f0;">${cat.label}</div><div class="flex flex-row flex-wrap justify-center gap-4 w-full">${macrosCols}</div></div>`;
-            }).join('');
+            
+            let htmlBuffer = '';
+            appData.categories.forEach((cat, index) => {
+                const macros = [...cat.macros].sort((a,b) => (a.order || 1) - (b.order || 1));
+                const macrosHtml = macros.map(m => getPrintMacroHTML(m)).join('');
+                
+                const isMid = cat.id === 'met'; 
+                
+                // Flèche descendante depuis Processus de Management
+                if (index === 1) {
+                    htmlBuffer += `<div class="w-full flex justify-center text-slate-300 my-2 shrink-0 z-10"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M5 13l7 7 7-7"/></svg></div>`;
+                }
+
+                let catContent = `<div class="px-8 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-full shrink-0 relative z-20" style="background-color:#f1f5f9; color:#475569; border: 1px solid #e2e8f0;">${cat.label}</div><div class="flex flex-row flex-wrap justify-center items-start gap-6 w-full px-4 relative z-20">${macrosHtml}</div>`;
+
+                if (isMid) {
+                    htmlBuffer += `<div class="flex flex-col items-center gap-4 w-full flex-1 justify-center relative py-6">
+                        <!-- Grande flèche de fond (Gauche -> Droite) -->
+                        <div class="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none z-0 px-2 opacity-[0.06]">
+                            <svg viewBox="0 0 1000 200" preserveAspectRatio="none" class="w-full h-full" fill="#005B63">
+                                <polygon points="0,40 900,40 900,0 1000,100 900,200 900,160 0,160" />
+                            </svg>
+                        </div>
+                        ${catContent}
+                    </div>`;
+                } else {
+                    htmlBuffer += `<div class="flex flex-col items-center gap-4 w-full shrink-0 relative z-20">${catContent}</div>`;
+                }
+
+                // Flèche montante depuis Processus Support
+                if (index === 1) {
+                    htmlBuffer += `<div class="w-full flex justify-center text-slate-300 my-2 shrink-0 z-10"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4M5 11l7-7 7 7"/></svg></div>`;
+                }
+            });
+            
+            container.innerHTML = htmlBuffer;
             lucide.createIcons();
         }
 
@@ -1366,13 +1396,48 @@
             const children = appData.roles.filter(r => r.parentId === parentId); if (children.length === 0) return '';
             let ulClass = ''; if (depth === 3) ulClass = 'vertical-centered-ul'; else if (depth >= 4) ulClass = 'vertical-indented-ul';
             let html = `<ul class="${ulClass}">`;
-            children.forEach(c => {
-                const pilotedProcs = getProcessList().filter(p => (c.pilotedProcesses || []).includes(p.id));
-                const nodeInner = getOrgNodeHTML(c, isPrint, showProcs, pilotedProcs);
-                let liClass = ''; if (depth === 3) liClass = 'vertical-centered-li'; else if (depth >= 4) liClass = 'vertical-indented-li';
-                if (depth >= 4) html += `<li class="${liClass}"><div class="spine"></div><div class="branch"></div>${nodeInner}${buildOrgTree(isPrint, showProcs, c.id, depth + 1)}</li>`;
-                else html += `<li class="${liClass}">${nodeInner}${buildOrgTree(isPrint, showProcs, c.id, depth + 1)}</li>`;
-            });
+
+            // Application du regroupement compact sur les hauts niveaux (N-1, N-2, N-3)
+            if (depth < 3) {
+                // On sépare ceux qui ont des collaborateurs en dessous (branches) et ceux qui n'en ont pas (leaves)
+                const leaves = children.filter(c => !appData.roles.some(r => r.parentId === c.id));
+                const branches = children.filter(c => appData.roles.some(r => r.parentId === c.id));
+
+                // 1. On trace les branches complètes d'abord (ex: Directeur Exploitation)
+                branches.forEach(c => {
+                    const pilotedProcs = getProcessList().filter(p => (c.pilotedProcesses || []).includes(p.id));
+                    const nodeInner = getOrgNodeHTML(c, isPrint, showProcs, pilotedProcs);
+                    html += `<li>${nodeInner}${buildOrgTree(isPrint, showProcs, c.id, depth + 1)}</li>`;
+                });
+
+                // 2. On groupe les postes sans collaborateurs dans un seul bloc (grappe)
+                if (leaves.length > 0) {
+                    if (leaves.length === 1) {
+                        const pilotedProcs = getProcessList().filter(p => (leaves[0].pilotedProcesses || []).includes(p.id));
+                        const nodeInner = getOrgNodeHTML(leaves[0], isPrint, showProcs, pilotedProcs);
+                        html += `<li>${nodeInner}</li>`;
+                    } else {
+                        // Max width 400px permet d'afficher exactement 2 cartes par ligne
+                        let leavesHtml = `<div class="flex flex-wrap justify-center gap-3 max-w-[400px] bg-slate-50/80 rounded-[2rem] p-3 border border-slate-200/60 shadow-sm relative z-10 mt-0">`;
+                        leaves.forEach(c => {
+                            const pilotedProcs = getProcessList().filter(p => (c.pilotedProcesses || []).includes(p.id));
+                            leavesHtml += getOrgNodeHTML(c, isPrint, showProcs, pilotedProcs);
+                        });
+                        leavesHtml += `</div>`;
+                        html += `<li>${leavesHtml}</li>`;
+                    }
+                }
+            } else {
+                // Rendu standard pour les niveaux verticaux profonds
+                children.forEach(c => {
+                    const pilotedProcs = getProcessList().filter(p => (c.pilotedProcesses || []).includes(p.id));
+                    const nodeInner = getOrgNodeHTML(c, isPrint, showProcs, pilotedProcs);
+                    let liClass = ''; if (depth === 3) liClass = 'vertical-centered-li'; else if (depth >= 4) liClass = 'vertical-indented-li';
+                    if (depth >= 4) html += `<li class="${liClass}"><div class="spine"></div><div class="branch"></div>${nodeInner}${buildOrgTree(isPrint, showProcs, c.id, depth + 1)}</li>`;
+                    else html += `<li class="${liClass}">${nodeInner}${buildOrgTree(isPrint, showProcs, c.id, depth + 1)}</li>`;
+                });
+            }
+
             return html + '</ul>';
         }
 
@@ -1603,15 +1668,39 @@
         function saveRole() {
             const t = document.getElementById('role-title').value; if (!t) { showCustomModal({ message: "Veuillez sélectionner un titre de poste." }); return; }
             const ps = Array.from(document.querySelectorAll('input[name="role-processes"]:checked')).map(cb => cb.value);
+            
+            // On récupère les anciens processus de ce poste pour comparer avec la nouvelle sélection
+            let oldPs = [];
+            let targetRole = currentEditRoleId ? getRoleById(currentEditRoleId) : null;
+            if (targetRole) {
+                oldPs = targetRole.pilotedProcesses || [];
+            }
+
             const dat = { 
                 title: t, holder: document.getElementById('role-holder').value.trim(), depot: document.getElementById('role-depot').value.trim(),
                 count: parseInt(document.getElementById('role-count').value), parentId: document.getElementById('role-parent').value || null, 
                 pilotedProcesses: ps, isManager: document.getElementById('role-is-manager').checked 
             };
-            if (currentEditRoleId) Object.assign(getRoleById(currentEditRoleId), dat); else appData.roles.push({id: generateId(), ...dat}); 
+
+            // On isole uniquement les processus qui viennent d'être ajoutés lors de cette édition
+            const addedPs = ps.filter(p => !oldPs.includes(p));
+
+            if (currentEditRoleId) Object.assign(targetRole, dat); 
+            else appData.roles.push({id: generateId(), ...dat}); 
             
-            // Sync processes to all identical roles
-            appData.roles.forEach(r => { if (r.title === t) r.pilotedProcesses = [...ps]; });
+            // Synchronisation asymétrique : On ne propage QUE les ajouts aux autres postes identiques
+            if (addedPs.length > 0) {
+                appData.roles.forEach(r => { 
+                    if (r.title === t && r.id !== currentEditRoleId) { 
+                        if (!r.pilotedProcesses) r.pilotedProcesses = [];
+                        addedPs.forEach(addedP => {
+                            if (!r.pilotedProcesses.includes(addedP)) {
+                                r.pilotedProcesses.push(addedP);
+                            }
+                        });
+                    } 
+                });
+            }
             
             closeRoleModal(); renderOrg();
         }
