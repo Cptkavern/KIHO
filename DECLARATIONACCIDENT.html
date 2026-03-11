@@ -519,10 +519,10 @@
         // Silhouettes
         function renderSilhouettes() {
             const draw = (p) => {
-                const hl = formData.lesions[p.id];
+                const hl = formData.lesions[p.i];
                 const bg = hl ? 'background-color:#ef4444; border-color:#991b1b; animation: pulse 2s infinite;' : 'background-color:rgba(255,255,255,0.8); border-color:#374151;';
-                return `<button onclick="openLesionModal('${p.id}','${p.n}')" style="position:absolute; width:16px; height:16px; margin-left:-8px; margin-top:-8px; border:2px solid; border-radius:2px; ${bg} left:${p.x}%; top:${p.y}%; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);"></button>` + 
-                       (hl ? `<div style="position:absolute; white-space:nowrap; background-color:#dc2626; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:900; ${p.x>50?`left:${p.x+3}%`:`right:${100-p.x+3}%`}; top:${p.y}%; transform:translateY(-50%); display:flex; align-items:center; gap:4px; z-index:30;">${hl}<button onclick="removeLesion('${p.id}')" style="background:rgba(255,255,255,0.2); border:none; border-radius:2px; padding:2px; cursor:pointer;"><i data-lucide="x" style="width:10px; height:10px;"></i></button></div>` : '');
+                return `<button onclick="openLesionModal('${p.i}','${p.n.replace(/'/g, "\\'")}')" style="position:absolute; width:16px; height:16px; margin-left:-8px; margin-top:-8px; border:2px solid; border-radius:2px; ${bg} left:${p.x}%; top:${p.y}%; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);"></button>` + 
+                       (hl ? `<div style="position:absolute; white-space:nowrap; background-color:#dc2626; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:900; ${p.x>50?`left:${p.x+3}%`:`right:${100-p.x+3}%`}; top:${p.y}%; transform:translateY(-50%); display:flex; align-items:center; gap:4px; z-index:30;">${hl}<button onclick="removeLesion('${p.i}')" style="background:rgba(255,255,255,0.2); border:none; border-radius:2px; padding:2px; cursor:pointer;"><i data-lucide="x" style="width:10px; height:10px;"></i></button></div>` : '');
             };
             document.getElementById('silhouette-front-points').innerHTML = ptsF.map(draw).join('');
             document.getElementById('silhouette-back-points').innerHTML = ptsB.map(draw).join('');
