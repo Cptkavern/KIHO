@@ -60,11 +60,49 @@
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-900 pb-20 relative">
 
+    <!-- WELCOME MODAL -->
+    <!-- Correction : Utilisation des styles inline pour le fond sombre et le z-index -->
+    <div id="welcome-modal" class="fixed inset-0 flex items-center justify-center p-4" style="background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 50000;">
+        <div class="bg-white shadow-2xl w-full relative overflow-hidden p-8" style="border-radius: 1.5rem; max-width: 450px;">
+            <!-- Barre supérieure bleue -->
+            <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+            
+            <!-- En-tête -->
+            <div class="flex items-start gap-4 mb-6 mt-2">
+                <div class="bg-blue-50 text-blue-600 p-3 flex-shrink-0" style="border-radius: 1rem;">
+                    <i data-lucide="shield-check" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-800 leading-tight mb-1">Bienvenue dans l'application KIHO déclaration d'un accident</h2>
+                    <p class="text-xs uppercase text-gray-400 font-bold" style="letter-spacing: 0.1em;">Confidentialité & Sauvegarde</p>
+                </div>
+            </div>
+            
+            <!-- Encart Avertissement -->
+            <div class="border p-5 mb-6" style="background-color: #fff7ed; border-color: #fed7aa; color: #7c2d12; border-radius: 1rem;">
+                <h3 class="font-black flex items-center gap-2 mb-3 uppercase text-sm" style="color: #ea580c;">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i> Important
+                </h3>
+                <p class="font-bold text-sm mb-3">Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues.</p>
+                <p class="text-sm leading-relaxed mb-4" style="color: #9a3412;">Pensez à sauvegarder régulièrement votre travail à l'aide du bouton <strong>Exporter les données</strong> présent dans le menu situé en haut à droite.</p>
+                
+                <!-- Faux badge visuel -->
+                <div class="bg-white border px-3 py-2 flex items-center justify-center gap-2 text-sm font-bold shadow-sm text-gray-700 w-fit mx-auto" style="border-color: #fed7aa; border-radius: 0.5rem;">
+                    <i data-lucide="save" class="w-4 h-4 text-blue-600"></i> Exporter les données (.json)
+                </div>
+            </div>
+            
+            <!-- Bouton d'action -->
+            <button onclick="closeWelcomeModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 font-black uppercase flex items-center justify-center gap-2 transition-colors shadow-lg focus:outline-none" style="border-radius: 0.75rem; letter-spacing: 0.1em;">
+                J'ai compris <i data-lucide="check" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+
     <!-- HEADER -->
-    <header class="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+    <header class="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm">
+        <div class="mx-auto px-4 h-16 flex items-center justify-between" style="max-width: 1400px;">
             <div class="flex items-center gap-3">
-                <!-- Go fetola URL ya logo go ya ka kopo ya mosedi -->
                 <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" 
                      style="height: 22px; width: auto; object-fit: contain;" alt="Logo Keolis" 
                      onerror="this.outerHTML='<span style=\'font-weight:900; font-style:italic; font-size:24px; color:#005B63; letter-spacing:-1px;\'>Keolis</span>'" />
@@ -79,7 +117,7 @@
                 <button id="menu-btn" class="p-2 hover:bg-gray-100 rounded-lg text-gray-600 focus:outline-none">
                     <i data-lucide="menu" id="menu-icon"></i>
                 </button>
-                <div id="dropdown-menu" class="hidden absolute right-0 mt-4 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+                <div id="dropdown-menu" class="hidden absolute right-0 mt-4 bg-white shadow-2xl border border-gray-200 overflow-hidden" style="width: 16rem; border-radius: 0.75rem; z-index: 60;">
                     <div class="p-2 space-y-1">
                         <!-- Import/Export & PDF -->
                         <button onclick="document.getElementById('import-file').click()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-blue-50 rounded-lg text-gray-700 font-bold transition-colors">
@@ -113,13 +151,13 @@
     </header>
 
     <!-- PROGRESS BAR -->
-    <div class="max-w-5xl mx-auto px-4 pt-6">
+    <div class="mx-auto px-4 pt-6" style="max-width: 64rem;">
         <div class="flex justify-between mb-2" id="progress-bar"></div>
     </div>
 
     <!-- MAIN APP CONTAINER -->
-    <main class="max-w-5xl mx-auto my-6 px-4">
-        <div id="app-container" class="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden flex flex-col md:flex-row" style="min-height: 800px;">
+    <main class="mx-auto my-6 px-4" style="max-width: 64rem;">
+        <div id="app-container" class="bg-white shadow-xl border border-gray-200 overflow-hidden flex flex-col md:flex-row" style="border-radius: 1.5rem; min-height: 800px;">
             
             <!-- SIDEBAR -->
             <nav class="w-full md:w-64 bg-gray-50 border-r border-gray-200">
@@ -254,7 +292,7 @@
                         </div>
                         
                         <!-- Modal -->
-                        <div id="lesion-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6" style="background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);">
+                        <div id="lesion-modal" class="hidden fixed inset-0 flex items-center justify-center p-6" style="background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 100;">
                             <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
                                 <div class="flex justify-between items-center mb-6">
                                     <h3 class="font-black text-lg flex items-center gap-2"><i data-lucide="activity" class="text-red-500"></i> Nature</h3>
@@ -307,7 +345,7 @@
         </div>
 
         <!-- FOOTER NAV -->
-        <footer class="mt-8 flex justify-between items-center">
+        <footer class="mt-8 flex justify-between items-center no-print">
             <button id="btn-prev" onclick="goToStep(currentStep-1)" class="flex items-center gap-2 px-8 py-3 font-black text-xs uppercase tracking-widest transition-all rounded-2xl text-gray-300 pointer-events-none">
                 <i data-lucide="chevron-left" class="w-5 h-5"></i> Retour
             </button>
@@ -433,6 +471,10 @@
             document.getElementById('menu-btn').onclick = () => { document.getElementById('dropdown-menu').classList.toggle('hidden'); };
             injectSVG(); initFormValues(); renderProgressBar(); renderSilhouettes(); renderLesionOptions(); renderWitnesses(); lucide.createIcons();
         });
+
+        function closeWelcomeModal() {
+            document.getElementById('welcome-modal').classList.add('hidden');
+        }
 
         function injectSVG() {
             const svgBody = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; opacity:0.8;"><g fill="#f1f5f9" stroke="#9ca3af" stroke-width="0.8"><circle cx="50" cy="11" r="6"/><path d="M47 16L53 16L54 22L46 22Z"/><path d="M33 22C40 18,60 18,67 22C72 26,68 53,62 55Q50 60,38 55C32 53,28 26,33 22Z"/><path d="M33 22C30 25,25 35,22 45C19 55,17 63,14 65C13 67,18 68,19 64C22 55,26 45,29 35C31 30,35 25,33 22Z"/><path d="M67 22C70 25,75 35,78 45C81 55,83 63,86 65C87 67,82 68,81 64C78 55,74 45,71 35C69 30,65 25,67 22Z"/><path d="M42 55C42 65,41 75,38 80C36 88,34 95,33 97C32 99,38 99,39 97C40 93,43 85,44 80C46 72,48 62,50 57C48 55,44 55,42 55Z"/><path d="M58 55C58 65,59 75,62 80C64 88,66 95,67 97C68 99,62 99,61 97C60 93,57 85,56 80C54 72,52 62,50 57C52 55,56 55,58 55Z"/></g><g fill="none" stroke="#d1d5db" stroke-width="0.4">XXX</g></svg>`;
