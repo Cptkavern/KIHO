@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIHO - Déclaration d'Accident</title>
+    <!-- Tailwind CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Nunito:wght@800;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- HTML2PDF pour la génération PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .font-nunito { font-family: 'Nunito', sans-serif; }
+        
+        .text-kiho { color: #005B63; }
+        .bg-kiho { background-color: #005B63; }
+        .border-kiho { border-color: #005B63; }
+
+        .input-label { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; color: #9ca3af; margin-bottom: 0.5rem; letter-spacing: 0.1em; }
+        .input-field { width: 100%; padding: 0.75rem; border: 2px solid #f3f4f6; border-radius: 0.75rem; outline: none; font-size: 0.875rem; font-weight: bold; background-color: white; transition: all 0.2s; }
+        .input-field:focus { border-color: #3b82f6; }
+        
+        .nav-btn { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; border-left: 4px solid transparent; color: #9ca3af; transition: all 0.2s; width: 100%; text-align: left; background: none; cursor: pointer; }
+        .nav-btn:hover { background-color: #f3f4f6; }
+        .nav-btn.active { border-left-color: #2563eb; background-color: #eff6ff; color: #1d4ed8; font-weight: 900; }
+        .nav-icon { width: 1.25rem; height: 1.25rem; stroke: #d1d5db; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .nav-btn.active .nav-icon { stroke: #2563eb; }
+
+        .statut-btn { background-color: white; border: 2px solid #f3f4f6; color: #4b5563; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: bold; transition: all 0.2s; cursor: pointer; }
+        .statut-btn:hover { border-color: #14b8a6; }
+        .statut-btn.active { background-color: #005B63; color: white; border-color: #005B63; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+
+        .btn-check { background-color: white; color: #374151; border: 2px solid #e5e7eb; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 900; transition: all 0.2s; cursor: pointer; }
+        .btn-check.active-blue { background-color: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .btn-check.active-teal { background-color: #0d9488; color: white; border-color: #0d9488; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+
+        .radio-label { display: flex; align-items: center; gap: 0.75rem; cursor: pointer; font-size: 0.875rem; font-weight: 900; color: #374151; }
+        .radio-input { width: 1.25rem; height: 1.25rem; accent-color: #2563eb; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .hidden { display: none !important; }
+        
+        /* Spécifique au PDF caché */
+        #pdf-content { display: none; background: white; padding: 20px; color: black; font-family: 'Inter', sans-serif; width: 794px; }
+        .pdf-box { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }
+        .pdf-title { font-family: 'Nunito', sans-serif; font-weight: 900; color: #005B63; font-size: 14px; text-transform: uppercase; border-bottom: 2px solid #f3f4f6; padding-bottom: 4px; margin-bottom: 8px; }
+        .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .pdf-label { font-size: 9px; font-weight: 900; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 1px; }
+        .pdf-value { font-size: 12px; font-weight: 600; color: #111827; }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900 pb-20 relative">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <!-- Go fetola URL ya logo go ya ka kopo ya mosedi -->
+                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" 
+                     style="height: 22px; width: auto; object-fit: contain;" alt="Logo Keolis" 
+                     onerror="this.outerHTML='<span style=\'font-weight:900; font-style:italic; font-size:24px; color:#005B63; letter-spacing:-1px;\'>Keolis</span>'" />
+                <div class="w-px h-6 bg-gray-200 ml-2 mr-2"></div>
+                <h1 class="font-nunito font-black text-lg md:text-xl uppercase tracking-tighter flex items-center gap-1">
+                    <span class="text-kiho">KIHO</span>
+                    <span class="text-blue-600">DÉCLARATION D'ACCIDENT</span>
+                </h1>
+            </div>
+            
+            <div class="relative">
+                <button id="menu-btn" class="p-2 hover:bg-gray-100 rounded-lg text-gray-600 focus:outline-none">
+                    <i data-lucide="menu" id="menu-icon"></i>
+                </button>
+                <div id="dropdown-menu" class="hidden absolute right-0 mt-4 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+                    <div class="p-2 space-y-1">
+                        <!-- Import/Export & PDF -->
+                        <button onclick="document.getElementById('import-file').click()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-blue-50 rounded-lg text-gray-700 font-bold transition-colors">
+                            <i data-lucide="upload" class="w-4 h-4 text-blue-600"></i> Importer des données
+                        </button>
+                        <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
+                        
+                        <button onclick="exportData()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-blue-50 rounded-lg text-gray-700 font-bold transition-colors">
+                            <i data-lucide="save" class="w-4 h-4 text-blue-600"></i> Exporter les données
+                        </button>
+
+                        <div class="h-px bg-gray-100 my-1"></div>
+
+                        <button onclick="generatePDF()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 rounded-lg text-gray-700 font-bold transition-colors" id="btn-dl-pdf">
+                            <i data-lucide="download" class="w-4 h-4"></i> <span id="pdf-btn-text">Télécharger le PDF</span>
+                        </button>
+
+                        <button onclick="sendEmail()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 rounded-lg text-gray-700 font-bold transition-colors">
+                            <i data-lucide="mail" class="w-4 h-4"></i> Envoyer par e-mail
+                        </button>
+
+                        <div class="h-px bg-gray-100 my-1"></div>
+
+                        <button onclick="resetForm()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-red-50 rounded-lg text-red-600 font-bold transition-colors">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Vider le formulaire
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- PROGRESS BAR -->
+    <div class="max-w-5xl mx-auto px-4 pt-6">
+        <div class="flex justify-between mb-2" id="progress-bar"></div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="max-w-5xl mx-auto my-6 px-4">
+        <div id="app-container" class="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden flex flex-col md:flex-row" style="min-height: 800px;">
+            
+            <!-- SIDEBAR -->
+            <nav class="w-full md:w-64 bg-gray-50 border-r border-gray-200">
+                <div class="flex flex-col py-6 sticky top-20">
+                    <button class="nav-btn active" onclick="goToStep(1)">
+                        <i data-lucide="user" class="nav-icon"></i><span class="text-xs uppercase tracking-widest">Victime</span>
+                    </button>
+                    <button class="nav-btn" onclick="goToStep(2)">
+                        <i data-lucide="clock" class="nav-icon"></i><span class="text-xs uppercase tracking-widest">L'Accident</span>
+                    </button>
+                    <button class="nav-btn" onclick="goToStep(3)">
+                        <i data-lucide="stethoscope" class="nav-icon"></i><span class="text-xs uppercase tracking-widest">Médical</span>
+                    </button>
+                    <button class="nav-btn" onclick="goToStep(4)">
+                        <i data-lucide="alert-triangle" class="nav-icon"></i><span class="text-xs uppercase tracking-widest">Lésions</span>
+                    </button>
+                    <button class="nav-btn" onclick="goToStep(5)">
+                        <i data-lucide="users" class="nav-icon"></i><span class="text-xs uppercase tracking-widest">Alerte & Témoins</span>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- CONTENT AREA -->
+            <div class="flex-1 p-6 md:p-10 bg-white overflow-y-auto custom-scrollbar" style="max-height: 85vh;">
+                
+                <!-- STEP 1 : VICTIME -->
+                <div id="step-1" class="step-content space-y-8">
+                    <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3 border-b-2 border-gray-100 pb-4">
+                        <i data-lucide="user" class="text-kiho"></i> Identité de la victime
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div><label class="input-label">Nom</label><input type="text" data-bind="victime.nom" class="input-field" /></div>
+                        <div><label class="input-label">Prénom</label><input type="text" data-bind="victime.prenom" class="input-field" /></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="input-label">Âge</label><input type="number" data-bind="victime.age" class="input-field" /></div>
+                            <div><label class="input-label">Téléphone</label><input type="tel" data-bind="victime.telephone" class="input-field" /></div>
+                        </div>
+                        <div><label class="input-label">Site de rattachement</label><input type="text" data-bind="victime.site" class="input-field" /></div>
+                        <div><label class="input-label">Fonction</label><input type="text" data-bind="victime.fonction" class="input-field" /></div>
+                        <div class="md:col-span-2">
+                            <label class="input-label">Statut du collaborateur</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="setStatut('CDI')" class="statut-btn">CDI</button>
+                                <button onclick="setStatut('CDD')" class="statut-btn">CDD</button>
+                                <button onclick="setStatut('Apprenti')" class="statut-btn">Apprenti</button>
+                                <button onclick="setStatut('Stagiaire')" class="statut-btn">Stagiaire</button>
+                                <button onclick="setStatut('Intérimaire')" class="statut-btn">Intérimaire</button>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2"><label class="input-label">Adresse exacte de l'accident</label><textarea data-bind="victime.adresseAccident" class="input-field custom-scrollbar" style="height: 100px;"></textarea></div>
+                    </div>
+                </div>
+
+                <!-- STEP 2 : ACCIDENT -->
+                <div id="step-2" class="step-content hidden space-y-8">
+                    <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3 border-b-2 border-gray-100 pb-4">
+                        <i data-lucide="clock" class="text-kiho"></i> Détails temporels
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div><label class="input-label">Date</label><input type="date" data-bind="accident.date" class="input-field" /></div>
+                        <div><label class="input-label">Heure</label><input type="time" data-bind="accident.heure" class="input-field" /></div>
+                        <div class="md:col-span-2"><label class="input-label">Lieu exact (Atelier, trajet, etc.)</label><input type="text" data-bind="accident.lieu" class="input-field" /></div>
+                        <div><label class="input-label">Horaire de travail ce jour</label><input type="text" data-bind="accident.horaireTravail" placeholder="Ex: 08h30 - 16h30" class="input-field" /></div>
+                    </div>
+                </div>
+
+                <!-- STEP 3 : MÉDICAL -->
+                <div id="step-3" class="step-content hidden space-y-10">
+                    <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3 border-b-2 border-gray-100 pb-4">
+                        <i data-lucide="stethoscope" class="text-kiho"></i> Suivi Médical
+                    </h2>
+                    <div class="p-8 bg-gray-50 rounded-2xl flex items-center justify-between border border-gray-200">
+                        <span class="font-bold">Premiers soins prodigués ?</span>
+                        <div class="flex gap-4">
+                            <button onclick="setRadio('medical.premiersSoins','Oui',this)" class="btn-check btn-soins">Oui</button>
+                            <button onclick="setRadio('medical.premiersSoins','Non',this)" class="btn-check btn-soins">Non</button>
+                        </div>
+                    </div>
+                    <div id="heure-soins-container" class="hidden"><label class="input-label">À quelle heure ?</label><input type="time" data-bind="medical.heureSoins" class="input-field md:w-1/2" /></div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <label class="input-label">Prise en charge par :</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="setRadio('medical.typePriseEnCharge','Médecin gén.',this)" class="btn-check btn-pec px-2 py-2 text-xs">Médecin gén.</button>
+                                <button onclick="setRadio('medical.typePriseEnCharge','Pompier',this)" class="btn-check btn-pec px-2 py-2 text-xs">Pompier</button>
+                                <button onclick="setRadio('medical.typePriseEnCharge','SAMU',this)" class="btn-check btn-pec px-2 py-2 text-xs">SAMU</button>
+                                <button onclick="setRadio('medical.typePriseEnCharge','Aucun',this)" class="btn-check btn-pec px-2 py-2 text-xs">Aucun</button>
+                            </div>
+                        </div>
+                        <div><label class="input-label">Délai d'intervention</label><input type="text" data-bind="medical.delaiPriseEnCharge" placeholder="Ex: 15 min" class="input-field" /></div>
+                        <div>
+                            <label class="input-label">Rapport de police ?</label>
+                            <select data-bind="medical.etablissementPolice" class="input-field cursor-pointer"><option>Non</option><option>Oui</option></select>
+                        </div>
+                    </div>
+
+                    <div class="p-8 rounded-2xl border space-y-6" style="background-color: #fff7ed; border-color: #ffedd5;">
+                        <h3 class="font-black text-sm uppercase tracking-widest flex items-center gap-2" style="color: #9a3412;">
+                            <i data-lucide="activity"></i> Arrêt de travail consécutif
+                        </h3>
+                        <div class="flex gap-8">
+                            <label class="radio-label"><input type="radio" name="arret_travail" value="Oui" onchange="handleArret(this.value)" class="radio-input"> Oui</label>
+                            <label class="radio-label"><input type="radio" name="arret_travail" value="Non" onchange="handleArret(this.value)" class="radio-input"> Non</label>
+                            <label class="radio-label"><input type="radio" name="arret_travail" value="À confirmer" onchange="handleArret(this.value)" class="radio-input"> À confirmer</label>
+                        </div>
+                        <div id="arret-details" class="hidden grid grid-cols-2 gap-6 border-t pt-4" style="border-color: #fed7aa;">
+                            <div><label class="input-label" style="color: #9a3412;">Date de l'arrêt</label><input type="date" data-bind="medical.dateArret" class="input-field" /></div>
+                            <div><label class="input-label" style="color: #9a3412;">Durée prévisionnelle</label><input type="text" data-bind="medical.dureeArret" placeholder="Ex: 5 jours" class="input-field" /></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 4 : LÉSIONS -->
+                <div id="step-4" class="step-content hidden space-y-10">
+                    <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3 border-b-2 border-gray-100 pb-4">
+                        <i data-lucide="alert-triangle" class="text-kiho"></i> Cartographie des Lésions
+                    </h2>
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Cliquer sur un repère pour spécifier le traumatisme.</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 py-4 justify-items-center">
+                        <div class="flex flex-col items-center">
+                            <h3 class="text-xs font-black text-gray-400 mb-6 uppercase tracking-widest">Face (Antérieure)</h3>
+                            <div class="relative bg-gray-50 rounded-2xl border border-gray-200 shadow-sm" id="box-front" style="width: 300px; height: 600px;">
+                                <div id="silhouette-front-points" class="absolute inset-0 w-full h-full z-10"></div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <h3 class="text-xs font-black text-gray-400 mb-6 uppercase tracking-widest">Dos (Postérieure)</h3>
+                            <div class="relative bg-gray-50 rounded-2xl border border-gray-200 shadow-sm" id="box-back" style="width: 300px; height: 600px;">
+                                <div id="silhouette-back-points" class="absolute inset-0 w-full h-full z-10"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Modal -->
+                        <div id="lesion-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6" style="background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);">
+                            <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="font-black text-lg flex items-center gap-2"><i data-lucide="activity" class="text-red-500"></i> Nature</h3>
+                                    <button onclick="document.getElementById('lesion-modal').classList.add('hidden')" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg"><i data-lucide="x"></i></button>
+                                </div>
+                                <div class="mb-4 p-3 rounded-xl" style="background-color: #eff6ff;"><span class="text-[10px] font-black uppercase block" style="color: #60a5fa;">Zone ciblée</span><span id="modal-zone-name" class="font-black text-lg" style="color: #1d4ed8;">...</span></div>
+                                <div id="lesion-options" class="overflow-y-auto space-y-1 custom-scrollbar" style="max-height: 300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 5 : ALERTE & TÉMOINS -->
+                <div id="step-5" class="step-content hidden space-y-12">
+                    <section class="space-y-6">
+                        <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3 border-b-2 border-gray-100 pb-4">
+                            <i data-lucide="bell" class="text-kiho"></i> Identité de la première personne avisée
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-8 rounded-2xl border border-gray-200">
+                            <div><label class="input-label">Nom</label><input type="text" data-bind="alerte.nom" class="input-field" /></div>
+                            <div><label class="input-label">Prénom</label><input type="text" data-bind="alerte.prenom" class="input-field" /></div>
+                            <div><label class="input-label">Fonction</label><input type="text" data-bind="alerte.fonction" class="input-field" /></div>
+                            <div><label class="input-label">Téléphone</label><input type="tel" data-bind="alerte.telephone" class="input-field" /></div>
+                            <div><label class="input-label">Date et heure</label><input type="datetime-local" data-bind="alerte.dateHeure" class="input-field" /></div>
+                            <div><label class="input-label">Site géographique</label><input type="text" data-bind="alerte.site" class="input-field" /></div>
+                            <div class="md:col-span-2"><label class="input-label">Nom de l'entreprise extérieure (si ext.)</label><input type="text" data-bind="alerte.entrepriseExt" class="input-field" /></div>
+                            <div class="md:col-span-2">
+                                <label class="input-label">Première personne avisée par :</label>
+                                <div class="flex gap-8">
+                                    <label class="radio-label"><input type="radio" name="alerte_par" value="La victime" onchange="formData.alerte.aviseePar=this.value" class="radio-input"> La victime</label>
+                                    <label class="radio-label"><input type="radio" name="alerte_par" value="Un tiers" onchange="formData.alerte.aviseePar=this.value" class="radio-input"> Un tiers</label>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="space-y-6">
+                        <header class="border-b-2 border-gray-100 pb-4 flex justify-between items-center">
+                            <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3">
+                                <i data-lucide="users" class="text-kiho"></i> Identité des témoins
+                            </h2>
+                            <button onclick="addWitness()" class="bg-blue-600 text-white text-xs px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-blue-700 transition-colors">
+                                <i data-lucide="plus-circle" class="w-4 h-4"></i> Nouveau Témoin
+                            </button>
+                        </header>
+                        <div id="witnesses-container" class="grid gap-6"></div>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER NAV -->
+        <footer class="mt-8 flex justify-between items-center">
+            <button id="btn-prev" onclick="goToStep(currentStep-1)" class="flex items-center gap-2 px-8 py-3 font-black text-xs uppercase tracking-widest transition-all rounded-2xl text-gray-300 pointer-events-none">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i> Retour
+            </button>
+            <button id="btn-next" onclick="goToStep(currentStep+1)" class="flex items-center gap-2 px-10 py-3 bg-blue-600 text-white rounded-2xl shadow-md font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all">
+                Étape Suivante <i data-lucide="chevron-right" id="btn-next-icon" class="w-5 h-5"></i>
+            </button>
+        </footer>
+    </main>
+
+    <!-- HIDDEN PDF TEMPLATE (Design ultra-pro pour 1-2 pages) -->
+    <div style="position: absolute; left: -9999px; top: 0;">
+        <div id="pdf-content">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid #005B63; padding-bottom: 10px; margin-bottom: 16px;">
+                <div style="font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 24px; color: #005B63; font-style: italic;">KEOLIS <span style="font-size: 14px; color:#6b7280; font-style: normal; margin-left: 8px;">KIHO SYSTEM</span></div>
+                <div style="text-align: right;">
+                    <div style="font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 18px; color: #2563eb;">RAPPORT D'ACCIDENT DU TRAVAIL</div>
+                    <div style="font-size: 10px; font-weight: 900; color: #9ca3af; letter-spacing: 0.1em; margin-top: 4px;" id="pdf-ref"></div>
+                </div>
+            </div>
+
+            <div class="pdf-grid">
+                <!-- Victime -->
+                <div class="pdf-box">
+                    <div class="pdf-title">Identité de la Victime</div>
+                    <div style="margin-bottom: 8px;"><span class="pdf-label">Nom & Prénom</span><span class="pdf-value" id="pdf-nom"></span></div>
+                    <div class="pdf-grid" style="margin-bottom: 8px;">
+                        <div><span class="pdf-label">Statut</span><span class="pdf-value" id="pdf-statut"></span></div>
+                        <div><span class="pdf-label">Âge</span><span class="pdf-value" id="pdf-age"></span></div>
+                    </div>
+                    <div class="pdf-grid" style="margin-bottom: 8px;">
+                        <div><span class="pdf-label">Fonction</span><span class="pdf-value" id="pdf-fonction"></span></div>
+                        <div><span class="pdf-label">Site</span><span class="pdf-value" id="pdf-site"></span></div>
+                    </div>
+                    <div><span class="pdf-label">Téléphone</span><span class="pdf-value" id="pdf-tel"></span></div>
+                </div>
+
+                <!-- Contexte -->
+                <div class="pdf-box">
+                    <div class="pdf-title">Contexte de l'Accident</div>
+                    <div class="pdf-grid" style="margin-bottom: 8px;">
+                        <div><span class="pdf-label">Date</span><span class="pdf-value" id="pdf-date"></span></div>
+                        <div><span class="pdf-label">Heure</span><span class="pdf-value" id="pdf-heure"></span></div>
+                    </div>
+                    <div style="margin-bottom: 8px;"><span class="pdf-label">Lieu</span><span class="pdf-value" id="pdf-lieu"></span></div>
+                    <div style="margin-bottom: 8px;"><span class="pdf-label">Adresse exacte</span><span class="pdf-value" id="pdf-adresse" style="font-style: italic; color: #4b5563;"></span></div>
+                    <div><span class="pdf-label">Horaire de travail</span><span class="pdf-value" id="pdf-horaire"></span></div>
+                </div>
+            </div>
+
+            <div class="pdf-grid">
+                <!-- Médical -->
+                <div class="pdf-box">
+                    <div class="pdf-title">Bilan Médical</div>
+                    <div class="pdf-grid" style="margin-bottom: 8px;">
+                        <div><span class="pdf-label">1ers Soins</span><span class="pdf-value" id="pdf-soins"></span></div>
+                        <div><span class="pdf-label">Prise en charge</span><span class="pdf-value" id="pdf-pec"></span></div>
+                    </div>
+                    <div class="pdf-grid" style="margin-bottom: 8px;">
+                        <div><span class="pdf-label">Rapport Police</span><span class="pdf-value" id="pdf-police"></span></div>
+                        <div><span class="pdf-label">Arrêt de Travail</span><span class="pdf-value" id="pdf-arret" style="color: #ea580c;"></span></div>
+                    </div>
+                </div>
+
+                <!-- Lésions -->
+                <div class="pdf-box">
+                    <div class="pdf-title">Cartographie des Lésions</div>
+                    <div id="pdf-lesions" style="font-size: 13px; line-height: 1.5; color: #111827;"></div>
+                </div>
+            </div>
+
+            <!-- Alerte & Témoins -->
+            <div class="pdf-box">
+                <div class="pdf-title">Identité de la première personne avisée</div>
+                <div class="pdf-grid" style="margin-bottom: 12px; border-bottom: 1px solid #f3f4f6; padding-bottom: 12px;">
+                    <div><span class="pdf-label">Première personne avisée par</span><span class="pdf-value" id="pdf-alerte-par"></span></div>
+                    <div><span class="pdf-label">Date de l'alerte</span><span class="pdf-value" id="pdf-alerte-date"></span></div>
+                    <div><span class="pdf-label">Personne avisée</span><span class="pdf-value" id="pdf-alerte-nom"></span></div>
+                    <div><span class="pdf-label">Fonction / Tél</span><span class="pdf-value" id="pdf-alerte-contact"></span></div>
+                    <div style="grid-column: span 2;"><span class="pdf-label">Entreprise extérieure</span><span class="pdf-value" id="pdf-alerte-ent"></span></div>
+                </div>
+                <div class="pdf-title" style="margin-top: 12px;">Identité des témoins</div>
+                <div id="pdf-temoins" style="font-size: 13px; line-height: 1.5; color: #111827;"></div>
+            </div>
+
+            <!-- Signatures -->
+            <div class="pdf-grid" style="margin-top: 20px; page-break-inside: avoid;">
+                <div style="border-top: 2px solid #e5e7eb; padding-top: 8px; height: 80px;">
+                    <span class="pdf-label">Visa Manager / Encadrant</span>
+                </div>
+                <div style="border-top: 2px solid #e5e7eb; padding-top: 8px; height: 80px;">
+                    <span class="pdf-label">Visa Collaborateur / Victime</span>
+                </div>
+            </div>
+            
+            <div style="text-align: center; font-size: 9px; color: #9ca3af; margin-top: 10px; border-top: 1px solid #f3f4f6; padding-top: 8px;">
+                Document confidentiel généré par l'application KIHO - Keolis
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedPartId = null;
+        
+        // Données (Exemple pré-rempli)
+        const formData = {
+            victime: { nom: 'Dupont', prenom: 'Jean', age: '45', fonction: 'Chauffeur', telephone: '0612345678', site: 'Dépôt', statut: 'CDI', adresseAccident: 'Quai 3' },
+            accident: { date: '2026-03-11', heure: '14:30', lieu: 'Atelier', horaireTravail: '08h-16h' },
+            medical: { premiersSoins: 'Oui', heureSoins: '14:35', typePriseEnCharge: 'Pompier', delaiPriseEnCharge: '15min', etablissementPolice: 'Non', accidentAvecArret: 'Oui', dateArret: '2026-03-12', dureeArret: '10j' },
+            lesions: { 'arm-r':'Fracture/fêlure', 'h-r':'Plaies (coupures...)' }, 
+            alerte: { nom: 'Martin', prenom: 'Sophie', fonction: "Chef", dateHeure: '2026-03-11T14:32', telephone: '0698765432', site: 'Dépôt', entrepriseExt: '', aviseePar: 'Un tiers' },
+            temoins: [{ id: Date.now(), type: 'Oculaire', nom: 'Bernard', prenom: 'Luc', metier: 'Mécanicien', telephone: '0711223344' }]
+        };
+
+        const natureOptions = ["Fracture/fêlure","Brûlure","Gelure","Amputation","Plaies (coupures...)","Piqûre","Contusion","Inflammation","Entorse","Luxation","Asphyxie","Commotion","Présence corps étranger","Hernie","Douleur, lumbago","Intoxication","Dermite","Troubles visuels","Troubles auditifs","Déchirures musculaires","Non corporel","Autres lésions"];
+
+        const ptsF = [{i:'head',n:'Visage',x:50,y:11},{i:'ear-l',n:'Oreille D',x:44,y:11},{i:'ear-r',n:'Oreille G',x:56,y:11},{i:'neck',n:'Cou',x:50,y:18},{i:'sh-l',n:'Épaule D',x:33,y:22},{i:'sh-r',n:'Épaule G',x:67,y:22},{i:'chest',n:'Poitrine',x:50,y:28},{i:'abd',n:'Abdomen',x:50,y:42},{i:'pelv',n:'Bassin',x:50,y:55},{i:'arm-l',n:'Bras D',x:25,y:35},{i:'elb-l',n:'Coude D',x:22,y:45},{i:'fa-l',n:'Av-bras D',x:19,y:55},{i:'h-l',n:'Main D',x:15,y:65},{i:'arm-r',n:'Bras G',x:75,y:35},{i:'elb-r',n:'Coude G',x:78,y:45},{i:'fa-r',n:'Av-bras G',x:81,y:55},{i:'h-r',n:'Main G',x:85,y:65},{i:'th-l',n:'Cuisse D',x:42,y:68},{i:'kn-l',n:'Genou D',x:38,y:80},{i:'leg-l',n:'Tibia D',x:36,y:88},{i:'ft-l',n:'Pied D',x:33,y:97},{i:'th-r',n:'Cuisse G',x:58,y:68},{i:'kn-r',n:'Genou G',x:62,y:80},{i:'leg-r',n:'Tibia G',x:64,y:88},{i:'ft-r',n:'Pied G',x:67,y:97}];
+        const ptsB = [{i:'h-b',n:'Arr. tête',x:50,y:11},{i:'ear-lb',n:'Or. G',x:44,y:11},{i:'ear-rb',n:'Or. D',x:56,y:11},{i:'nk-b',n:'Nuque',x:50,y:18},{i:'sh-lb',n:'Omo. G',x:33,y:22},{i:'sh-rb',n:'Omo. D',x:67,y:22},{i:'up-b',n:'Haut dos',x:50,y:28},{i:'mid-b',n:'Mil. dos',x:50,y:38},{i:'low-b',n:'Lombaires',x:50,y:48},{i:'but',n:'Fessiers',x:50,y:56},{i:'arm-lb',n:'Bras G',x:25,y:35},{i:'elb-lb',n:'Coude G',x:22,y:45},{i:'h-lb',n:'Main G',x:15,y:65},{i:'arm-rb',n:'Bras D',x:75,y:35},{i:'elb-rb',n:'Coude D',x:78,y:45},{i:'h-rb',n:'Main D',x:85,y:65},{i:'th-lb',n:'Arr. cuisse G',x:42,y:68},{i:'kn-lb',n:'Poplité G',x:38,y:80},{i:'cf-l',n:'Mollet G',x:36,y:88},{i:'hl-l',n:'Talon G',x:33,y:97},{i:'th-rb',n:'Arr. cuisse D',x:58,y:68},{i:'kn-rb',n:'Poplité D',x:62,y:80},{i:'cf-r',n:'Mollet D',x:64,y:88},{i:'hl-r',n:'Talon D',x:67,y:97}];
+        
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-bind]').forEach(el => el.addEventListener('input', e => { const [s, f] = e.target.getAttribute('data-bind').split('.'); formData[s][f] = e.target.value; }));
+            document.getElementById('menu-btn').onclick = () => { document.getElementById('dropdown-menu').classList.toggle('hidden'); };
+            injectSVG(); initFormValues(); renderProgressBar(); renderSilhouettes(); renderLesionOptions(); renderWitnesses(); lucide.createIcons();
+        });
+
+        function injectSVG() {
+            const svgBody = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; opacity:0.8;"><g fill="#f1f5f9" stroke="#9ca3af" stroke-width="0.8"><circle cx="50" cy="11" r="6"/><path d="M47 16L53 16L54 22L46 22Z"/><path d="M33 22C40 18,60 18,67 22C72 26,68 53,62 55Q50 60,38 55C32 53,28 26,33 22Z"/><path d="M33 22C30 25,25 35,22 45C19 55,17 63,14 65C13 67,18 68,19 64C22 55,26 45,29 35C31 30,35 25,33 22Z"/><path d="M67 22C70 25,75 35,78 45C81 55,83 63,86 65C87 67,82 68,81 64C78 55,74 45,71 35C69 30,65 25,67 22Z"/><path d="M42 55C42 65,41 75,38 80C36 88,34 95,33 97C32 99,38 99,39 97C40 93,43 85,44 80C46 72,48 62,50 57C48 55,44 55,42 55Z"/><path d="M58 55C58 65,59 75,62 80C64 88,66 95,67 97C68 99,62 99,61 97C60 93,57 85,56 80C54 72,52 62,50 57C52 55,56 55,58 55Z"/></g><g fill="none" stroke="#d1d5db" stroke-width="0.4">XXX</g></svg>`;
+            document.getElementById('box-front').insertAdjacentHTML('afterbegin', svgBody.replace('XXX', '<path d="M38 28C45 32,55 32,62 28"/><path d="M40 42Q50 45 60 42"/>'));
+            document.getElementById('box-back').insertAdjacentHTML('afterbegin', svgBody.replace('XXX', '<path d="M50 16L50 52"/><path d="M38 28C45 25,55 25,62 28"/>'));
+        }
+
+        function initFormValues() {
+            document.querySelectorAll('[data-bind]').forEach(el => { const [s, f] = el.getAttribute('data-bind').split('.'); el.value = formData[s][f] || ''; });
+            setStatut(formData.victime.statut);
+            ['premiersSoins', 'typePriseEnCharge'].forEach(f => document.querySelectorAll(`.btn-${f==='premiersSoins'?'soins':'pec'}`).forEach(b => { if (b.innerText === formData.medical[f]) setRadio(`medical.${f}`, b.innerText, b, true); }));
+            document.querySelectorAll('input[type="radio"]').forEach(r => { if(r.name==='arret_travail' && r.value===formData.medical.accidentAvecArret){r.checked=true; handleArret(r.value);} if(r.name==='alerte_par' && r.value===formData.alerte.aviseePar) r.checked=true; });
+        }
+
+        // Navigation
+        function goToStep(n) {
+            if(n<1 || n>5) return; currentStep = n;
+            document.querySelectorAll('.step-content').forEach((el, i) => el.classList.toggle('hidden', i+1 !== n));
+            document.querySelectorAll('.nav-btn').forEach((btn, i) => { btn.className = `nav-btn ${i+1===n?'active':''}`; });
+            renderProgressBar(); updateFooterButtons(); lucide.createIcons();
+        }
+        function renderProgressBar() { document.getElementById('progress-bar').innerHTML = Array.from({length:5}).map((_,i)=>`<div style="height:6px; border-radius:10px; width:19%; background-color:${currentStep>i?'#2563eb':'#e5e7eb'}; transition:all 0.3s;"></div>`).join(''); }
+        
+        function updateFooterButtons() {
+            const p = document.getElementById('btn-prev'), n = document.getElementById('btn-next');
+            if(currentStep===1) { p.style.backgroundColor = 'transparent'; p.style.color = '#d1d5db'; p.style.borderColor = 'transparent'; p.style.pointerEvents = 'none'; } 
+            else { p.style.backgroundColor = 'white'; p.style.color = '#4b5563'; p.style.borderColor = '#e5e7eb'; p.style.pointerEvents = 'auto'; }
+            
+            n.innerHTML = currentStep===5 ? 'Télécharger le PDF <i data-lucide="download" class="w-5 h-5 ml-2"></i>' : 'Étape Suivante <i data-lucide="chevron-right" class="w-5 h-5 ml-2"></i>';
+            n.onclick = currentStep===5 ? generatePDF : () => goToStep(currentStep + 1);
+        }
+
+        // Form Logic
+        function setStatut(val) { formData.victime.statut = val; document.querySelectorAll('.statut-btn').forEach(b => b.className = `statut-btn ${b.innerText===val ? 'active' : ''}`); }
+        function setRadio(path, val, btn, init=false) {
+            const [s, f] = path.split('.'); if(!init) formData[s][f] = val; const cls = f==="premiersSoins" ? "active-blue" : "active-teal";
+            Array.from(btn.parentElement.children).forEach(sib => { sib.classList.toggle(cls, sib===btn); sib.style.borderColor = sib===btn ? '' : '#e2e8f0'; });
+            if(f==="premiersSoins") { document.getElementById('heure-soins-container').classList.toggle('hidden', val!=='Oui'); if(val==='Non') formData.medical.heureSoins=''; }
+        }
+        function handleArret(val) { formData.medical.accidentAvecArret = val; document.getElementById('arret-details').classList.toggle('hidden', val!=='Oui'); if(val!=='Oui'){ formData.medical.dateArret=''; formData.medical.dureeArret=''; document.querySelectorAll('[data-bind^="medical.d"]').forEach(e=>e.value=''); } }
+
+        // Silhouettes
+        function renderSilhouettes() {
+            const draw = (p) => {
+                const hl = formData.lesions[p.id];
+                const bg = hl ? 'background-color:#ef4444; border-color:#991b1b; animation: pulse 2s infinite;' : 'background-color:rgba(255,255,255,0.8); border-color:#374151;';
+                return `<button onclick="openLesionModal('${p.id}','${p.n}')" style="position:absolute; width:16px; height:16px; margin-left:-8px; margin-top:-8px; border:2px solid; border-radius:2px; ${bg} left:${p.x}%; top:${p.y}%; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);"></button>` + 
+                       (hl ? `<div style="position:absolute; white-space:nowrap; background-color:#dc2626; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:900; ${p.x>50?`left:${p.x+3}%`:`right:${100-p.x+3}%`}; top:${p.y}%; transform:translateY(-50%); display:flex; align-items:center; gap:4px; z-index:30;">${hl}<button onclick="removeLesion('${p.id}')" style="background:rgba(255,255,255,0.2); border:none; border-radius:2px; padding:2px; cursor:pointer;"><i data-lucide="x" style="width:10px; height:10px;"></i></button></div>` : '');
+            };
+            document.getElementById('silhouette-front-points').innerHTML = ptsF.map(draw).join('');
+            document.getElementById('silhouette-back-points').innerHTML = ptsB.map(draw).join('');
+            lucide.createIcons();
+        }
+        function openLesionModal(id, n) { selectedPartId=id; document.getElementById('modal-zone-name').innerText=n; document.getElementById('lesion-modal').classList.remove('hidden'); }
+        function closeLesionModal() { selectedPartId=null; document.getElementById('lesion-modal').classList.add('hidden'); }
+        function renderLesionOptions() { document.getElementById('lesion-options').innerHTML = natureOptions.map(n => `<button onclick="selectLesion('${n}')" style="width:100%; text-align:left; padding:12px; font-size:14px; font-weight:bold; border-radius:8px; border:none; background:transparent; cursor:pointer;" onmouseover="this.style.backgroundColor='#fef2f2'; this.style.color='#b91c1c'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='inherit'">${n}</button>`).join(''); }
+        function selectLesion(n) { if(selectedPartId) formData.lesions[selectedPartId] = n; renderSilhouettes(); closeLesionModal(); }
+        function removeLesion(id) { delete formData.lesions[id]; renderSilhouettes(); }
+
+        // Witnesses
+        function addWitness() { formData.temoins.push({ id: Date.now(), type: 'Oculaire', nom: '', prenom: '', metier: '', telephone: '' }); renderWitnesses(); }
+        function removeWitness(id) { formData.temoins = formData.temoins.filter(t => t.id !== id); renderWitnesses(); }
+        function updateWitness(id, f, v) { formData.temoins.find(t=>t.id===id)[f]=v; if(f==='type') renderWitnesses(); }
+        function renderWitnesses() {
+            document.getElementById('witnesses-container').innerHTML = formData.temoins.map(t => `
+                <div class="p-6 bg-white border-2 border-gray-200 rounded-2xl relative">
+                    <button onclick="removeWitness(${t.id})" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2 flex gap-8 border-b pb-4">
+                            <label class="radio-label" style="color: ${t.type==='Oculaire'?'#2563eb':'#4b5563'}"><input type="radio" value="Oculaire" ${t.type==='Oculaire'?'checked':''} onchange="updateWitness(${t.id},'type',this.value)" class="radio-input"> Oculaire</label>
+                            <label class="radio-label" style="color: ${t.type==='Auditif'?'#2563eb':'#4b5563'}"><input type="radio" value="Auditif" ${t.type==='Auditif'?'checked':''} onchange="updateWitness(${t.id},'type',this.value)" class="radio-input"> Auditif</label>
+                        </div>
+                        <div><label class="input-label">Nom</label><input type="text" value="${t.nom}" oninput="updateWitness(${t.id},'nom',this.value)" class="input-field p-2" /></div>
+                        <div><label class="input-label">Prénom</label><input type="text" value="${t.prenom}" oninput="updateWitness(${t.id},'prenom',this.value)" class="input-field p-2" /></div>
+                        <div><label class="input-label">Métier</label><input type="text" value="${t.metier}" oninput="updateWitness(${t.id},'metier',this.value)" class="input-field p-2" /></div>
+                        <div><label class="input-label">Tél</label><input type="tel" value="${t.telephone}" oninput="updateWitness(${t.id},'telephone',this.value)" class="input-field p-2" /></div>
+                    </div>
+                </div>`).join('');
+            lucide.createIcons();
+        }
+
+        // --- IMPORT / EXPORT DATA ---
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(formData, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `rapport_accident_${formData.victime.nom || 'inconnu'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.json`);
+            dlAnchorElem.click();
+            document.getElementById('dropdown-menu').classList.add('hidden');
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const importedData = JSON.parse(event.target.result);
+                    Object.assign(formData, importedData);
+                    initFormValues();
+                    renderSilhouettes();
+                    renderWitnesses();
+                    document.getElementById('dropdown-menu').classList.add('hidden');
+                    alert("Données importées avec succès !");
+                } catch(err) {
+                    alert("Le fichier sélectionné n'est pas valide.");
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ''; // Reset input
+        }
+
+        // --- GENERATION DU PDF ---
+        function populatePDF() {
+            const d = formData;
+            document.getElementById('pdf-ref').innerText = `Réf: ${d.victime.nom.substring(0,3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+            
+            // Victime
+            document.getElementById('pdf-nom').innerText = `${(d.victime.nom||'').toUpperCase()} ${d.victime.prenom}`;
+            document.getElementById('pdf-statut').innerText = d.victime.statut;
+            document.getElementById('pdf-age').innerText = d.victime.age ? `${d.victime.age} ans` : '-';
+            document.getElementById('pdf-fonction').innerText = d.victime.fonction || '-';
+            document.getElementById('pdf-site').innerText = d.victime.site || '-';
+            document.getElementById('pdf-tel').innerText = d.victime.telephone || '-';
+
+            // Accident
+            document.getElementById('pdf-date').innerText = d.accident.date ? new Date(d.accident.date).toLocaleDateString('fr-FR') : '-';
+            document.getElementById('pdf-heure').innerText = d.accident.heure || '-';
+            document.getElementById('pdf-lieu').innerText = d.accident.lieu || '-';
+            document.getElementById('pdf-adresse').innerText = d.victime.adresseAccident || '-';
+            document.getElementById('pdf-horaire').innerText = d.accident.horaireTravail || '-';
+
+            // Médical
+            document.getElementById('pdf-soins').innerText = d.medical.premiersSoins === 'Oui' ? `Oui (à ${d.medical.heureSoins})` : 'Non';
+            document.getElementById('pdf-pec').innerText = d.medical.typePriseEnCharge + (d.medical.delaiPriseEnCharge ? ` (Délai: ${d.medical.delaiPriseEnCharge})` : '');
+            document.getElementById('pdf-police').innerText = d.medical.etablissementPolice;
+            document.getElementById('pdf-arret').innerText = d.medical.accidentAvecArret === 'Oui' ? `Oui (du ${d.medical.dateArret} - Prévu: ${d.medical.dureeArret})` : d.medical.accidentAvecArret;
+
+            // Lésions
+            const lContainer = document.getElementById('pdf-lesions');
+            if(Object.keys(d.lesions).length > 0) {
+                lContainer.innerHTML = Object.entries(d.lesions).map(([id,v])=> `<div><b>${([...ptsF,...ptsB].find(x=>x.i===id)||{}).n||id}</b> : ${v}</div>`).join('');
+            } else {
+                lContainer.innerHTML = '<i>Aucune lésion déclarée.</i>';
+            }
+
+            // Alerte & Témoins
+            document.getElementById('pdf-alerte-par').innerText = d.alerte.aviseePar;
+            document.getElementById('pdf-alerte-date').innerText = d.alerte.dateHeure ? new Date(d.alerte.dateHeure).toLocaleString('fr-FR') : '-';
+            document.getElementById('pdf-alerte-nom').innerText = `${d.alerte.nom||''} ${d.alerte.prenom||''}`.trim() || '-';
+            document.getElementById('pdf-alerte-contact').innerText = `${d.alerte.fonction||'-'} / ${d.alerte.telephone||'-'}`;
+            document.getElementById('pdf-alerte-ent').innerText = d.alerte.entrepriseExt || 'N/A';
+
+            const tContainer = document.getElementById('pdf-temoins');
+            const validT = d.temoins.filter(t => t.nom || t.prenom);
+            if(validT.length > 0) {
+                tContainer.innerHTML = validT.map(t=> `<div><b>${t.type}</b>: ${t.nom} ${t.prenom} (${t.metier}) - Tél: ${t.telephone}</div>`).join('');
+            } else {
+                tContainer.innerHTML = '<i>Aucun témoin.</i>';
+            }
+        }
+
+        // --- VIDER LE FORMULAIRE ---
+        function resetForm() {
+            if(confirm("Voulez-vous vraiment vider tout le formulaire ? Toutes les données non sauvegardées seront perdues.")) {
+                // On réinitialise toutes les données à vide
+                Object.assign(formData, {
+                    victime: { nom: '', prenom: '', age: '', fonction: '', telephone: '', site: '', statut: 'CDI', adresseAccident: '' },
+                    accident: { date: '', heure: '', lieu: '', horaireTravail: '' },
+                    medical: { premiersSoins: 'Non', heureSoins: '', typePriseEnCharge: 'Aucun', delaiPriseEnCharge: '', etablissementPolice: 'Non', accidentAvecArret: 'Non', dateArret: '', dureeArret: '' },
+                    lesions: {}, 
+                    alerte: { nom: '', prenom: '', fonction: '', dateHeure: '', telephone: '', site: '', entrepriseExt: '', aviseePar: 'La victime' },
+                    temoins: []
+                });
+                
+                // On met à jour l'interface
+                initFormValues();
+                renderSilhouettes();
+                renderWitnesses();
+                
+                // Retour à l'étape 1 et fermeture du menu
+                goToStep(1);
+                document.getElementById('dropdown-menu').classList.add('hidden');
+            }
+        }
+
+        function generatePDF() {
+            populatePDF();
+            const element = document.getElementById('pdf-content');
+            element.style.display = 'block'; // Make visible for render
+            
+            const fileName = `Rapport_Accident_${formData.victime.nom || 'Inconnu'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.pdf`;
+            
+            const opt = {
+                margin:       5,
+                filename:     fileName,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            const btn = document.getElementById('btn-next');
+            const oldHtml = btn.innerHTML;
+            btn.innerHTML = 'Création PDF... <svg class="animate-spin w-5 h-5 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.display = 'none';
+                btn.innerHTML = oldHtml;
+                lucide.createIcons();
+                document.getElementById('dropdown-menu').classList.add('hidden');
+            });
+        }
+
+        // Email
+        function sendEmail() {
+            const d=formData, dt=d.accident.date?new Date(d.accident.date).toLocaleDateString('fr-FR'):'N/C';
+            const n=d.victime.nom?d.victime.nom.toUpperCase():'INC', p=d.victime.prenom||'';
+            const ls=Object.entries(d.lesions).map(([id,v])=>`- ${([...ptsF,...ptsB].find(x=>x.i===id)||{}).n||id}: ${v}`).join('\n') || "Aucune lésion";
+            const tm=d.temoins.filter(t=>t.nom).map(t=>`- ${t.type}: ${t.nom} ${t.prenom} (${t.telephone})`).join('\n') || "Aucun témoin";
+            
+            const body=`Bonjour,\n\nCompte-rendu d'accident : ${n} ${p} le ${dt}\n\n📋 VICTIME\nNom: ${n} ${p} (${d.victime.age} ans)\nTél: ${d.victime.telephone}\nStatut: ${d.victime.statut}\nLieu: ${d.victime.adresseAccident}\n\n🕒 ACCIDENT\nDate/Heure: ${dt} à ${d.accident.heure}\nLieu: ${d.accident.lieu}\n\n🏥 MEDICAL\nSoins: ${d.medical.premiersSoins} (${d.medical.heureSoins})\nPrise en charge: ${d.medical.typePriseEnCharge} (${d.medical.delaiPriseEnCharge})\nArrêt: ${d.medical.accidentAvecArret} (du ${d.medical.dateArret})\n\n🤕 LÉSIONS\n${ls}\n\n📞 IDENTITÉ DE LA PREMIÈRE PERSONNE AVISÉE\nPremière personne avisée par: ${d.alerte.aviseePar}\nPersonne: ${d.alerte.nom} ${d.alerte.prenom} - ${d.alerte.telephone}\nDate: ${d.alerte.dateHeure ? new Date(d.alerte.dateHeure).toLocaleString('fr-FR') : '-'}\nEntreprise extérieure: ${d.alerte.entrepriseExt || 'N/A'}\n\n👥 IDENTITÉ DES TÉMOINS\n${tm}\n\nCordialement.`;
+            
+            window.location.href=`mailto:?subject=${encodeURIComponent(`Déclaration - ${dt} - ${n} ${p}`)}&body=${encodeURIComponent(body)}`;
+            document.getElementById('dropdown-menu').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
