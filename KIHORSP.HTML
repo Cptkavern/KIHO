@@ -101,6 +101,7 @@
                             <button onclick="exportJSON()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left"><i data-lucide="download" class="text-blue-500"></i> Sauvegarder (.json)</button>
                             <label class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b cursor-pointer text-left block"><i data-lucide="upload" class="text-purple-500 inline-block"></i> Charger Projet<input type="file" class="hidden" onchange="importJSON(event)"></label>
                             <button onclick="exportCSV()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 text-left"><i data-lucide="file-spreadsheet" class="text-green-500"></i> Excel (CSV)</button>
+                            <div class="p-4 bg-slate-50 border-t text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest">Concepteur : D.Ablancourt</div>
                         </div>
                     </div>
                 </div>
@@ -119,20 +120,6 @@
                     </div>
                 </div>
             </main>
-
-            <!-- Footer -->
-            <footer class="p-4 md:p-6 bg-slate-50 border-t flex items-center justify-between shrink-0">
-                <button onclick="prevStep()" class="flex items-center gap-2 p-3 rounded-2xl font-bold text-slate-400 hover:text-slate-900 transition-colors">
-                    <i data-lucide="chevron-left"></i> Précédent
-                </button>
-                <div class="hidden sm:flex gap-1.5" id="progress-dots"></div>
-                <div class="flex flex-col items-end gap-1">
-                    <button onclick="nextStep()" id="next-btn" class="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">
-                        Suivant <i data-lucide="chevron-right"></i>
-                    </button>
-                    <span class="text-[8px] font-bold text-slate-400 tracking-tight text-right uppercase mt-1">Concepteur : D.Ablancourt</span>
-                </div>
-            </footer>
         </div>
     </div>
 
