@@ -99,8 +99,7 @@
                             <button onclick="resetData()" class="w-full p-4 flex items-center gap-4 hover:bg-red-50 border-b text-left text-red-600 font-bold"><i data-lucide="trash-2" class="text-red-500"></i> Nouvelle Analyse (Effacer)</button>
                             <button onclick="printReport()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left text-slate-900"><i data-lucide="printer" class="text-slate-600"></i> Imprimer (PDF/A3)</button>
                             <button onclick="exportJSON()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left"><i data-lucide="download" class="text-blue-500"></i> Sauvegarder (.json)</button>
-                            <label class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b cursor-pointer text-left block"><i data-lucide="upload" class="text-purple-500 inline-block"></i> Charger Projet<input type="file" class="hidden" onchange="importJSON(event)"></label>
-                            <button onclick="exportCSV()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 text-left"><i data-lucide="file-spreadsheet" class="text-green-500"></i> Excel (CSV)</button>
+                            <label class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 cursor-pointer text-left block"><i data-lucide="upload" class="text-purple-500 inline-block"></i> Charger Projet<input type="file" class="hidden" onchange="importJSON(event)"></label>
                             <div class="p-4 bg-slate-50 border-t text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest">Concepteur : D.Ablancourt</div>
                         </div>
                     </div>
@@ -545,7 +544,7 @@
             const visible = getVisibleSteps();
             const currentIndex = visible.findIndex(s => s.id === currentStep);
             if (currentIndex < visible.length - 1) goToStep(visible[currentIndex + 1].id);
-            else exportCSV();
+            else printReport();
         }
 
         function prevStep() {
@@ -1389,35 +1388,6 @@
             const reader = new FileReader();
             reader.onload = function(e) { try { formData = JSON.parse(e.target.result); normalizeData(); renderContent(); showToast("Projet chargé avec succès !", "success"); } catch(err) { showToast("Erreur lors du chargement du fichier.", "error"); } };
             reader.readAsText(file); toggleMenu();
-        }
-
-        function exportCSV() {
-            let csv = "\ufeffEtape;Champ;Valeur\n";
-            csv += `0;Titre;${formData.resolutionTitle.replace(/[\n;]/g, " ")}\n`;
-            csv += `0;Date_Debut;${formData.startDate}\n`;
-            csv += `0;Participants;${formData.participants.replace(/[\n;]/g, " | ")}\n`;
-            formData.measuresList.forEach((m, i) => { csv += `1;Mesure_${i+1};${m.description} (Qui: ${m.who}, Quand: ${m.date})\n`; });
-            Object.entries(formData.qqoqccp).forEach(([k,v]) => { csv += `2;QQOQCCP_${k};${v}\n`; });
-            csv += `2;Objectifs;${formData.objectives ? formData.objectives.replace(/[\n;]/g, " ") : ""}\n`;
-            csv += `2;Problematique;${formData.problemStatement ? formData.problemStatement.replace(/[\n;]/g, " ") : ""}\n`;
-            formData.customFamilies.forEach((f, i) => { csv += `4;Groupe_${i+1};${f.name} (Causes: ${f.causes.map(c=>c.text).join('|')})\n`; });
-            const roots = getAllRootCauseNodes().filter(n => formData.selectedRootIds.includes(n.id)).map(n => n.text);
-            csv += `5;Racines_Validees;${roots.join(' | ')}\n`;
-            formData.actions.forEach(a => {
-                const statusLabel = ACTION_STATUSES.find(s => s.id === a.status)?.label || 'Inconnu';
-                csv += `6;Action;${a.task} - ${a.who} (Lien: ${a.linkedRootText}) [Statut: ${statusLabel}]\n`;
-                csv += `7;Standardisation;${a.standardization ? a.standardization.replace(/[\n;]/g, " ") : ""}\n`;
-            });
-            csv += `8;Leçons;${formData.lessonsLearned ? formData.lessonsLearned.replace(/[\n;]/g, " ") : ""}\n`;
-            csv += `8;Améliorations;${formData.improvements ? formData.improvements.replace(/[\n;]/g, " ") : ""}\n`;
-            csv += `8;Check_Informés;${formData.checklist.informed ? 'Oui' : 'Non'}\n`;
-            csv += `8;Check_Applicable;${formData.checklist.applicable ? 'Oui' : 'Non'}\n`;
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            const safeTitle = formData.resolutionTitle ? formData.resolutionTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_').substring(0, 50) : 'KIHO_RSP';
-            link.href = url; link.download = `Rapport_${safeTitle}.csv`; link.click();
-            toggleMenu();
         }
 
         function printReport() {
