@@ -165,6 +165,25 @@
         </div>
     </div>
 
+    <!-- MODAL GUIDE PÉDAGOGIQUE -->
+    <div id="help-modal" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh] animate-fade-in-up relative">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-900 to-indigo-800 text-white shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-white/10 rounded-xl"><i data-lucide="help-circle" class="w-6 h-6 text-indigo-300"></i></div>
+                    <h3 id="help-modal-title" class="text-xl font-black uppercase tracking-tight">Guide d'utilisation</h3>
+                </div>
+                <button onclick="closeHelpModal()" class="hover:text-red-400 transition-colors p-1"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div id="help-modal-content" class="p-8 overflow-y-auto bg-slate-50 flex-1 text-sm text-slate-700 leading-relaxed space-y-4">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="p-6 border-t border-slate-100 bg-white flex justify-center shrink-0">
+                <button onclick="closeHelpModal()" class="bg-indigo-600 text-white px-8 py-3 rounded-xl text-xs font-black uppercase hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">J'ai compris</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL D'ACCUEIL -->
     <div id="welcome-modal" class="hidden fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm no-print">
         <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col relative animate-fade-in-up">
@@ -404,7 +423,10 @@
         <!-- VUE CARTOGRAPHIE -->
         <div id="view-mapping" class="space-y-8">
             <div class="flex items-center justify-between no-print flex-wrap gap-4">
-                <h2 class="text-xl font-black text-slate-800 uppercase italic">Cartographie des Processus</h2>
+                <div class="flex items-center gap-3">
+                    <h2 class="text-xl font-black text-slate-800 uppercase italic">Cartographie des Processus</h2>
+                    <button onclick="openHelpModal('mapping')" class="text-indigo-500 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg transition-colors flex items-center gap-1.5" title="Comment remplir cette étape ?"><i data-lucide="help-circle" class="w-4 h-4"></i><span class="text-[10px] font-black uppercase tracking-widest">Guide</span></button>
+                </div>
                 <div class="relative">
                     <button onclick="toggleViewMenu('menu-mapping')" class="p-2 bg-white border border-slate-200 rounded-xl shadow-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-300 transition"><i data-lucide="menu" class="w-5 h-5"></i></button>
                     <div id="menu-mapping" class="view-menu hidden absolute right-0 mt-2 w-48 bg-white border border-slate-200 shadow-xl rounded-xl p-2 z-50 flex flex-col gap-1">
@@ -435,7 +457,10 @@
         <div id="view-org" class="hidden h-[calc(100vh-176px)] md:h-[calc(100vh-208px)]">
             <div class="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-200 h-full flex flex-col">
                 <div class="flex items-center justify-between mb-6 md:mb-10 no-print flex-wrap gap-4 shrink-0">
-                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">Organigramme de Pilotage</h3>
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-2xl font-black text-slate-800 uppercase italic">Organigramme de Pilotage</h3>
+                        <button onclick="openHelpModal('org')" class="text-indigo-500 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg transition-colors flex items-center gap-1.5" title="Comment remplir cette étape ?"><i data-lucide="help-circle" class="w-4 h-4"></i><span class="text-[10px] font-black uppercase tracking-widest">Guide</span></button>
+                    </div>
                     <div class="flex items-center gap-2">
                         <button onclick="openRegistryModal()" class="px-3 py-1.5 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-xl text-[10px] font-black uppercase hover:bg-indigo-100 transition shadow-sm flex items-center gap-1.5 mr-2"><i data-lucide="book-open" class="w-3.5 h-3.5"></i> Référentiel Postes</button>
                         <div class="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-200 mr-2 shadow-sm">
@@ -468,7 +493,10 @@
         <div id="view-sipoc" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col gap-4 no-print">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <h3 class="text-lg font-black text-slate-800 uppercase italic">Fiche Processus (SIPOC)</h3>
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-lg font-black text-slate-800 uppercase italic">Fiche Processus (SIPOC)</h3>
+                        <button onclick="openHelpModal('sipoc')" class="text-indigo-500 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg transition-colors flex items-center gap-1.5" title="Comment remplir cette étape ?"><i data-lucide="help-circle" class="w-4 h-4"></i><span class="text-[10px] font-black uppercase tracking-widest">Guide</span></button>
+                    </div>
                     <div class="relative">
                         <button onclick="toggleViewMenu('menu-sipoc')" class="p-2 bg-white border border-slate-200 rounded-xl shadow-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-300 transition"><i data-lucide="menu" class="w-5 h-5"></i></button>
                         <div id="menu-sipoc" class="view-menu hidden absolute right-0 mt-2 w-52 bg-white border border-slate-200 shadow-xl rounded-xl p-2 z-[60] flex flex-col gap-1">
@@ -514,7 +542,10 @@
             <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-200">
                 <div class="flex flex-col gap-6 mb-8 no-print">
                     <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
-                        <h3 class="text-xl font-black text-slate-800 uppercase italic">Rôles & Responsabilités</h3>
+                        <div class="flex items-center gap-3">
+                            <h3 class="text-xl font-black text-slate-800 uppercase italic">Rôles & Responsabilités</h3>
+                            <button onclick="openHelpModal('raci')" class="text-indigo-500 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg transition-colors flex items-center gap-1.5" title="Comment remplir cette étape ?"><i data-lucide="help-circle" class="w-4 h-4"></i><span class="text-[10px] font-black uppercase tracking-widest">Guide</span></button>
+                        </div>
                         <div class="relative">
                             <button onclick="toggleViewMenu('menu-raci')" class="p-2 bg-white border border-slate-200 rounded-xl shadow-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-300 transition"><i data-lucide="menu" class="w-5 h-5"></i></button>
                             <div id="menu-raci" class="view-menu hidden absolute right-0 mt-2 w-52 bg-white border border-slate-200 shadow-xl rounded-xl p-2 z-[60] flex flex-col gap-1">
@@ -557,7 +588,10 @@
                 <div class="flex flex-col gap-6 mb-8 no-print">
                     <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
                         <div>
-                            <h3 class="text-xl font-black text-slate-800 uppercase italic">Gestion Documentaire</h3>
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-xl font-black text-slate-800 uppercase italic">Gestion Documentaire</h3>
+                                <button onclick="openHelpModal('docs')" class="text-indigo-500 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg transition-colors flex items-center gap-1.5" title="Comment remplir cette étape ?"><i data-lucide="help-circle" class="w-4 h-4"></i><span class="text-[10px] font-black uppercase tracking-widest">Guide</span></button>
+                            </div>
                             <p class="text-sm text-slate-500 mt-1 font-medium">Associez des procédures, modes opératoires et outils aux activités du processus.</p>
                         </div>
                     </div>
@@ -583,7 +617,10 @@
             <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-200 no-print">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                     <div>
-                        <h3 class="text-2xl font-black text-slate-800 uppercase italic">Évaluation du Système (SMI)</h3>
+                        <div class="flex items-center gap-3">
+                            <h3 class="text-2xl font-black text-slate-800 uppercase italic">Évaluation du Système (SMI)</h3>
+                            <button onclick="openHelpModal('eval-smi')" class="text-indigo-500 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg transition-colors flex items-center gap-1.5" title="Comment remplir cette étape ?"><i data-lucide="help-circle" class="w-4 h-4"></i><span class="text-[10px] font-black uppercase tracking-widest">Guide</span></button>
+                        </div>
                         <p class="text-sm text-slate-500 mt-2 font-medium">Analyse automatique des écarts de conception sur l'ensemble de votre système.</p>
                     </div>
                     <button onclick="renderEvaluation()" class="bg-indigo-600 text-white hover:bg-indigo-700 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
@@ -600,7 +637,10 @@
                 <div class="flex flex-col gap-6 mb-8">
                     <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
                         <div>
-                            <h3 class="text-xl font-black text-slate-800 uppercase italic">Évaluation KIHO</h3>
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-xl font-black text-slate-800 uppercase italic">Évaluation KIHO</h3>
+                                <button onclick="openHelpModal('eval-kiho')" class="text-indigo-500 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg transition-colors flex items-center gap-1.5" title="Comment remplir cette étape ?"><i data-lucide="help-circle" class="w-4 h-4"></i><span class="text-[10px] font-black uppercase tracking-widest">Guide</span></button>
+                            </div>
                             <p class="text-sm text-slate-500 mt-1 font-medium">Évaluation de la maturité des rituels et standards pour les postes de management.</p>
                         </div>
                         <div class="flex items-center gap-3">
@@ -716,43 +756,99 @@
             </div>
             <div class="a4-wrapper no-print">
                 <div class="print-content landscape">
-                    <div class="header-viz flex justify-between items-center w-full">
+                    <div class="header-viz flex justify-between items-center w-full shrink-0">
                         <div class="flex items-center gap-6">
                             <div class="print-logo-container"></div>
                             <div class="h-12 w-px bg-slate-100"></div>
                             <div class="space-y-1">
                                 <h2 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Fiche Processus (SIPOC)</h2>
                                 <div id="viz-sipoc-proc-name" class="text-3xl font-black uppercase text-slate-900 italic"></div>
-                                <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Pilote : <span id="viz-sipoc-pilot-name" class="text-indigo-600 italic"></span></div>
+                                <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pilote : <span id="viz-sipoc-pilot-name" class="text-indigo-600 italic"></span></div>
                             </div>
                         </div>
                         <div class="print-date text-[10px] font-black text-slate-300 uppercase tracking-widest"></div>
                     </div>
-                    <div class="grid grid-cols-5 w-full flex-1">
-                        <div style="background-color: #f8fafc; padding:4px;"><div class="text-[9px] font-black text-amber-600 uppercase mb-3 border-b pb-1">Fournisseurs</div><ul id="viz-sipoc-s" class="text-[8px] list-disc ml-4 space-y-1 text-slate-700"></ul></div>
-                        <div style="background-color: #f8fafc; padding:4px;"><div class="text-[9px] font-black text-blue-600 uppercase mb-3 border-b pb-1">Entrées</div><ul id="viz-sipoc-i" class="text-[8px] list-disc ml-4 space-y-1 text-slate-700"></ul></div>
-                        <div style="background-color: #eef2ff; border: 1px solid #c7d2fe; padding:4px;"><div class="text-[9px] font-black text-indigo-700 uppercase mb-3 border-b pb-1" style="border-color: #c7d2fe;">Activités</div><ul id="viz-sipoc-p" class="text-[8px] list-decimal ml-4 font-bold space-y-1 text-slate-800"></ul></div>
-                        <div style="background-color: #f8fafc; padding:4px;"><div class="text-[9px] font-black text-emerald-600 uppercase mb-3 border-b pb-1">Sorties</div><ul id="viz-sipoc-o" class="text-[8px] list-disc ml-4 space-y-1 text-slate-700"></ul></div>
-                        <div style="background-color: #f8fafc; padding:4px;"><div class="text-[9px] font-black text-rose-600 uppercase mb-3 border-b pb-1">Clients</div><ul id="viz-sipoc-c" class="text-[8px] list-disc ml-4 space-y-1 text-slate-700"></ul></div>
+                    
+                    <div class="flex-1 flex flex-col mt-4 gap-4">
+                        <!-- SIPOC Grid -->
+                        <div class="grid grid-cols-5 w-full flex-[1.5] gap-3 min-h-0">
+                            <!-- S -->
+                            <div class="flex flex-col border border-amber-200 rounded-xl overflow-hidden bg-amber-50/40">
+                                <div class="bg-amber-100 py-2 px-3 text-[11px] font-black text-amber-800 uppercase text-center border-b border-amber-200 shrink-0">Fournisseurs</div>
+                                <div class="p-4 flex-1 overflow-hidden">
+                                    <ul id="viz-sipoc-s" class="text-[10px] list-disc ml-4 space-y-2 text-slate-800 font-medium"></ul>
+                                </div>
+                            </div>
+                            <!-- I -->
+                            <div class="flex flex-col border border-blue-200 rounded-xl overflow-hidden bg-blue-50/40">
+                                <div class="bg-blue-100 py-2 px-3 text-[11px] font-black text-blue-800 uppercase text-center border-b border-blue-200 shrink-0">Entrées</div>
+                                <div class="p-4 flex-1 overflow-hidden">
+                                    <ul id="viz-sipoc-i" class="text-[10px] list-disc ml-4 space-y-2 text-slate-800 font-medium"></ul>
+                                </div>
+                            </div>
+                            <!-- P -->
+                            <div class="flex flex-col border-2 border-indigo-300 rounded-xl overflow-hidden bg-indigo-50/50 shadow-sm relative">
+                                <div class="bg-indigo-100 py-2 px-3 text-[12px] font-black text-indigo-900 uppercase text-center border-b-2 border-indigo-200 shrink-0">Activités</div>
+                                <div class="p-4 flex-1 overflow-hidden">
+                                    <ul id="viz-sipoc-p" class="text-[11px] list-decimal ml-5 space-y-3 text-indigo-950 font-bold"></ul>
+                                </div>
+                            </div>
+                            <!-- O -->
+                            <div class="flex flex-col border border-emerald-200 rounded-xl overflow-hidden bg-emerald-50/40">
+                                <div class="bg-emerald-100 py-2 px-3 text-[11px] font-black text-emerald-800 uppercase text-center border-b border-emerald-200 shrink-0">Sorties</div>
+                                <div class="p-4 flex-1 overflow-hidden">
+                                    <ul id="viz-sipoc-o" class="text-[10px] list-disc ml-4 space-y-2 text-slate-800 font-medium"></ul>
+                                </div>
+                            </div>
+                            <!-- C -->
+                            <div class="flex flex-col border border-rose-200 rounded-xl overflow-hidden bg-rose-50/40">
+                                <div class="bg-rose-100 py-2 px-3 text-[11px] font-black text-rose-800 uppercase text-center border-b border-rose-200 shrink-0">Clients</div>
+                                <div class="p-4 flex-1 overflow-hidden">
+                                    <ul id="viz-sipoc-c" class="text-[10px] list-disc ml-4 space-y-2 text-slate-800 font-medium"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KPIs -->
+                        <div class="grid grid-cols-3 gap-4 flex-1 min-h-0">
+                            <div class="flex flex-col border-2 border-blue-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                                <div class="bg-blue-50 py-2 px-3 text-[11px] font-black text-blue-800 uppercase text-center border-b border-blue-100 shrink-0">KPI Exigences</div>
+                                <div class="p-4 flex-1 overflow-hidden">
+                                    <ul id="viz-sipoc-kpi-i" class="text-[11px] list-disc ml-5 space-y-2 text-slate-700 font-bold"></ul>
+                                </div>
+                            </div>
+                            <div class="flex flex-col border-2 border-indigo-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                                <div class="bg-indigo-50 py-2 px-3 text-[11px] font-black text-indigo-800 uppercase text-center border-b border-indigo-100 shrink-0">KPI Maîtrise</div>
+                                <div class="p-4 flex-1 overflow-hidden">
+                                    <ul id="viz-sipoc-kpi-p" class="text-[11px] list-disc ml-5 space-y-2 text-slate-700 font-bold"></ul>
+                                </div>
+                            </div>
+                            <div class="flex flex-col border-2 border-emerald-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                                <div class="bg-emerald-50 py-2 px-3 text-[11px] font-black text-emerald-800 uppercase text-center border-b border-emerald-100 shrink-0">KPI Performance</div>
+                                <div class="p-4 flex-1 overflow-hidden">
+                                    <ul id="viz-sipoc-kpi-o" class="text-[11px] list-disc ml-5 space-y-2 text-slate-700 font-bold"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Objectif Global -->
+                        <div class="bg-indigo-900 rounded-xl p-4 flex items-center justify-between shrink-0 shadow-md text-white mt-1">
+                            <span class="text-[11px] font-black uppercase tracking-widest text-indigo-200">Objectif Succès Global</span>
+                            <div id="viz-sipoc-kpi-g" class="text-lg font-black italic"></div>
+                        </div>
                     </div>
-                    <div class="kpi-print-container grid grid-cols-3 w-full" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:4px; margin-top:4px;">
-                        <div><div class="text-[8px] font-black text-blue-600 uppercase mb-2 border-b border-blue-100 pb-1">KPI Exigences</div><ul id="viz-sipoc-kpi-i" class="text-[8px] text-slate-600 list-disc ml-4 space-y-0.5"></ul></div>
-                        <div><div class="text-[8px] font-black text-indigo-600 uppercase mb-2 border-b border-indigo-100 pb-1">KPI Maîtrise</div><ul id="viz-sipoc-kpi-p" class="text-[8px] text-slate-600 list-disc ml-4 space-y-0.5"></ul></div>
-                        <div><div class="text-[8px] font-black text-emerald-600 uppercase mb-2 border-b border-emerald-100 pb-1">KPI Performance</div><ul id="viz-sipoc-kpi-o" class="text-[8px] text-slate-600 list-disc ml-4 space-y-0.5"></ul></div>
-                    </div>
-                    <div class="mt-2 pt-2 border-t flex justify-between items-center w-full"><span class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Objectif Succès Global</span><div id="viz-sipoc-kpi-g" class="text-lg font-black italic"></div></div>
                 </div>
             </div>
         </div>
 
         <div id="view-raci-print" class="hidden space-y-6">
-            <div class="flex justify-between items-center no-print px-4 max-w-3xl mx-auto">
+            <div class="flex justify-between items-center no-print px-4 max-w-5xl mx-auto">
                 <button onclick="switchTab('raci')" class="text-slate-500 font-black text-xs uppercase flex items-center gap-2 hover:text-indigo-600 transition"><i data-lucide="arrow-left" class="w-4 h-4"></i> Éditer</button>
-                <button onclick="printStage('portrait')" class="bg-emerald-600 text-white px-8 py-3 rounded-full text-xs font-black uppercase flex items-center gap-2 shadow-xl hover:bg-emerald-700 transition"><i data-lucide="printer" class="w-4 h-4"></i> Lancer l'impression PDF</button>
+                <button onclick="printStage('landscape')" class="bg-emerald-600 text-white px-8 py-3 rounded-full text-xs font-black uppercase flex items-center gap-2 shadow-xl hover:bg-emerald-700 transition"><i data-lucide="printer" class="w-4 h-4"></i> Lancer l'impression PDF</button>
             </div>
             <div class="a4-wrapper no-print">
-                <div class="print-content portrait">
-                    <div class="header-viz flex justify-between items-center w-full">
+                <div class="print-content landscape">
+                    <div class="header-viz flex justify-between items-center w-full shrink-0">
                         <div class="flex items-center gap-6">
                             <div class="print-logo-container"></div>
                             <div class="h-12 w-px bg-slate-100"></div>
@@ -763,20 +859,30 @@
                         </div>
                         <div class="print-date text-[10px] font-black text-slate-300 uppercase tracking-widest"></div>
                     </div>
-                    <div class="w-full flex-1 overflow-hidden">
-                        <h3 id="viz-raci-proc-name" class="text-lg font-black text-slate-800 uppercase italic mb-4"></h3>
-                        <table>
-                            <thead>
-                                <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                                    <th class="text-left w-2/5">Étape SIPOC</th>
-                                    <th class="text-left w-[15%]">Réaliser</th>
-                                    <th class="text-left w-[15%]">Approuver</th>
-                                    <th class="text-left w-[15%]">Consulter</th>
-                                    <th class="text-left w-[15%]">Informer</th>
-                                </tr>
-                            </thead>
-                            <tbody id="raci-print-body"></tbody>
-                        </table>
+                    <div class="w-full flex-1 overflow-hidden mt-4 flex flex-col">
+                        <div class="flex items-center justify-between mb-4 border-b-2 border-slate-800 pb-3 shrink-0">
+                            <h3 id="viz-raci-proc-name" class="text-xl font-black text-slate-900 uppercase italic m-0"></h3>
+                            <div class="text-[9px] font-black uppercase tracking-widest flex gap-4">
+                                <span class="text-rose-600 bg-rose-50 px-2 py-1 rounded">R: Réalise</span>
+                                <span class="text-amber-600 bg-amber-50 px-2 py-1 rounded">A: Approuve</span>
+                                <span class="text-blue-600 bg-blue-50 px-2 py-1 rounded">C: Consulté</span>
+                                <span class="text-emerald-600 bg-emerald-50 px-2 py-1 rounded">I: Informé</span>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-auto rounded-xl border border-slate-200">
+                            <table class="w-full border-collapse bg-white">
+                                <thead>
+                                    <tr style="background-color: #1e293b; color: white;">
+                                        <th class="text-left py-3 px-4 w-[32%] text-[9px] font-black uppercase tracking-widest border-r border-slate-600">Étape SIPOC</th>
+                                        <th class="text-left py-3 px-3 w-[17%] text-[9px] font-black uppercase tracking-widest text-rose-300 border-r border-slate-600">Réaliser (R)</th>
+                                        <th class="text-left py-3 px-3 w-[17%] text-[9px] font-black uppercase tracking-widest text-amber-300 border-r border-slate-600">Approuver (A)</th>
+                                        <th class="text-left py-3 px-3 w-[17%] text-[9px] font-black uppercase tracking-widest text-blue-300 border-r border-slate-600">Consulter (C)</th>
+                                        <th class="text-left py-3 px-3 w-[17%] text-[9px] font-black uppercase tracking-widest text-emerald-300">Informer (I)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="raci-print-body"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -956,6 +1062,232 @@
             }
             
             modal.classList.remove('hidden');
+        }
+
+        // ================= GUIDE PEDAGOGIQUE =================
+        const helpContents = {
+            'mapping': `
+                <div class="space-y-5">
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                        <h4 class="font-black text-indigo-900 uppercase tracking-widest text-[10px] mb-2">1. L'objectif de la cartographie</h4>
+                        <p class="text-xs text-indigo-800 leading-relaxed">C'est la fondation de votre Système de Management. Elle permet de visualiser l'ensemble des activités de l'entreprise et de comprendre comment elles interagissent pour créer de la valeur.</p>
+                    </div>
+                    
+                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-[10px] mt-4 border-b pb-2">Comment s'en servir ?</h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                            <span class="w-6 h-6 bg-slate-900 text-white rounded-full flex items-center justify-center text-xs font-bold mb-3">1</span>
+                            <h5 class="text-xs font-bold text-slate-800 mb-1">Les catégories (Fixes)</h5>
+                            <p class="text-[10px] text-slate-500 leading-relaxed">L'architecture est divisée en processus de <strong class="text-indigo-600">Management</strong> (pilotage), de <strong class="text-emerald-600">Réalisation</strong> (cœur de métier) et <strong class="text-slate-600">Supports</strong> (ressources).</p>
+                        </div>
+                        <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                            <span class="w-6 h-6 bg-slate-900 text-white rounded-full flex items-center justify-center text-xs font-bold mb-3">2</span>
+                            <h5 class="text-xs font-bold text-slate-800 mb-1">Les Domaines</h5>
+                            <p class="text-[10px] text-slate-500 leading-relaxed">Cliquez sur <strong>+ Domaine</strong> pour créer de grandes familles (ex: "Ressources Humaines" dans les supports, ou "Exploitation" en réalisation).</p>
+                        </div>
+                        <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                            <span class="w-6 h-6 bg-slate-900 text-white rounded-full flex items-center justify-center text-xs font-bold mb-3">3</span>
+                            <h5 class="text-xs font-bold text-slate-800 mb-1">Activités et Processus</h5>
+                            <p class="text-[10px] text-slate-500 leading-relaxed">Cliquez sur <strong>+ Activité</strong> pour découper le domaine (ex: "Recrutement"). C'est ici que vous nommerez les véritables processus terminaux.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-amber-50 p-4 rounded-xl border border-amber-100 flex items-start gap-3 mt-4">
+                        <i data-lucide="lightbulb" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+                        <p class="text-[10px] text-amber-800 font-medium leading-relaxed"><strong>Astuce :</strong> Vous pouvez réorganiser vos blocs (Domaines ou Activités) à tout moment grâce au <strong>Glisser-Déposer</strong> (Drag & Drop). Saisissez un bloc par le haut et déplacez-le à la position souhaitée !</p>
+                    </div>
+                </div>
+            `,
+            'org': `
+                <div class="space-y-5">
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                        <h4 class="font-black text-indigo-900 uppercase tracking-widest text-[10px] mb-2">2. L'Organigramme de pilotage</h4>
+                        <p class="text-xs text-indigo-800 leading-relaxed">L'organigramme définit <strong>"qui fait quoi"</strong>. Il permet non seulement de visualiser la hiérarchie de votre établissement, mais surtout d'affecter la responsabilité (le pilotage) des processus définis à l'étape précédente.</p>
+                    </div>
+                    
+                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-[10px] mt-4 border-b pb-2">Les étapes de construction</h4>
+                    
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <div class="p-2 bg-slate-100 rounded-lg shrink-0 mt-1"><i data-lucide="book-open" class="w-4 h-4 text-slate-600"></i></div>
+                            <div>
+                                <h5 class="text-[11px] font-black text-slate-800 uppercase mb-1">Le référentiel des postes</h5>
+                                <p class="text-[10px] text-slate-500 leading-relaxed">Avant de dessiner l'organigramme, cliquez sur "Référentiel Postes" pour lister les titres officiels de votre entreprise (ex: Directeur, Chef de secteur, Conducteur...).</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="p-2 bg-emerald-50 rounded-lg shrink-0 mt-1"><i data-lucide="plus" class="w-4 h-4 text-emerald-600"></i></div>
+                            <div>
+                                <h5 class="text-[11px] font-black text-slate-800 uppercase mb-1">Créer et lier les rôles</h5>
+                                <p class="text-[10px] text-slate-500 leading-relaxed">Survolez un poste et cliquez sur le <strong>"+" vert</strong> pour lui ajouter des subordonnés. Renseignez son titre, son responsable direct, son effectif et s'il s'agit d'un poste de management.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="p-2 bg-indigo-50 rounded-lg shrink-0 mt-1"><i data-lucide="git-branch" class="w-4 h-4 text-indigo-600"></i></div>
+                            <div>
+                                <h5 class="text-[11px] font-black text-slate-800 uppercase mb-1">Affecter les processus (Pilotes)</h5>
+                                <p class="text-[10px] text-slate-500 leading-relaxed">Lors de l'édition d'un poste (bouton crayon), cochez dans la liste tout en bas les processus dont ce poste est le "Pilote" officiel. C'est l'étape la plus importante de la démarche !</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            `,
+            'sipoc': `
+                <div class="space-y-5">
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                        <h4 class="font-black text-indigo-900 uppercase tracking-widest text-[10px] mb-2">3. La fiche processus (Méthode SIPOC)</h4>
+                        <p class="text-xs text-indigo-800 leading-relaxed">Le SIPOC est un outil qualité (issu de Six Sigma) qui permet de définir clairement les limites d'un processus, de son commencement à sa fin, pour garantir qu'aucune donnée ou acteur n'a été oublié.</p>
+                    </div>
+                    
+                    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                        <table class="w-full text-left border-collapse">
+                            <tbody>
+                                <tr class="border-b"><td class="p-3 bg-amber-50 text-[10px] font-black text-amber-700 w-1/4">S (Supplier)</td><td class="p-3 text-[10px] text-slate-600"><strong>Fournisseurs :</strong> Qui fournit les éléments nécessaires au démarrage du processus ? (Services internes ou prestataires)</td></tr>
+                                <tr class="border-b"><td class="p-3 bg-blue-50 text-[10px] font-black text-blue-700 w-1/4">I (Input)</td><td class="p-3 text-[10px] text-slate-600"><strong>Entrées :</strong> Qu'est-ce qui est fourni ? (Un document, un ordre, une matière première, une information)</td></tr>
+                                <tr class="border-b"><td class="p-3 bg-indigo-50 text-[10px] font-black text-indigo-700 w-1/4">P (Process)</td><td class="p-3 text-[10px] text-slate-600"><strong>Étapes clés :</strong> Quelles sont les 3 à 7 grandes étapes chronologiques pour transformer l'entrée en sortie ?</td></tr>
+                                <tr class="border-b"><td class="p-3 bg-emerald-50 text-[10px] font-black text-emerald-700 w-1/4">O (Output)</td><td class="p-3 text-[10px] text-slate-600"><strong>Sorties :</strong> Quel est le résultat tangible produit par le processus ? (Un livrable, un produit fini, une validation)</td></tr>
+                                <tr><td class="p-3 bg-rose-50 text-[10px] font-black text-rose-700 w-1/4">C (Customer)</td><td class="p-3 text-[10px] text-slate-600"><strong>Clients :</strong> Qui reçoit le résultat ? (Service interne suivant ou client final)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4">
+                        <h4 class="font-black text-slate-800 uppercase tracking-widest text-[10px] mb-2 border-b pb-2">Les Indicateurs de performance (KPI)</h4>
+                        <p class="text-[10px] text-slate-500 leading-relaxed mb-3">Un processus sans mesure est un processus aveugle. Définissez vos KPIs :</p>
+                        <ul class="text-[10px] text-slate-600 space-y-2 list-disc pl-4">
+                            <li><strong>KPI Exigence :</strong> Qualité des données reçues en entrée (ex: % de dossiers complets).</li>
+                            <li><strong>KPI Maîtrise :</strong> Efficacité pendant la réalisation (ex: délai moyen de traitement).</li>
+                            <li><strong>KPI Performance :</strong> Résultat final (ex: Taux de conformité ou satisfaction).</li>
+                            <li><strong class="text-indigo-600">Indicateur Global :</strong> L'objectif ultime de succès du processus.</li>
+                        </ul>
+                    </div>
+                </div>
+            `,
+            'raci': `
+                <div class="space-y-5">
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                        <h4 class="font-black text-indigo-900 uppercase tracking-widest text-[10px] mb-2">4. La matrice des responsabilités (RACI)</h4>
+                        <p class="text-xs text-indigo-800 leading-relaxed">Le RACI est l'outil indispensable pour éviter le syndrome du <em>"je pensais que c'était toi qui devais le faire"</em>. Il définit le rôle exact de chaque poste pour chaque étape du SIPOC défini précédemment.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="bg-white p-3 rounded-xl border border-rose-200 border-l-4">
+                            <h5 class="text-[10px] font-black text-rose-600 uppercase mb-1">R - Réalise (Responsible)</h5>
+                            <p class="text-[9px] text-slate-500 leading-snug">C'est "Celui qui fait". La personne qui exécute concrètement la tâche opérationnelle. <em>(Il peut y en avoir plusieurs)</em>.</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl border border-amber-200 border-l-4">
+                            <h5 class="text-[10px] font-black text-amber-600 uppercase mb-1">A - Approuve (Accountable)</h5>
+                            <p class="text-[9px] text-slate-500 leading-snug">C'est "L'unique responsable". Celui qui porte le chapeau si ça se passe mal. <strong class="text-red-500">Il ne doit y avoir qu'un seul 'A' par ligne !</strong></p>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl border border-blue-200 border-l-4">
+                            <h5 class="text-[10px] font-black text-blue-600 uppercase mb-1">C - Consulté (Consulted)</h5>
+                            <p class="text-[9px] text-slate-500 leading-snug">L'expert. La personne à qui l'on doit demander un avis ou des informations <strong>avant</strong> de prendre une décision ou de faire la tâche.</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl border border-emerald-200 border-l-4">
+                            <h5 class="text-[10px] font-black text-emerald-600 uppercase mb-1">I - Informé (Informed)</h5>
+                            <p class="text-[9px] text-slate-500 leading-snug">La personne qui doit simplement être tenue au courant <strong>après</strong> que la tâche ait été réalisée.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50 p-4 rounded-xl border border-amber-100 flex items-start gap-3 mt-4">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+                        <p class="text-[10px] text-amber-800 font-medium leading-relaxed"><strong>Attention aux erreurs courantes :</strong><br>- L'absence de 'R' (personne ne travaille).<br>- L'absence de 'A' (personne n'est responsable).<br>- Trop de 'A' (confusion des responsabilités).<br>L'évaluation du SMI vérifiera ces règles automatiquement !</p>
+                    </div>
+                </div>
+            `,
+            'docs': `
+                <div class="space-y-5">
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                        <h4 class="font-black text-indigo-900 uppercase tracking-widest text-[10px] mb-2">5. La Gestion Documentaire</h4>
+                        <p class="text-xs text-indigo-800 leading-relaxed">Cet onglet vous permet de créer un véritable intranet interactif. Vous allez pouvoir lier des documents externes (SharePoint, Drive, sites web) directement aux étapes de vos processus métiers.</p>
+                    </div>
+                    
+                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-[10px] mt-4 border-b pb-2">Comment faire ?</h4>
+                    
+                    <ul class="text-[10px] text-slate-600 space-y-3">
+                        <li class="flex gap-2"><span class="font-bold text-slate-800">1.</span> <span>Sélectionnez un processus via la barre de filtres en haut. Ses étapes (définies dans le SIPOC) s'affichent alors.</span></li>
+                        <li class="flex gap-2"><span class="font-bold text-slate-800">2.</span> <span>Pour chaque étape, cliquez sur <strong>"+ Ajouter un lien"</strong>.</span></li>
+                        <li class="flex gap-2"><span class="font-bold text-slate-800">3.</span> <span>Choisissez la famille de document pour un classement par couleur :
+                            <div class="grid grid-cols-2 gap-2 mt-2">
+                                <div class="bg-blue-50 text-blue-700 p-1.5 rounded text-[8px] font-bold">Encadrement (SOP, Procédure)</div>
+                                <div class="bg-emerald-50 text-emerald-700 p-1.5 rounded text-[8px] font-bold">Support (Formulaire, Check-list)</div>
+                                <div class="bg-amber-50 text-amber-700 p-1.5 rounded text-[8px] font-bold">Performance (Plan, Indicateur)</div>
+                                <div class="bg-slate-100 text-slate-700 p-1.5 rounded text-[8px] font-bold">Référentiel (Norme, Contrat)</div>
+                                <div class="bg-rose-50 text-rose-700 p-1.5 rounded text-[8px] font-bold">Enregistrement (Rapport, Log)</div>
+                                <div class="bg-purple-50 text-purple-700 p-1.5 rounded text-[8px] font-bold">Outil (Logiciel, App)</div>
+                            </div>
+                        </span></li>
+                        <li class="flex gap-2"><span class="font-bold text-slate-800">4.</span> <span>Collez le lien URL du document. Lors de l'exportation PDF, ces boutons seront cliquables !</span></li>
+                    </ul>
+                </div>
+            `,
+            'eval-smi': `
+                <div class="space-y-5">
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                        <h4 class="font-black text-indigo-900 uppercase tracking-widest text-[10px] mb-2">6. Évaluation du Système (SMI)</h4>
+                        <p class="text-xs text-indigo-800 leading-relaxed">C'est votre auditeur qualité automatisé ! Un Système de Management Intégré (SMI) doit être parfaitement cohérent de bout en bout. Cette page scanne instantanément votre saisie pour identifier les "trous dans la raquette".</p>
+                    </div>
+
+                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-[10px] mt-4 border-b pb-2">Les 4 niveaux d'analyse</h4>
+                    <ul class="space-y-3">
+                        <li class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                            <h5 class="text-[10px] font-black text-slate-800 uppercase mb-1">Cartographie</h5>
+                            <p class="text-[9px] text-slate-500">Vérifie que vous n'avez pas laissé de catégories, de domaines ou d'activités totalement vides.</p>
+                        </li>
+                        <li class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                            <h5 class="text-[10px] font-black text-slate-800 uppercase mb-1">Organisation</h5>
+                            <p class="text-[9px] text-slate-500">Vérifie qu'aucun poste de manager n'est "fantôme" (sans titulaire) et qu'absolument <strong>tous</strong> les processus de la cartographie ont bien un poste "Pilote" assigné dans l'organigramme.</p>
+                        </li>
+                        <li class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                            <h5 class="text-[10px] font-black text-slate-800 uppercase mb-1">Fiches Processus (SIPOC)</h5>
+                            <p class="text-[9px] text-slate-500">Alerte si des données manquent dans les SIPOC : absence d'étapes, de fournisseurs, de clients, ou oubli des indicateurs de performance (KPI).</p>
+                        </li>
+                        <li class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                            <h5 class="text-[10px] font-black text-slate-800 uppercase mb-1">Matrices RACI</h5>
+                            <p class="text-[9px] text-slate-500">Le point le plus strict : s'assure que pour <strong>chaque étape</strong> de chaque processus, il y a au moins une personne assignée pour "Réaliser" la tâche.</p>
+                        </li>
+                    </ul>
+
+                    <p class="text-[10px] text-center text-slate-500 italic mt-2">Cliquez sur "Actualiser l'analyse" pour lancer le diagnostic en temps réel.</p>
+                </div>
+            `,
+            'eval-kiho': `
+                <div class="space-y-5">
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                        <h4 class="font-black text-indigo-900 uppercase tracking-widest text-[10px] mb-2">7. Évaluation KIHO</h4>
+                        <p class="text-xs text-indigo-800 leading-relaxed">Cette section est l'outil d'évaluation de la maturité des pratiques et rituels managériaux sur le terrain. Contrairement au SMI qui évalue la "conception" théorique, KIHO évalue "l'application" par les Hommes.</p>
+                    </div>
+
+                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-[10px] mt-4 border-b pb-2">Comment réaliser l'évaluation ?</h4>
+                    
+                    <ul class="text-[10px] text-slate-600 space-y-3">
+                        <li class="flex gap-2"><span class="font-bold text-slate-800">1.</span> <span>Choisissez une catégorie via les boutons colorés (Pratiques Managériales, Amélioration Continue, Gestion des Processus).</span></li>
+                        <li class="flex gap-2"><span class="font-bold text-slate-800">2.</span> <span>Sélectionnez le Standard KIHO spécifique dans le menu déroulant (Ex: S1 - Point quotidien).</span></li>
+                        <li class="flex gap-2"><span class="font-bold text-slate-800">3.</span> <span>Le tableau affiche automatiquement tous les postes marqués comme "Manager" dans votre organigramme (ou les processus pour S9/S10).</span></li>
+                        <li class="flex gap-2"><span class="font-bold text-slate-800">4.</span> <span>Attribuez un niveau de maturité et ajoutez un commentaire ou plan d'action (qui sera repris dans les rapports PDF).</span></li>
+                    </ul>
+
+                    <div class="bg-slate-100 p-4 rounded-xl mt-4">
+                        <h5 class="text-[10px] font-black text-slate-700 uppercase mb-2">Cas Spéciaux</h5>
+                        <p class="text-[9px] text-slate-600 mb-2"><strong>S3 / S8 :</strong> Une note "Pilotage" globale s'ajoute en haut du tableau pour évaluer la planification globale de ces rituels.</p>
+                        <p class="text-[9px] text-slate-600"><strong>S5 (Réunion de coord.) :</strong> L'évaluation se fait par paires de managers. Cliquez sur "Ajouter un binôme" pour évaluer la qualité de la communication inter-services.</p>
+                    </div>
+                </div>
+            `
+        };
+
+        function openHelpModal(tabId) {
+            const contentDiv = document.getElementById('help-modal-content');
+            if (contentDiv && helpContents[tabId]) {
+                contentDiv.innerHTML = helpContents[tabId];
+                document.getElementById('help-modal').classList.remove('hidden');
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function closeHelpModal() {
+            document.getElementById('help-modal').classList.add('hidden');
         }
 
         // ================= IA & CONFIG =================
@@ -1894,11 +2226,35 @@
             const steps = appData.sipocs[pid]?.steps || [];
             const raci = appData.raci[pid] || [];
             let html = '';
+
+            const buildBadges = (arr, color) => {
+                if (!arr || arr.length === 0) return '';
+                return arr.map(id => {
+                    const title = getRoleById(id)?.title || '';
+                    if (!title) return '';
+                    return `<div class="inline-block bg-${color}-50 text-${color}-700 border border-${color}-200 px-2 py-1 rounded mb-1 mr-1 text-[8px] font-black uppercase leading-tight" style="word-break: normal; overflow-wrap: break-word;">${title}</div>`;
+                }).join('');
+            };
+
             steps.forEach((s, i) => {
                 if(!s.trim()) return;
                 const conf = raci[i] || { r: [], a: '', c: [], i: [] };
-                const getNames = arr => arr.map(id => getRoleById(id)?.title || '').filter(Boolean).join(', ');
-                html += `<tr><td>${s}</td><td>${getNames(conf.r)}</td><td>${conf.a ? getRoleById(conf.a)?.title || '' : ''}</td><td>${getNames(conf.c)}</td><td>${getNames(conf.i)}</td></tr>`;
+                
+                const bgClass = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+                
+                const rHtml = buildBadges(conf.r, 'rose');
+                const aHtml = conf.a ? buildBadges([conf.a], 'amber') : '';
+                const cHtml = buildBadges(conf.c, 'blue');
+                const iHtml = buildBadges(conf.i, 'emerald');
+
+                html += `
+                <tr style="background-color: ${bgClass}; border-bottom: 1px solid #e2e8f0;">
+                    <td class="py-3 px-4 text-[9px] font-black text-slate-700 uppercase leading-snug border-r border-slate-200 align-top">${s}</td>
+                    <td class="py-3 px-2 border-r border-slate-200 align-top">${rHtml}</td>
+                    <td class="py-3 px-2 border-r border-slate-200 align-top">${aHtml}</td>
+                    <td class="py-3 px-2 border-r border-slate-200 align-top">${cHtml}</td>
+                    <td class="py-3 px-2 align-top">${iHtml}</td>
+                </tr>`;
             });
             tb.innerHTML = html;
         }
@@ -1929,7 +2285,7 @@
                 const filtered = (items || []).filter(x => x && x.trim());
                 el.innerHTML = filtered.length > 0
                     ? filtered.map(item => `<li>${item}</li>`).join('')
-                    : '<li style="color:#94a3b8; font-style:italic;">—</li>';
+                    : '<li style="color:#94a3b8; font-style:italic; list-style-type: none; margin-left:-1rem;">—</li>';
             };
 
             fillList('viz-sipoc-s', s.suppliers);
