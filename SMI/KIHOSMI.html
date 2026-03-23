@@ -2651,7 +2651,12 @@
                 items.forEach(item => {
                     const baseKey = isFiliale ? 'filiale' : item.id;
                     const titleText = isFiliale ? item.name : item.title;
-                    const subText = (!isFiliale && item.holder) ? `<div class="text-[10px] text-indigo-500 font-bold mt-1">${item.holder}</div>` : '';
+                    let subText = '';
+                    if (!isFiliale) {
+                        if (item.holder && item.depot) subText = `<div class="text-[10px] text-indigo-500 font-bold mt-1">${item.holder} <span class="text-slate-400 font-normal">|</span> <span class="text-slate-600">${item.depot}</span></div>`;
+                        else if (item.holder) subText = `<div class="text-[10px] text-indigo-500 font-bold mt-1">${item.holder}</div>`;
+                        else if (item.depot) subText = `<div class="text-[10px] text-slate-600 font-bold mt-1">${item.depot}</div>`;
+                    }
                     bodyHtml += renderEvalRow(item, baseKey, titleText, subText, false);
                 });
             }
@@ -2811,7 +2816,12 @@
                         evaluatedItems.forEach(item => {
                             const baseKey = isFiliale ? 'filiale' : item.id;
                             const titleText = isFiliale ? item.name : item.title;
-                            const subText = (!isFiliale && item.holder) ? `<div class="text-[9px] text-indigo-500 font-bold mt-1">${item.holder}</div>` : '';
+                            let subText = '';
+                            if (!isFiliale) {
+                                if (item.holder && item.depot) subText = `<div class="text-[9px] text-indigo-500 font-bold mt-1">${item.holder} <span class="text-slate-400 font-normal">|</span> <span class="text-slate-600">${item.depot}</span></div>`;
+                                else if (item.holder) subText = `<div class="text-[9px] text-indigo-500 font-bold mt-1">${item.holder}</div>`;
+                                else if (item.depot) subText = `<div class="text-[9px] text-slate-600 font-bold mt-1">${item.depot}</div>`;
+                            }
                             bodyHtml += renderPrintRow(item, baseKey, titleText, subText, false);
                         });
                     }
