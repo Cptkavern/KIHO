@@ -1811,7 +1811,26 @@
         function renderOrg() { 
             const r = document.getElementById('org-tree-root'); 
             const showProcs = document.getElementById('toggle-org-edit-procs') ? document.getElementById('toggle-org-edit-procs').checked : true;
-            if(r) { r.innerHTML = buildOrgTree(false, showProcs); r.style.transition = 'transform 0.2s ease-in-out'; applyOrgEditZoom(); }
+            if(r) { 
+                if (appData.roles && appData.roles.length > 0) {
+                    r.innerHTML = buildOrgTree(false, showProcs); 
+                } else {
+                    r.innerHTML = `
+                        <div class="flex flex-col items-center justify-center p-10 bg-white border-2 border-dashed border-slate-300 rounded-3xl max-w-md mx-auto mt-10 shadow-sm">
+                            <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-4">
+                                <i data-lucide="users" class="w-8 h-8"></i>
+                            </div>
+                            <h4 class="text-lg font-black text-slate-800 uppercase mb-2">Organigramme vide</h4>
+                            <p class="text-xs text-slate-500 mb-6 text-center leading-relaxed">Commencez par ajouter le poste de direction (ou le plus haut niveau de votre périmètre) pour initier l'arborescence.</p>
+                            <button onclick="openRoleModal(null, null)" class="bg-indigo-600 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 flex items-center gap-2">
+                                <i data-lucide="plus" class="w-4 h-4"></i> Créer le premier poste
+                            </button>
+                        </div>
+                    `;
+                }
+                r.style.transition = 'transform 0.2s ease-in-out'; 
+                applyOrgEditZoom(); 
+            }
             if(window.lucide) lucide.createIcons(); 
         }
         function renderOrgPrint() { 
