@@ -398,6 +398,11 @@
                     <button onclick="triggerImport('organigramme'); toggleMobileMenu();" class="w-full px-4 py-2.5 text-[10px] font-black uppercase text-indigo-600 hover:bg-indigo-50 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="user-plus" class="w-4 h-4"></i> IMPORTER POSTES</button>
                     <button onclick="exportAnnuaire(); toggleMobileMenu();" class="w-full px-4 py-2.5 text-[10px] font-black uppercase text-indigo-600 hover:bg-indigo-50 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="users" class="w-4 h-4"></i> EXPORTER POSTES</button>
                     <div class="w-full h-px bg-slate-100 my-1"></div>
+                    <label class="w-full px-4 py-2.5 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 rounded-lg transition flex items-center justify-between cursor-pointer">
+                        <span class="flex items-center gap-2"><i data-lucide="folder-open" class="w-4 h-4"></i> Option : Gestion Doc.</span>
+                        <input type="checkbox" id="toggle-module-docs" onchange="toggleDocsModule(this.checked)" class="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer transition">
+                    </label>
+                    <div class="w-full h-px bg-slate-100 my-1"></div>
                     <button onclick="switchTab('evaluation'); toggleMobileMenu();" class="w-full px-4 py-2.5 text-[10px] font-black uppercase text-slate-700 hover:bg-slate-100 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> Évaluation du SMI</button>
                     <button onclick="switchTab('kiho'); toggleMobileMenu();" class="w-full px-4 py-2.5 text-[10px] font-black uppercase text-slate-700 hover:bg-slate-100 rounded-lg transition flex items-center gap-2 justify-start"><i data-lucide="check-square" class="w-4 h-4"></i> Évaluation KIHO</button>
                     <div class="w-full h-px bg-slate-100 my-1"></div>
@@ -989,6 +994,7 @@
 
         const initialData = {
             meta: { organization: "", manager: "", logoUrl: null },
+            settings: { enableDocs: true },
             roleRegistry: [], 
             roles: [],
             categories: [
@@ -2339,6 +2345,23 @@
             }
         }
 
+        function toggleDocsModule(show) {
+            if (!appData.settings) appData.settings = { enableDocs: true };
+            appData.settings.enableDocs = show;
+            
+            const tabDocs = document.getElementById('tab-docs');
+            if (tabDocs) {
+                if (show) {
+                    tabDocs.classList.remove('hidden');
+                } else {
+                    tabDocs.classList.add('hidden');
+                    if (tabDocs.classList.contains('tab-active')) {
+                        switchTab('mapping');
+                    }
+                }
+            }
+        }
+
         document.addEventListener('click', function(event) {
             const mobileMenu = document.getElementById('mobile-menu');
             if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
@@ -2904,6 +2927,7 @@
             if (!appData.roleRegistry) appData.roleRegistry = [];
             if (!appData.kihoEvaluation) appData.kihoEvaluation = {};
             if (!appData.docs) appData.docs = {};
+            if (!appData.settings) appData.settings = { enableDocs: true };
             if (!appData.currentKihoStandardId) appData.currentKihoStandardId = KIHO_STANDARDS[0].id;
 
             appData.roles.forEach(r => { if (r.title && !appData.roleRegistry.includes(r.title)) appData.roleRegistry.push(r.title); });
@@ -2924,6 +2948,10 @@
             const activeStd = KIHO_STANDARDS.find(s => s.id === appData.currentKihoStandardId) || KIHO_STANDARDS[0];
             appData.activeKihoCategory = activeStd.category;
             setKihoCategory(appData.activeKihoCategory);
+            
+            const toggleEl = document.getElementById('toggle-module-docs');
+            if (toggleEl) toggleEl.checked = appData.settings.enableDocs;
+            toggleDocsModule(appData.settings.enableDocs);
             
             updateAiStatusBadge(); 
         }
