@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <link rel="manifest" href="manifest.json">
+      <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KIHO - Déclaration d'Accident</title>
@@ -62,7 +62,6 @@
 <body class="min-h-screen bg-gray-50 text-gray-900 pb-20 relative">
 
     <!-- WELCOME MODAL -->
-    <!-- Correction : Utilisation des styles inline pour le fond sombre et le z-index -->
     <div id="welcome-modal" class="fixed inset-0 flex items-center justify-center p-4" style="background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 50000;">
         <div class="bg-white shadow-2xl w-full relative overflow-hidden p-8" style="border-radius: 1.5rem; max-width: 450px;">
             <!-- Barre supérieure bleue -->
@@ -85,11 +84,11 @@
                     <i data-lucide="alert-triangle" class="w-5 h-5"></i> Important
                 </h3>
                 <p class="font-bold text-sm mb-3">Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues.</p>
-                <p class="text-sm leading-relaxed mb-4" style="color: #9a3412;">Pensez à sauvegarder régulièrement votre travail à l'aide du bouton <strong>Exporter les données</strong> présent dans le menu situé en haut à droite.</p>
+                <p class="text-sm leading-relaxed mb-4" style="color: #9a3412;">Pensez à sauvegarder régulièrement votre travail à l'aide du bouton <strong>Enregistrer</strong> présent dans le menu situé en haut à droite.</p>
                 
                 <!-- Faux badge visuel -->
                 <div class="bg-white border px-3 py-2 flex items-center justify-center gap-2 text-sm font-bold shadow-sm text-gray-700 w-fit mx-auto" style="border-color: #fed7aa; border-radius: 0.5rem;">
-                    <i data-lucide="save" class="w-4 h-4 text-blue-600"></i> Exporter les données (.json)
+                    <i data-lucide="save" class="w-4 h-4 text-blue-600"></i> Enregistrer (.json)
                 </div>
             </div>
             
@@ -122,18 +121,18 @@
                     <div class="p-2 space-y-1">
                         <!-- Import/Export & PDF -->
                         <button onclick="document.getElementById('import-file').click()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-blue-50 rounded-lg text-gray-700 font-bold transition-colors">
-                            <i data-lucide="upload" class="w-4 h-4 text-blue-600"></i> Importer des données
+                            <i data-lucide="folder-open" class="w-4 h-4 text-blue-600"></i> Ouvrir
                         </button>
                         <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
                         
                         <button onclick="exportData()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-blue-50 rounded-lg text-gray-700 font-bold transition-colors">
-                            <i data-lucide="save" class="w-4 h-4 text-blue-600"></i> Exporter les données
+                            <i data-lucide="save" class="w-4 h-4 text-blue-600"></i> Enregistrer
                         </button>
 
                         <div class="h-px bg-gray-100 my-1"></div>
 
                         <button onclick="generatePDF()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 rounded-lg text-gray-700 font-bold transition-colors" id="btn-dl-pdf">
-                            <i data-lucide="download" class="w-4 h-4"></i> <span id="pdf-btn-text">Télécharger le PDF</span>
+                            <i data-lucide="file-down" class="w-4 h-4"></i> <span id="pdf-btn-text">Enregistrer le PDF</span>
                         </button>
 
                         <button onclick="sendEmail()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 rounded-lg text-gray-700 font-bold transition-colors">
@@ -504,7 +503,7 @@
             if(currentStep===1) { p.style.backgroundColor = 'transparent'; p.style.color = '#d1d5db'; p.style.borderColor = 'transparent'; p.style.pointerEvents = 'none'; } 
             else { p.style.backgroundColor = 'white'; p.style.color = '#4b5563'; p.style.borderColor = '#e5e7eb'; p.style.pointerEvents = 'auto'; }
             
-            n.innerHTML = currentStep===5 ? 'Télécharger le PDF <i data-lucide="download" class="w-5 h-5 ml-2"></i>' : 'Étape Suivante <i data-lucide="chevron-right" class="w-5 h-5 ml-2"></i>';
+            n.innerHTML = currentStep===5 ? 'Enregistrer le PDF <i data-lucide="file-down" class="w-5 h-5 ml-2"></i>' : 'Étape Suivante <i data-lucide="chevron-right" class="w-5 h-5 ml-2"></i>';
             n.onclick = currentStep===5 ? generatePDF : () => goToStep(currentStep + 1);
         }
 
@@ -558,13 +557,38 @@
         }
 
         // --- IMPORT / EXPORT DATA ---
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(formData, null, 2));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", `rapport_accident_${formData.victime.nom || 'inconnu'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.json`);
-            dlAnchorElem.click();
+        async function exportData() {
             document.getElementById('dropdown-menu').classList.add('hidden');
+            const dataStr = JSON.stringify(formData, null, 2);
+            const defaultName = `rapport_accident_${formData.victime.nom || 'inconnu'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.json`;
+            
+            try {
+                // Utilise l'API moderne pour afficher la fenêtre "Enregistrer sous..."
+                if (window.showSaveFilePicker) {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: defaultName,
+                        types: [{
+                            description: 'Fichier de sauvegarde JSON',
+                            accept: {'application/json': ['.json']},
+                        }],
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(dataStr);
+                    await writable.close();
+                } else {
+                    // Fallback classique si le navigateur ne supporte pas showSaveFilePicker
+                    const dataUri = "data:text/json;charset=utf-8," + encodeURIComponent(dataStr);
+                    const dlAnchorElem = document.createElement('a');
+                    dlAnchorElem.setAttribute("href", dataUri);
+                    dlAnchorElem.setAttribute("download", defaultName);
+                    dlAnchorElem.click();
+                }
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    alert("Erreur lors de l'enregistrement des données.");
+                    console.error(err);
+                }
+            }
         }
 
         function importData(e) {
@@ -579,7 +603,7 @@
                     renderSilhouettes();
                     renderWitnesses();
                     document.getElementById('dropdown-menu').classList.add('hidden');
-                    alert("Données importées avec succès !");
+                    alert("Données ouvertes avec succès !");
                 } catch(err) {
                     alert("Le fichier sélectionné n'est pas valide.");
                 }
