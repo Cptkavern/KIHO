@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <link rel="manifest" href="manifest.json">
+      <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KIHO GESTION DES COMPÉTENCES</title>
@@ -69,7 +69,7 @@
                     </div>
                     <div>
                         <h3 class="text-xl font-black text-slate-800 leading-tight">Bienvenue sur KIHO GESTION DES COMPÉTENCES</h3>
-                        <p class="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-1">CONFIDENTIALITÉ & SAUVEGARDE</p>
+                        <p class="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase mt-1">CONFIDENTIALITÉ & ENREGISTREMENT</p>
                     </div>
                 </div>
                 <div class="bg-orange-50 border border-orange-200 rounded-2xl p-5 mb-8">
@@ -78,10 +78,10 @@
                         <span>IMPORTANT</span>
                     </div>
                     <p class="text-sm text-slate-800 mb-3 leading-relaxed">
-                        <span class="font-bold text-slate-900">Si vous actualisez la page ou fermez cet onglet, vos données non exportées seront perdues.</span>
+                        <span class="font-bold text-slate-900 text-left">Si vous actualisez la page ou fermez cet onglet, vos données non enregistrées seront perdues.</span>
                     </p>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        Pensez à exporter régulièrement votre travail via le bouton Sauvegarder présent dans le menu situé en haut à droite.
+                    <p class="text-xs text-slate-600 leading-relaxed text-left">
+                        Pensez à enregistrer régulièrement votre travail via le bouton "Enregistrer" présent dans le menu situé en haut à droite.
                     </p>
                 </div>
                 <button onclick="closeWelcomeModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase tracking-wide text-sm transition-all shadow-lg active:scale-95 text-center">
@@ -94,63 +94,63 @@
     <!-- MANUEL D'UTILISATION GÉNÉRAL -->
     <div id="manualModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4">
         <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden modal-enter border-t-8 border-indigo-600">
-            <div class="p-6 border-b bg-slate-50 flex justify-between items-center shrink-0">
+            <div class="p-6 border-b bg-slate-50 flex justify-between items-center shrink-0 text-left">
                 <div class="flex items-center gap-3">
                     <div class="bg-indigo-100 text-indigo-600 p-2 rounded-xl"><i data-lucide="book-open" class="w-6 h-6"></i></div>
                     <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Manuel d'Utilisation KIHO</h2>
                 </div>
-                <button onclick="closeModal('manualModal')" class="p-2 hover:bg-slate-200 rounded-full transition-all text-slate-400"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <button onclick="closeModal('manualModal')" class="p-2 hover:bg-slate-200 rounded-full transition-all"><i data-lucide="x" class="w-6 h-6 text-slate-400"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto p-8 space-y-10 no-scrollbar text-left text-slate-800">
                 
-                <section class="space-y-4">
+                <section class="space-y-4 text-left">
                     <h3 class="text-lg font-black text-indigo-600 uppercase border-b pb-2 flex items-center gap-2">
                         <i data-lucide="layout-dashboard" class="w-5 h-5"></i> 1. Dashboard (Effectifs)
                     </h3>
-                    <p class="text-sm leading-relaxed">C'est la tour de contrôle de votre filiale. Elle permet de structurer vos besoins.</p>
-                    <ul class="space-y-3 pl-4 border-l-2 border-slate-100">
-                        <li class="text-sm"><span class="font-bold">Nouveau métier :</span> Créez un profil de poste. Indiquez la <span class="font-bold text-blue-600">Cible</span> (nombre minimum d'autonomes requis) et la <span class="font-bold text-emerald-600">Périodicité</span> (délai en mois pour les évaluations).</li>
+                    <p class="text-sm leading-relaxed text-left">C'est la tour de contrôle de votre filiale. Elle permet de structurer vos besoins.</p>
+                    <ul class="space-y-3 pl-4 border-l-2 border-slate-100 text-left">
+                        <li class="text-sm"><span class="font-bold">Nouveau métier :</span> Créez un profil de poste. Indiquez la <span class="font-bold text-blue-600">Cible</span> et la <span class="font-bold text-emerald-600">Périodicité</span>.</li>
                         <li class="text-sm"><span class="font-bold">Nouveau collaborateur :</span> Ajoutez un agent et affectez-lui ses métiers via le menu déroulant.</li>
                     </ul>
                 </section>
 
-                <section class="space-y-4">
+                <section class="space-y-4 text-left">
                     <h3 class="text-lg font-black text-indigo-600 uppercase border-b pb-2 flex items-center gap-2">
                         <i data-lucide="file-text" class="w-5 h-5"></i> 2. Référentiels (Contenu technique)
                     </h3>
-                    <ul class="space-y-3 pl-4 border-l-2 border-slate-100">
+                    <ul class="space-y-3 pl-4 border-l-2 border-slate-100 text-left">
                         <li class="text-sm"><span class="font-bold">Configuration :</span> Définissez les thèmes et les compétences.</li>
                         <li class="text-sm"><span class="font-bold"><i data-lucide="printer" class="inline w-4 h-4 text-blue-600"></i> Imprimante :</span> Génère une grille d'évaluation papier vierge.</li>
-                        <li class="text-sm"><span class="font-bold">Import/Export JSON :</span> Sauvegardez ou restaurez uniquement la structure technique d'un métier spécifique.</li>
+                        <li class="text-sm"><span class="font-bold">Ouvrir / Enregistrer JSON :</span> Enregistrez sur votre PC ou ouvrez la structure technique d'un métier spécifique.</li>
                     </ul>
                 </section>
 
-                <section class="space-y-4">
+                <section class="space-y-4 text-left">
                     <h3 class="text-lg font-black text-indigo-600 uppercase border-b pb-2 flex items-center gap-2">
                         <i data-lucide="check-square" class="w-5 h-5"></i> 3. Évaluations (Saisie)
                     </h3>
-                    <ul class="space-y-3 pl-4 border-l-2 border-slate-100">
+                    <ul class="space-y-3 pl-4 border-l-2 border-slate-100 text-left">
                         <li class="text-sm"><span class="font-bold text-red-600 uppercase italic">À ÉVALUER :</span> Indique qu'une évaluation est requise (délai dépassé).</li>
                         <li class="text-sm"><span class="font-bold">Notation :</span> 0 = Non acquis | 1 = Accompagné | 2 = Sait faire | 3 = Sait former.</li>
                     </ul>
                 </section>
 
-                <section class="space-y-4">
+                <section class="space-y-4 text-left">
                     <h3 class="text-lg font-black text-indigo-600 uppercase border-b pb-2 flex items-center gap-2">
                         <i data-lucide="database" class="w-5 h-5"></i> 4. Gestion des données
                     </h3>
-                    <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200">
-                        <p class="text-sm text-amber-800 leading-relaxed italic">
-                            KIHO fonctionne 100% en local. Exportez votre base régulièrement.
+                    <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200 text-left">
+                        <p class="text-sm text-amber-800 leading-relaxed italic text-left">
+                            KIHO fonctionne 100% en local. Enregistrez votre base régulièrement.
                         </p>
                     </div>
-                    <ul class="space-y-3 pl-4 border-l-2 border-slate-100">
-                        <li class="text-sm"><span class="font-bold">Exporter base globale :</span> Sauvegarde TOUT le contenu de l'application dans un fichier.</li>
-                        <li class="text-sm"><span class="font-bold">Importer base globale :</span> Restaure une sauvegarde complète.</li>
+                    <ul class="space-y-3 pl-4 border-l-2 border-slate-100 text-left">
+                        <li class="text-sm"><span class="font-bold">Enregistrer :</span> Sauvegarde TOUT le contenu de l'application dans un fichier .json.</li>
+                        <li class="text-sm"><span class="font-bold">Ouvrir :</span> Restaure une sauvegarde complète à partir d'un fichier .json.</li>
                     </ul>
                 </section>
             </div>
-            <div class="p-6 border-t bg-slate-50 flex items-center justify-center shrink-0">
+            <div class="p-6 border-t bg-slate-50 flex items-center justify-center shrink-0 text-center">
                 <button onclick="closeModal('manualModal')" class="px-12 h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl uppercase tracking-widest text-sm shadow-xl flex items-center justify-center gap-2">
                     <i data-lucide="check-circle" class="w-5 h-5"></i> Fermer le guide
                 </button>
@@ -178,14 +178,14 @@
                 <button id="menuBtn" class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
-                <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl py-2 z-50 text-slate-700 overflow-hidden">
+                <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl py-2 z-50 text-slate-700 overflow-hidden text-left">
                     <!-- Menu généré dynamiquement en JS -->
                 </div>
             </div>
         </div>
 
         <nav class="w-full bg-slate-50 border-t border-slate-100 px-4 overflow-x-auto no-scrollbar">
-            <div class="flex items-center space-x-8 text-slate-500 font-medium">
+            <div class="flex items-center space-x-8 text-slate-500 font-medium text-left">
                 <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-tab py-3 px-1 border-b-2 border-blue-600 text-blue-600 text-sm font-bold uppercase transition-all whitespace-nowrap">Dashboard</button>
                 <button onclick="switchTab('referentiels')" id="tab-referentiels" class="nav-tab py-3 px-1 border-b-2 border-transparent text-sm uppercase transition-all whitespace-nowrap">Référentiels</button>
                 <button onclick="switchTab('evaluations')" id="tab-evaluations" class="nav-tab py-3 px-1 border-b-2 border-transparent text-sm uppercase transition-all whitespace-nowrap">Évaluations</button>
@@ -202,13 +202,13 @@
     <main class="p-4 md:p-8 no-print text-left">
         <!-- VUE DASHBOARD -->
         <div id="view-dashboard" class="tab-view max-w-7xl mx-auto space-y-8 text-slate-800">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left">
                 <div class="lg:col-span-5 space-y-6">
                     <div class="bg-white rounded-[2rem] p-6 border border-slate-200 card-shadow">
                         <div class="flex items-center justify-between mb-6">
                             <div class="flex items-center gap-2">
-                                <h2 class="text-xl font-black uppercase tracking-tight">Métiers</h2>
-                                <button onclick="openHelp('dashboard_jobs')" class="help-btn text-left"><i data-lucide="help-circle" class="w-4 h-4"></i></button>
+                                <h2 class="text-xl font-black uppercase tracking-tight text-left">Métiers</h2>
+                                <button onclick="openHelp('dashboard_jobs')" class="help-btn text-left"><i data-lucide="help-circle" class="w-4 h-4 text-left"></i></button>
                             </div>
                             <span id="jobCount" class="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full text-left">0</span>
                         </div>
@@ -229,7 +229,7 @@
                                 <i data-lucide="user-plus" class="w-4 h-4"></i> Nouveau collaborateur
                             </button>
                         </div>
-                        <div class="overflow-x-auto text-left">
+                        <div class="overflow-x-auto text-left text-slate-800">
                             <table class="w-full text-left text-sm">
                                 <thead class="text-slate-400 text-xs uppercase tracking-widest border-b border-slate-100">
                                     <tr><th class="pb-4 font-bold text-left">Collaborateur</th><th class="pb-4 font-bold text-left">Métiers</th><th class="pb-4 font-bold text-right px-4 text-right">Actions</th></tr>
@@ -247,10 +247,10 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3 text-left">
                     <h2 class="text-2xl font-black uppercase tracking-tight text-slate-800 text-left">Référentiels Métiers</h2>
-                    <button onclick="openHelp('referentials')" class="help-btn text-left"><i data-lucide="help-circle" class="w-5 h-5 text-left text-left"></i></button>
+                    <button onclick="openHelp('referentials')" class="help-btn text-left text-left text-left"><i data-lucide="help-circle" class="w-5 h-5 text-left text-left text-left text-left"></i></button>
                 </div>
-                <button onclick="triggerJobImportNew()" class="h-12 px-6 bg-white border-2 border-indigo-100 text-indigo-600 rounded-2xl hover:bg-indigo-50 transition-all font-black uppercase text-xs shadow-sm flex items-center justify-center gap-2 text-center">
-                    <i data-lucide="file-plus" class="w-4 h-4"></i> Importer métier
+                <button onclick="triggerJobImportNew()" class="h-12 px-6 bg-white border-2 border-indigo-100 text-indigo-600 rounded-2xl hover:bg-indigo-50 transition-all font-black uppercase text-xs shadow-sm flex items-center justify-center gap-2 text-center text-left">
+                    <i data-lucide="file-plus" class="w-4 h-4 text-left"></i> Ouvrir métier
                 </button>
             </div>
             <div id="jobsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left"></div>
@@ -259,12 +259,12 @@
         <!-- VUE ÉVALUATIONS -->
         <div id="view-evaluations" class="tab-view hidden max-w-7xl mx-auto space-y-12 text-left text-slate-800">
             <div class="flex items-center gap-3 mb-4 text-left">
-                <h2 class="text-2xl font-black uppercase tracking-tight text-slate-800 text-left">Suivi des Évaluations</h2>
-                <button onclick="openHelp('evaluations')" class="help-btn text-left"><i data-lucide="help-circle" class="w-5 h-5 text-left text-left"></i></button>
+                <h2 class="text-2xl font-black uppercase tracking-tight text-slate-800 text-left text-left">Suivi des Évaluations</h2>
+                <button onclick="openHelp('evaluations')" class="help-btn text-left text-left text-left"><i data-lucide="help-circle" class="w-5 h-5 text-left text-left text-left"></i></button>
             </div>
-            <div id="evaluationList" class="space-y-12 text-left"></div>
+            <div id="evaluationList" class="space-y-12 text-left text-slate-800"></div>
             
-            <div id="evaluationFormContainer" class="hidden bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden modal-enter text-left">
+            <div id="evaluationFormContainer" class="hidden bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden modal-enter text-left text-slate-800">
                 <div class="p-8 border-b bg-slate-50 flex justify-between items-center text-left">
                     <div>
                         <button onclick="closeEvaluationForm()" class="text-slate-400 hover:text-slate-600 mb-2 flex items-center gap-1 text-xs font-bold uppercase text-left"><i data-lucide="chevron-left" class="w-4 h-4 text-left"></i> Retour</button>
@@ -273,7 +273,7 @@
                     </div>
                     <div class="text-right font-black text-sm uppercase text-slate-400 text-right">Date : <span id="evalFormDate" class="text-slate-800"></span></div>
                 </div>
-                <div id="evalFormContent" class="p-8 space-y-12 text-slate-800 text-left"></div>
+                <div id="evalFormContent" class="p-8 space-y-12 text-slate-800 text-left text-slate-800"></div>
                 <div class="p-8 bg-slate-50 border-t flex justify-end gap-4 text-left">
                     <button onclick="closeEvaluationForm()" class="px-8 h-12 text-slate-600 font-bold hover:bg-slate-200 rounded-2xl transition-all uppercase text-sm flex items-center justify-center text-center">Annuler</button>
                     <button onclick="saveEvaluation()" class="px-12 h-12 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-lg uppercase tracking-wide text-sm flex items-center justify-center text-center">Enregistrer</button>
@@ -285,9 +285,9 @@
         <div id="view-reporting" class="tab-view hidden max-w-7xl mx-auto space-y-6 text-left text-slate-800">
             <div class="bg-white rounded-[2rem] p-8 border border-slate-200 card-shadow text-slate-800 text-left">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 text-left text-slate-800">
-                    <div class="flex items-center gap-3 text-left">
+                    <div class="flex items-center gap-3 text-left text-slate-800">
                         <h2 class="text-2xl font-black uppercase tracking-tight text-slate-800 text-left">Matrice de Polycompétence</h2>
-                        <button onclick="openHelp('reporting')" class="help-btn text-left text-left"><i data-lucide="help-circle" class="w-5 h-5 text-left text-left"></i></button>
+                        <button onclick="openHelp('reporting')" class="help-btn text-left text-left text-left text-left"><i data-lucide="help-circle" class="w-5 h-5 text-left text-left text-left text-left"></i></button>
                     </div>
                     <div class="w-full md:w-80 text-left">
                         <select id="matrixJobSelector" onchange="renderMatrix()" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-700 outline-none cursor-pointer hover:bg-white transition-all text-sm uppercase shadow-sm text-left">
@@ -301,7 +301,7 @@
         </div>
     </main>
 
-    <!-- MODALES DE CONFIGURATION -->
+    <!-- MODALE AIDE (CONTENU DYNAMIQUE) -->
     <div id="helpModal" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm text-left"></div>
         <div class="relative bg-white w-full max-w-2xl h-[70vh] rounded-[2.5rem] shadow-2xl modal-enter flex flex-col overflow-hidden text-slate-800">
@@ -310,17 +310,18 @@
                 <button onclick="closeModal('helpModal')" class="p-2 hover:bg-white/10 rounded-full transition-all text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto p-8 space-y-6 text-left" id="helpContent"></div>
-            <div class="p-4 bg-slate-50 text-center flex items-center justify-center">
+            <div class="p-4 bg-slate-50 flex items-center justify-center text-center">
                 <button onclick="closeModal('helpModal')" class="px-8 h-10 bg-slate-800 text-white font-black rounded-lg uppercase text-xs flex items-center justify-center text-center">Fermer</button>
             </div>
         </div>
     </div>
 
+    <!-- MODALE METIER -->
     <div id="addJobModal" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 text-left text-slate-800">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm text-left"></div>
-        <div class="relative bg-white w-full max-w-md rounded-[2rem] shadow-2xl modal-enter p-8 border-t-8 border-blue-600 text-left text-slate-800">
+        <div class="relative bg-white w-full max-w-md rounded-[2rem] shadow-2xl modal-enter p-8 border-t-8 border-blue-600 text-left">
             <h3 class="text-2xl font-black uppercase mb-6 text-center text-left">Nouveau Métier</h3>
-            <div class="space-y-5 text-left text-slate-800">
+            <div class="space-y-5 text-left text-slate-800 text-left">
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest text-left">Nom du métier</label>
                     <input type="text" id="modalJobName" placeholder="Ex: CONDUCTEUR..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 text-slate-800">
@@ -336,13 +337,14 @@
                     </div>
                 </div>
                 <div class="flex gap-3 pt-4 font-black justify-center text-center">
-                    <button onclick="closeModal('addJobModal')" class="flex-1 h-12 text-slate-500 hover:bg-slate-100 rounded-xl uppercase text-sm flex items-center justify-center">Annuler</button>
-                    <button onclick="confirmAddJob()" class="flex-1 h-12 bg-blue-600 text-white rounded-xl shadow-lg uppercase text-sm flex items-center justify-center">Créer</button>
+                    <button onclick="closeModal('addJobModal')" class="flex-1 h-12 text-slate-500 hover:bg-slate-100 rounded-xl uppercase text-sm flex items-center justify-center text-center">Annuler</button>
+                    <button onclick="confirmAddJob()" class="flex-1 h-12 bg-blue-600 text-white rounded-xl shadow-lg uppercase text-sm flex items-center justify-center text-center">Créer</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- MODALE EDIT REF -->
     <div id="editRefModal" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 text-left text-slate-800">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm text-left"></div>
         <div class="relative bg-white w-full max-w-4xl h-[85vh] rounded-[2rem] shadow-2xl modal-enter flex flex-col border-t-8 border-indigo-600 text-left text-slate-800">
@@ -358,25 +360,27 @@
         </div>
     </div>
 
+    <!-- MODALE COLLABORATEUR -->
     <div id="employeeModal" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 text-left text-slate-800">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm text-left"></div>
-        <div class="relative bg-white w-full max-w-lg rounded-[2rem] shadow-2xl modal-enter p-8 border-t-8 border-indigo-600 text-left text-slate-800">
-            <h3 id="employeeModalTitle" class="text-2xl font-black uppercase mb-6 text-center text-slate-800">Profil Collaborateur</h3>
-            <div class="space-y-6 text-left text-slate-800">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm text-left text-slate-800"></div>
+        <div class="relative bg-white w-full max-w-lg rounded-[2rem] shadow-2xl modal-enter p-8 border-t-8 border-indigo-600 text-left text-slate-800 text-left text-slate-800 text-left text-slate-800">
+            <h3 id="employeeModalTitle" class="text-2xl font-black uppercase mb-6 text-center text-left text-slate-800">Profil Collaborateur</h3>
+            <div class="space-y-6 text-left text-slate-800 text-left text-slate-800">
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest text-left text-slate-800">Identité (Nom Prénom)</label>
-                    <input type="text" id="modalEmpName" placeholder="NOM Prénom" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500 text-slate-700">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest text-left text-slate-800 text-left text-slate-800">Identité (Nom Prénom)</label>
+                    <input type="text" id="modalEmpName" placeholder="NOM Prénom" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500 text-slate-700 text-left">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest text-left text-slate-800">Affecter des métiers</label>
-                    <select id="modalEmpJobSelect" onchange="handleJobSelect(this.value)" class="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500 mb-4 cursor-pointer text-slate-700 text-left">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest text-left text-slate-800 text-left text-slate-800">Affecter des métiers</label>
+                    <select id="modalEmpJobSelect" onchange="handleJobSelect(this.value)" class="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500 mb-4 cursor-pointer text-slate-700 text-left text-left text-left">
                         <option value="">Cliquer pour ajouter un métier...</option>
                     </select>
-                    <div id="modalEmpSelectedJobs" class="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-2xl min-h-[60px] border border-slate-100 text-left text-slate-800"></div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-2 tracking-widest text-left text-slate-800 text-left text-left">Métiers rattachés :</p>
+                    <div id="modalEmpSelectedJobs" class="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-2xl min-h-[60px] border border-slate-100 text-left text-slate-800 text-left text-left text-left"></div>
                 </div>
                 <div class="flex gap-3 pt-4 border-t border-slate-100 font-black justify-center text-center">
-                    <button onclick="closeModal('employeeModal')" class="flex-1 h-12 text-slate-500 hover:bg-slate-100 rounded-xl uppercase text-sm flex items-center justify-center">Annuler</button>
-                    <button onclick="confirmEmployeeAction()" id="btnConfirmEmp" class="flex-1 h-12 bg-indigo-600 text-white rounded-xl shadow-lg uppercase tracking-wider text-sm flex items-center justify-center">Enregistrer</button>
+                    <button onclick="closeModal('employeeModal')" class="flex-1 h-12 text-slate-500 hover:bg-slate-100 rounded-xl uppercase text-sm flex items-center justify-center text-center">Annuler</button>
+                    <button onclick="confirmEmployeeAction()" id="btnConfirmEmp" class="flex-1 h-12 bg-indigo-600 text-white rounded-xl shadow-lg uppercase tracking-wider text-sm flex items-center justify-center text-center">Enregistrer</button>
                 </div>
             </div>
         </div>
@@ -390,18 +394,10 @@
         let currentEmpEditId = null;
         let importTargetJobId = null;
 
-        const HELP_CONTENT = {
-            dashboard_jobs: `<section class="space-y-4"><h4 class="text-indigo-600 font-black text-lg uppercase">Métiers</h4><p class="text-sm">Configurez ici vos métiers, les besoins cibles et la périodicité de suivi.</p></section>`,
-            dashboard_employees: `<section class="space-y-4"><h4 class="text-indigo-600 font-black text-lg uppercase">Annuaire</h4><p class="text-sm">Gérez vos agents et leurs affectations par liste déroulante.</p></section>`,
-            referentials: `<section class="space-y-4"><h4 class="text-indigo-600 font-black text-lg uppercase">Référentiels</h4><p class="text-sm">Structurez thèmes et points de contrôle. Utilisez l'import/export JSON.</p></section>`,
-            evaluations: `<section class="space-y-4"><h4 class="text-indigo-600 font-black text-lg uppercase">Suivi</h4><p class="text-sm">Le statut "À ÉVALUER" rouge s'active si le délai est dépassé.</p></section>`,
-            reporting: `<section class="space-y-4"><h4 class="text-indigo-600 font-black text-lg uppercase">Matrice</h4><p class="text-sm">Vérifiez si l'effectif cible autonome est atteint.</p></section>`
-        };
-
         // PERSISTANCE
-        function saveToLocal() { localStorage.setItem('kiho_final_data_v22_clean', JSON.stringify(state)); }
+        function saveToLocal() { localStorage.setItem('kiho_v22_local_simple', JSON.stringify(state)); }
         function loadFromLocal() {
-            const saved = localStorage.getItem('kiho_final_data_v22_clean');
+            const saved = localStorage.getItem('kiho_v22_local_simple');
             state = saved ? JSON.parse(saved) : { jobs: [], employees: [], evaluations: [] };
             renderDashboard();
         }
@@ -409,7 +405,18 @@
         // --- GESTION DES MODALES ---
         function closeWelcomeModal() { document.getElementById('welcomeModal').classList.add('hidden'); }
         function openManual() { document.getElementById('manualModal').classList.remove('hidden'); lucide.createIcons(); }
-        function openHelp(sec) { document.getElementById('helpContent').innerHTML = HELP_CONTENT[sec]; document.getElementById('helpModal').classList.remove('hidden'); lucide.createIcons(); }
+        function openHelp(sec) { 
+            const contents = {
+                dashboard_jobs: `<section class="space-y-4"><h4 class="text-indigo-600 font-black text-lg uppercase">Métiers</h4><p class="text-sm">Configurez ici vos métiers, les besoins cibles et la périodicité de suivi.</p></section>`,
+                dashboard_employees: `<section class="space-y-4"><h4 class="text-indigo-600 font-black text-lg uppercase">Annuaire</h4><p class="text-sm">Gérez vos agents et affectations par liste déroulante.</p></section>`,
+                referentials: `<section class="space-y-4"><h4 class="text-indigo-600 font-black text-lg uppercase">Référentiels</h4><p class="text-sm">Structurez thèmes et points de contrôle. Utilisez l'ouverture/enregistrement JSON.</p></section>`,
+                evaluations: `<section class="space-y-4"><h4 class="text-indigo-600 font-black text-lg uppercase">Suivi</h4><p class="text-sm">Le statut "À ÉVALUER" rouge s'active si le délai est dépassé.</p></section>`,
+                reporting: `<section class="space-y-4"><h4 class="text-indigo-600 font-black text-lg uppercase">Matrice</h4><p class="text-sm">Vérifiez si l'effectif cible autonome est atteint.</p></section>`
+            };
+            document.getElementById('helpContent').innerHTML = contents[sec]; 
+            document.getElementById('helpModal').classList.remove('hidden'); 
+            lucide.createIcons(); 
+        }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
         // --- MENU BURGER ---
@@ -423,10 +430,10 @@
                     </button>
                     <div class="h-px bg-slate-100 my-1"></div>
                     <button onclick="triggerImport()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-slate-50 font-bold transition-all text-left text-slate-700">
-                        <i data-lucide="upload" class="w-4 h-4 text-blue-500"></i> Importer base JSON
+                        <i data-lucide="upload" class="w-4 h-4 text-blue-500"></i> Ouvrir
                     </button>
                     <button onclick="exportData()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-slate-50 font-bold transition-all text-left text-slate-700">
-                        <i data-lucide="download" class="w-4 h-4 text-emerald-500"></i> Exporter base JSON
+                        <i data-lucide="download" class="w-4 h-4 text-emerald-500"></i> Enregistrer
                     </button>
                     <button onclick="resetData()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 font-bold border-t mt-1 text-left">
                         <i data-lucide="refresh-cw" class="w-4 h-4"></i> Réinitialiser l'App
@@ -489,22 +496,22 @@
         function renderDashboard() {
             const jList = document.getElementById('dashboardJobsList'); const jCount = document.getElementById('jobCount'); const eTable = document.getElementById('employeeTableBody');
             if(jCount) jCount.innerText = state.jobs.length;
-            if(jList) jList.innerHTML = state.jobs.map(job => '<div class="flex flex-col p-4 bg-white rounded-2xl border border-slate-100 group hover:bg-slate-50 text-left transition-all text-slate-800"><div class="flex items-center justify-between mb-3 text-slate-800"><span class="text-sm font-black truncate uppercase">' + job.title + '</span><button onclick="deleteJob(\'' + job.id + '\')" class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 text-left"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div><div class="space-y-2"><div class="flex items-center justify-between text-left"><label class="text-[9px] font-black uppercase text-slate-400">Cible</label><input type="number" value="' + (job.targetNeed || 0) + '" onchange="updateTargetNeed(\'' + job.id + '\', this.value)" class="w-16 bg-slate-50 border border-slate-200 rounded-lg text-center font-black text-blue-600 text-center"></div><div class="flex items-center justify-between text-left"><label class="text-[9px] font-black uppercase text-slate-400">Période (m)</label><input type="number" value="' + (job.periodicity || 12) + '" onchange="updateJobPeriod(\'' + job.id + '\', this.value)" class="w-16 bg-slate-50 border border-slate-200 rounded-lg text-center font-black text-emerald-600 text-center"></div></div></div>').join('');
-            if(eTable) eTable.innerHTML = state.employees.map(emp => '<tr class="hover:bg-indigo-50/30 transition-all border-b border-slate-50 text-left"><td class="py-4 px-4 font-bold min-w-[280px] text-slate-800">' + emp.name + '</td><td class="py-4"><div class="flex flex-wrap gap-1">' + emp.jobIds.map(jid => '<span class="bg-blue-50 text-blue-700 text-[9px] font-black px-2 py-0.5 rounded uppercase border border-blue-100">' + (state.jobs.find(x => x.id === jid)?.title || '---') + '</span>').join('') + '</div></td><td class="py-4 text-right px-6"><div class="flex items-center justify-end gap-1"><button onclick="openEditEmployeeModal(\'' + emp.id + '\')" class="p-2 text-slate-400 hover:text-blue-600 transition-all"><i data-lucide="pencil" class="w-4 h-4"></i></button><button onclick="deleteEmployee(\'' + emp.id + '\')" class="p-2 text-slate-400 hover:text-red-600 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td></tr>').join('');
+            if(jList) jList.innerHTML = state.jobs.map(job => '<div class="flex flex-col p-4 bg-white rounded-2xl border border-slate-100 group hover:bg-slate-50 text-left transition-all text-slate-800"><div class="flex items-center justify-between mb-3 text-slate-800"><span class="text-sm font-black truncate uppercase">' + job.title + '</span><button onclick="deleteJob(\'' + job.id + '\')" class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 text-left text-left"><i data-lucide="trash-2" class="w-4 h-4 text-left"></i></button></div><div class="space-y-2"><div class="flex items-center justify-between text-left"><label class="text-[9px] font-black uppercase text-slate-400 text-left">Cible</label><input type="number" value="' + (job.targetNeed || 0) + '" onchange="updateTargetNeed(\'' + job.id + '\', this.value)" class="w-16 bg-slate-50 border border-slate-200 rounded-lg text-center font-black text-blue-600 text-center text-left"></div><div class="flex items-center justify-between text-left"><label class="text-[9px] font-black uppercase text-slate-400 text-left">Période (m)</label><input type="number" value="' + (job.periodicity || 12) + '" onchange="updateJobPeriod(\'' + job.id + '\', this.value)" class="w-16 bg-slate-50 border border-slate-200 rounded-lg text-center font-black text-emerald-600 text-center text-left"></div></div></div>').join('');
+            if(eTable) eTable.innerHTML = state.employees.map(emp => '<tr class="hover:bg-indigo-50/30 transition-all border-b border-slate-50 text-left text-slate-800"><td class="py-4 px-4 font-bold min-w-[280px] text-slate-800 text-left">' + emp.name + '</td><td class="py-4 text-left"><div class="flex flex-wrap gap-1">' + emp.jobIds.map(jid => '<span class="bg-blue-50 text-blue-700 text-[9px] font-black px-2 py-0.5 rounded uppercase border border-blue-100 text-left">' + (state.jobs.find(x => x.id === jid)?.title || '---') + '</span>').join('') + '</div></td><td class="py-4 text-right px-6"><div class="flex items-center justify-end gap-1"><button onclick="openEditEmployeeModal(\'' + emp.id + '\')" class="p-2 text-slate-400 hover:text-blue-600 transition-all"><i data-lucide="pencil" class="w-4 h-4"></i></button><button onclick="deleteEmployee(\'' + emp.id + '\')" class="p-2 text-slate-400 hover:text-red-600 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td></tr>').join('');
             lucide.createIcons();
         }
 
         // --- RÉFÉRENTIELS LOGIC ---
         function renderReferentiels() {
             const grid = document.getElementById('jobsGrid'); if (!grid) return;
-            grid.innerHTML = state.jobs.map(job => `<div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm text-left"><div class="flex items-start justify-between mb-2 text-slate-800"><h4 class="font-black uppercase text-lg text-left">${job.title}</h4><div class="flex gap-1"><button onclick="printJobForm('${job.id}')" class="p-2 text-slate-400 hover:text-blue-600" title="Imprimer"><i data-lucide="printer" class="w-4 h-4"></i></button><button onclick="exportJobReferential('${job.id}')" class="p-2 text-slate-400 hover:text-emerald-500" title="Export"><i data-lucide="download" class="w-4 h-4"></i></button><button onclick="triggerJobImportInto('${job.id}')" class="p-2 text-slate-400 hover:text-blue-500" title="Import"><i data-lucide="upload" class="w-4 h-4"></i></button></div></div><p class="text-xs text-slate-400 font-bold uppercase mb-6">${job.themes.reduce((acc, t) => acc + t.skills.length, 0)} points</p><button onclick="openRefEditor('${job.id}')" class="w-full h-12 bg-slate-800 text-white font-bold rounded-2xl hover:bg-blue-600 uppercase text-xs flex items-center justify-center text-center">Configuration</button></div>`).join('');
+            grid.innerHTML = state.jobs.map(job => `<div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm text-left text-slate-800"><div class="flex items-start justify-between mb-2 text-slate-800"><h4 class="font-black uppercase text-lg text-left text-slate-800">${job.title}</h4><div class="flex gap-1"><button onclick="printJobForm('${job.id}')" class="p-2 text-slate-400 hover:text-blue-600" title="Imprimer"><i data-lucide="printer" class="w-4 h-4 text-left"></i></button><button onclick="exportJobReferential('${job.id}')" class="p-2 text-slate-400 hover:text-emerald-500" title="Enregistrer"><i data-lucide="download" class="w-4 h-4 text-left"></i></button><button onclick="triggerJobImportInto('${job.id}')" class="p-2 text-slate-400 hover:text-blue-500" title="Ouvrir"><i data-lucide="upload" class="w-4 h-4 text-left"></i></button></div></div><p class="text-xs text-slate-400 font-bold uppercase mb-6 text-left">${job.themes.reduce((acc, t) => acc + t.skills.length, 0)} points</p><button onclick="openRefEditor('${job.id}')" class="w-full h-12 bg-slate-800 text-white font-bold rounded-2xl hover:bg-blue-600 uppercase text-xs flex items-center justify-center text-center text-left">Configuration</button></div>`).join('');
             lucide.createIcons();
         }
         function openRefEditor(jid) { currentEditingJobId = jid; const job = state.jobs.find(j => j.id === jid); document.getElementById('editRefTitle').innerText = job.title; document.getElementById('editRefModal').classList.remove('hidden'); renderRefEditor(); }
         function renderRefEditor() {
             const job = state.jobs.find(j => j.id === currentEditingJobId);
             const container = document.getElementById('refEditorContent'); if (!container) return;
-            container.innerHTML = job.themes.map((theme, tIdx) => `<div class="bg-slate-50 rounded-[2rem] p-6 border border-slate-200 space-y-4 text-left"><div class="flex items-center justify-between text-slate-800"><input type="text" value="${theme.name}" onchange="updateThemeName(${tIdx}, this.value)" class="bg-transparent text-lg font-black border-b-2 border-transparent hover:border-slate-300 focus:border-blue-500 outline-none w-full uppercase"><button onclick="removeTheme(${tIdx})" class="text-slate-300 hover:text-red-500 ml-4"><i data-lucide="trash-2" class="w-5 h-5"></i></button></div><div class="space-y-2">${theme.skills.map((skill, sIdx) => `<div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm group"><input type="text" value="${skill}" onchange="updateSkillName(${tIdx}, ${sIdx}, this.value)" class="flex-1 text-sm text-slate-600 outline-none font-medium"><button onclick="removeSkill(${tIdx}, ${sIdx})" class="text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="x-circle" class="w-4 h-4"></i></button></div>`).join('')}<button onclick="addNewSkill(${tIdx})" class="w-full h-12 text-xs font-black text-blue-600 hover:bg-blue-50 border-2 border-dashed border-blue-100 rounded-xl mt-4 uppercase flex items-center justify-center text-center">+ Ajouter compétence</button></div></div>`).join('');
+            container.innerHTML = job.themes.map((theme, tIdx) => `<div class="bg-slate-50 rounded-[2rem] p-6 border border-slate-200 space-y-4 text-left text-slate-800 text-left"><div class="flex items-center justify-between text-slate-800 text-left"><input type="text" value="${theme.name}" onchange="updateThemeName(${tIdx}, this.value)" class="bg-transparent text-lg font-black border-b-2 border-transparent hover:border-slate-300 focus:border-blue-500 outline-none w-full uppercase text-left"><button onclick="removeTheme(${tIdx})" class="text-slate-300 hover:text-red-500 ml-4 text-left"><i data-lucide="trash-2" class="w-5 h-5 text-left"></i></button></div><div class="space-y-2 text-left">${theme.skills.map((skill, sIdx) => `<div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm group text-left text-slate-800 text-left text-left"><input type="text" value="${skill}" onchange="updateSkillName(${tIdx}, ${sIdx}, this.value)" class="flex-1 text-sm text-slate-600 outline-none font-medium text-left"><button onclick="removeSkill(${tIdx}, ${sIdx})" class="text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all text-left text-left"><i data-lucide="x-circle" class="w-4 h-4 text-left"></i></button></div>`).join('')}<button onclick="addNewSkill(${tIdx})" class="w-full h-12 text-xs font-black text-blue-600 hover:bg-blue-50 border-2 border-dashed border-blue-100 rounded-xl mt-4 uppercase flex items-center justify-center text-center text-left">+ Ajouter compétence</button></div></div>`).join('');
             lucide.createIcons();
         }
         function updateThemeName(idx, val) { const job = state.jobs.find(j => j.id === currentEditingJobId); job.themes[idx].name = val.toUpperCase(); saveToLocal(); }
@@ -520,7 +527,7 @@
             container.innerHTML = state.jobs.map(job => {
                 const empsInJob = state.employees.filter(e => e.jobIds.includes(job.id));
                 const totalSkills = job.themes.reduce((acc, t) => acc + t.skills.length, 0);
-                return `<div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden mx-2 text-left"><div class="p-6 border-b bg-slate-50"><h3 class="font-black uppercase text-xl">${job.title}</h3><p class="text-[10px] font-bold text-slate-400 uppercase mt-2">Fréquence : ${job.periodicity || 12} mois</p></div><div class="overflow-x-auto px-4 pb-6"><table class="eval-table w-full"><thead><tr><th class="min-w-[340px] pl-6 text-left">Collaborateur</th><th>Dernière évaluation</th><th class="text-center">Niveau Maîtrise</th><th class="text-right px-10">Statut</th></tr></thead><tbody>${empsInJob.length > 0 ? empsInJob.map(emp => {
+                return `<div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden mx-2 text-left text-slate-800"><div class="p-6 border-b bg-slate-50"><h3 class="font-black uppercase text-xl">${job.title}</h3><p class="text-[10px] font-bold text-slate-400 uppercase mt-2">Fréquence : ${job.periodicity || 12} mois</p></div><div class="overflow-x-auto px-4 pb-6 text-left text-slate-800"><table class="eval-table w-full text-left"><thead><tr><th class="min-w-[340px] pl-6 text-left">Collaborateur</th><th class="text-left text-left">Dernière évaluation</th><th class="text-center text-left text-left">Niveau Maîtrise</th><th class="text-right px-10 text-left text-left">Statut</th></tr></thead><tbody>${empsInJob.length > 0 ? empsInJob.map(emp => {
                     const lastEv = state.evaluations.filter(ev => ev.employeeId === emp.id && ev.jobId === job.id).sort((a,b) => new Date(b.date) - new Date(a.date))[0];
                     let mastery = 0; if(lastEv && totalSkills > 0) {
                         const countAuto = Object.values(lastEv.scores).filter(s => s >= 2).length;
@@ -528,8 +535,8 @@
                     }
                     let isDue = true; const jobPeriod = job.periodicity || 12;
                     if(lastEv) { const now = new Date(); const lastDate = new Date(lastEv.date); if(((now.getFullYear() - lastDate.getFullYear()) * 12 + (now.getMonth() - lastDate.getMonth())) < jobPeriod) isDue = false; }
-                    return `<tr class="hover:bg-slate-50/50 transition-all text-left text-slate-700"><td class="font-bold pr-10 min-w-[340px] pl-6 text-slate-900">${emp.name}</td><td class="text-[11px] font-black text-slate-500 uppercase">${lastEv ? new Date(lastEv.date).toLocaleDateString('fr-FR') : '---'}</td><td class="text-center text-left"><div class="text-xs font-black text-blue-700">${lastEv ? mastery + '%' : '-'}</div></td><td class="text-right px-10 min-w-[160px] text-left">${isDue ? `<button onclick="startNewEvaluation('${emp.id}', '${job.id}')" class="inline-flex items-center gap-2 text-red-600 font-black text-[11px] uppercase hover:underline text-left"><i data-lucide="alert-circle" class="w-4 h-4"></i> À ÉVALUER</button>` : `<div class="inline-flex items-center gap-2 text-emerald-600 font-black text-[11px] uppercase text-left"><i data-lucide="check-circle" class="w-4 h-4"></i> À jour</div>`}</td></tr>`;
-                }).join('') : `<tr><td colspan="4" class="py-10 text-center text-slate-300 italic text-left">Aucun agent affecté.</td></tr>`}</tbody></table></div></div>`;
+                    return `<tr class="hover:bg-slate-50/50 transition-all text-left text-slate-700 text-left text-slate-800"><td class="font-bold pr-10 min-w-[340px] pl-6 text-slate-900 text-left">${emp.name}</td><td class="text-[11px] font-black text-slate-500 uppercase text-left">${lastEv ? new Date(lastEv.date).toLocaleDateString('fr-FR') : '---'}</td><td class="text-center text-left text-left text-left"><div class="text-xs font-black text-blue-700 text-left text-left text-left">${lastEv ? mastery + '%' : '-'}</div></td><td class="text-right px-10 min-w-[160px] text-left text-left text-left">${isDue ? `<button onclick="startNewEvaluation('${emp.id}', '${job.id}')" class="inline-flex items-center gap-2 text-red-600 font-black text-[11px] uppercase hover:underline text-left text-left text-left text-left"><i data-lucide="alert-circle" class="w-4 h-4 text-left"></i> À ÉVALUER</button>` : `<div class="inline-flex items-center gap-2 text-emerald-600 font-black text-[11px] uppercase text-left text-left text-left text-left text-left text-left text-left text-left text-left"><i data-lucide="check-circle" class="w-4 h-4 text-left"></i> À jour</div>`}</td></tr>`;
+                }).join('') : `<tr><td colspan="4" class="py-10 text-center text-slate-300 italic text-left text-left text-left">Aucun agent affecté.</td></tr>`}</tbody></table></div></div>`;
             }).join('');
             lucide.createIcons();
         }
@@ -542,10 +549,10 @@
             document.getElementById('evaluationList').classList.add('hidden'); document.getElementById('evaluationFormContainer').classList.remove('hidden');
             document.getElementById('evalFormTitle').innerText = emp.name; document.getElementById('evalFormJob').innerText = job.title; document.getElementById('evalFormDate').innerText = new Date().toLocaleDateString('fr-FR');
             const content = document.getElementById('evalFormContent');
-            content.innerHTML = job.themes.map((theme, tIdx) => `<div class="space-y-6 text-left"><div class="flex items-center justify-between border-l-4 border-indigo-600 pl-4 py-1 text-left"><h3 class="text-xl font-black uppercase tracking-tight text-left text-slate-800">${theme.name}</h3><div id="theme-score-${tIdx}" class="score-badge score-0">?</div></div><div class="grid grid-cols-1 gap-4">` + 
+            content.innerHTML = job.themes.map((theme, tIdx) => `<div class="space-y-6 text-left text-slate-800 text-left"><div class="flex items-center justify-between border-l-4 border-indigo-600 pl-4 py-1 text-left text-slate-800"><h3 class="text-xl font-black uppercase tracking-tight text-left text-slate-800">${theme.name}</h3><div id="theme-score-${tIdx}" class="score-badge score-0 text-left">?</div></div><div class="grid grid-cols-1 gap-4">` + 
                 theme.skills.map((skill, sIdx) => {
                     const key = theme.id + '-' + sIdx; const ps = last?.scores[key];
-                    return `<div class="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm text-left text-slate-800"><div class="flex flex-col md:flex-row gap-6 text-left text-slate-800"><div class="flex-1 text-slate-700 text-left text-slate-800"><p class="font-bold mb-1 leading-snug text-slate-900">${skill}</p>${ps !== undefined ? `<div class="prev-eval-box text-left"><div class="flex items-center gap-2 font-black uppercase text-[8px] text-slate-400 text-left">Précédent : <span class="score-badge score-${ps} !w-5 !h-5 !text-[8px] ml-1 text-slate-700">${ps}</span></div></div>` : ''}<textarea oninput="updateTempComment('${key}', this.value)" class="w-full h-16 p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none mt-4 font-medium text-left" placeholder="Observations..."></textarea></div><div class="md:w-48 shrink-0 text-left"><select onchange="updateTempScore('${key}', this.value, ${tIdx})" class="w-full h-12 p-3 bg-slate-50 border border-slate-200 rounded-xl font-black text-indigo-700 outline-none text-sm cursor-pointer shadow-sm"><option value="0">0 - Non acquis</option><option value="1">1 - Accompagné</option><option value="2">2 - Sait faire</option><option value="3">3 - Sait former</option></select></div></div></div>`;
+                    return `<div class="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm text-left text-slate-800"><div class="flex flex-col md:flex-row gap-6 text-left text-slate-800 text-left"><div class="flex-1 text-slate-700 text-left text-slate-800 text-left text-left text-left text-left"><p class="font-bold mb-1 leading-snug text-slate-900 text-left text-left text-left">${skill}</p>${ps !== undefined ? `<div class="prev-eval-box text-left text-left text-left text-left"><div class="flex items-center gap-2 font-black uppercase text-[8px] text-slate-400 text-left text-left text-left">Précédent : <span class="score-badge score-${ps} !w-5 !h-5 !text-[8px] ml-1 text-slate-700 text-left text-left text-left text-left">${ps}</span></div></div>` : ''}<textarea oninput="updateTempComment('${key}', this.value)" class="w-full h-16 p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none mt-4 font-medium text-left text-left text-left text-left text-left text-left text-left" placeholder="Observations..."></textarea></div><div class="md:w-48 shrink-0 text-left text-left text-left"><select onchange="updateTempScore('${key}', this.value, ${tIdx})" class="w-full h-12 p-3 bg-slate-50 border border-slate-200 rounded-xl font-black text-indigo-700 outline-none text-sm cursor-pointer shadow-sm text-left text-left text-left text-left text-left"><option value="0">0 - Non acquis</option><option value="1">1 - Accompagné</option><option value="2">2 - Sait faire</option><option value="3">3 - Sait former</option></select></div></div></div>`;
                 }).join('') + '</div></div>').join('');
             lucide.createIcons();
         }
@@ -562,7 +569,7 @@
             const job = state.jobs.find(j => j.id === window.currentEvaluatingJobId);
             const gts = job.themes.map((theme) => { const ts = theme.skills.map((_, sIdx) => window.tempEvaluation.scores[theme.id + '-' + sIdx] || 0); return Math.min(...ts); });
             state.evaluations.push({ id: 'ev'+Date.now(), employeeId: window.currentEvaluatingEmployeeId, jobId: window.currentEvaluatingJobId, date: new Date().toISOString().split('T')[0], scores: { ...window.tempEvaluation.scores }, comments: { ...window.tempEvaluation.comments }, globalThemeScores: gts });
-            saveToLocal(); closeEvaluationForm(); showMessage("Évaluation enregistrée !");
+            saveToLocal(); closeEvaluationForm(); showMessage("Enregistré !");
         }
         function closeEvaluationForm() { document.getElementById('evaluationFormContainer').classList.add('hidden'); renderEvaluationsList(); }
 
@@ -580,24 +587,24 @@
             if(!job || emps.length === 0) { table.innerHTML = ''; return; }
             let headersArr = []; job.themes.forEach(t => { t.skills.forEach((s, sIdx) => headersArr.push({ text: s, key: t.id + '-' + sIdx })); });
             let html = `<thead><tr><th class="sticky-col min-w-[280px] bg-slate-300 text-black text-left">Collaborateur</th>`;
-            headersArr.forEach(h => { html += `<th class="min-w-[120px] text-center text-black"><div class="line-clamp-2 leading-tight py-2 text-center text-xs font-black uppercase text-left">${h.text}</div></th>`; });
-            html += `<th class="text-center bg-indigo-100 text-indigo-700 font-black min-w-[100px] text-xs">Maîtrise (%)</th></tr></thead><tbody>`;
+            headersArr.forEach(h => { html += `<th class="min-w-[120px] text-center text-black text-left text-left"><div class="line-clamp-2 leading-tight py-2 text-left text-left text-left">${h.text}</div></th>`; });
+            html += `<th class="text-center bg-indigo-100 text-indigo-700 font-black min-w-[100px] text-left">Maîtrise (%)</th></tr></thead><tbody>`;
             const coverage = {}; headersArr.forEach(h => coverage[h.key] = 0);
             emps.forEach(emp => {
                 const ev = state.evaluations.filter(x => x.employeeId === emp.id && x.jobId === jid).sort((a,b) => new Date(b.date) - new Date(a.date))[0];
-                let count = 0; html += `<tr><td class="sticky-col font-bold text-slate-800 text-left">${emp.name}</td>`;
+                let count = 0; html += `<tr><td class="sticky-col font-bold text-slate-800 text-left text-left text-left text-left text-left text-left text-left text-left">${emp.name}</td>`;
                 headersArr.forEach(h => {
                     const sc = (ev && ev.scores[h.key] !== undefined) ? ev.scores[h.key] : null;
                     if (sc !== null && sc >= 2) { count++; coverage[h.key]++; }
                     const bClass = sc !== null ? 'score-' + sc : 'bg-slate-50 text-slate-300 opacity-30';
-                    html += `<td class="text-center text-left"><div class="score-badge ${bClass} mx-auto text-left">${sc !== null ? sc : '-'}</div></td>`;
+                    html += `<td class="text-center text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left"><div class="score-badge ${bClass} mx-auto text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">${sc !== null ? sc : '-'}</div></td>`;
                 });
                 const rate = headersArr.length > 0 ? ((count / headersArr.length) * 100).toFixed(0) : 0;
-                html += `<td class="text-center font-black text-indigo-600 bg-indigo-50/30 text-center text-sm">${rate}%</td></tr>`;
+                html += `<td class="text-center font-black text-indigo-600 bg-indigo-50/30 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">${rate}%</td></tr>`;
             });
-            html += `<tr class="footer-row text-left text-slate-800"><td class="sticky-col !bg-indigo-700 !text-white p-4 font-bold text-xs uppercase">Couverture (%) <br><span class="text-[9px] font-normal italic opacity-80 text-left">Besoin: ${job.targetNeed}</span></td>`;
-            headersArr.forEach(h => { const count = coverage[h.key]; const rate = job.targetNeed > 0 ? ((count / job.targetNeed) * 100).toFixed(0) : 0; const col = rate >= 100 ? 'text-emerald-700' : (rate >= 70 ? 'text-blue-700' : 'text-red-500'); html += `<td class="text-center font-black ${col} text-center font-bold text-sm">${rate}%</td>`; });
-            html += `<td class="bg-indigo-100 text-center"></td></tr></tbody>`;
+            html += `<tr class="footer-row text-left text-slate-800 text-left text-left text-left text-left"><td class="sticky-col !bg-indigo-700 !text-white p-4 font-bold text-left text-left text-left text-left text-left text-left text-left text-left text-left">Couverture (%) <br><span class="text-[9px] font-normal italic opacity-80 text-left text-left text-left text-left text-left text-left text-left text-left text-left">Besoin: ${job.targetNeed}</span></td>`;
+            headersArr.forEach(h => { const count = coverage[h.key]; const rate = job.targetNeed > 0 ? ((count / job.targetNeed) * 100).toFixed(0) : 0; const col = rate >= 100 ? 'text-emerald-700' : (rate >= 70 ? 'text-blue-700' : 'text-red-500'); html += `<td class="text-center font-black ${col} text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">${rate}%</td>`; });
+            html += `<td class="bg-indigo-100 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left"></td></tr></tbody>`;
             table.innerHTML = html; lucide.createIcons();
         }
 
@@ -661,7 +668,7 @@
                         } else {
                             state.jobs.push({ id: 'j' + Date.now(), title: (d.title || "IMPORT").toUpperCase(), targetNeed: 1, periodicity: 12, themes: d.themes });
                         }
-                        saveToLocal(); renderReferentiels(); showMessage("Référentiel chargé !");
+                        saveToLocal(); renderReferentiels(); showMessage("Ouvert !");
                     }
                 } catch (err) { alert("JSON invalide."); }
             }; r.readAsText(f); event.target.value = '';
@@ -673,17 +680,23 @@
                 try {
                     const d = JSON.parse(e.target.result);
                     if (d.jobs && d.employees) { state = d; saveToLocal(); location.reload(); }
-                } catch (err) { alert("Base corrompue."); }
+                } catch (err) { alert("Format de base invalide."); }
             }; r.readAsText(f);
         }
-        function exportData() { const b = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `kiho_data.json`; a.click(); }
-        function resetData() { if(confirm("Supprimer toutes les données ?")) { localStorage.removeItem('kiho_final_data_v22_clean'); location.reload(); } }
+        function exportData() { 
+            const b = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }); 
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(b); 
+            a.download = `kiho_data.json`; 
+            a.click(); 
+        }
+        function resetData() { if(confirm("Supprimer toutes les données ?")) { localStorage.removeItem('kiho_v22_local_simple'); location.reload(); } }
 
-        function initJobSelect() { const sel = document.getElementById('modalEmpJobSelect'); if(sel) sel.innerHTML = '<option value="">Cliquer pour ajouter...</option>' + state.jobs.map(j => `<option value="${j.id}">${j.title}</option>`).join(''); }
+        function initJobSelect() { const sel = document.getElementById('modalEmpJobSelect'); if(sel) sel.innerHTML = '<option value="">Ajouter un métier...</option>' + state.jobs.map(j => `<option value="${j.id}">${j.title}</option>`).join(''); }
         function renderSelectedJobsList() {
             const container = document.getElementById('modalEmpSelectedJobs'); if(!container) return;
-            if(tempEmpSelection.length === 0) { container.innerHTML = `<p class="text-[10px] text-slate-400 italic m-auto text-left">Aucun métier affecté</p>`; return; }
-            container.innerHTML = tempEmpSelection.map(jid => `<div onclick="removeJobFromTemp('${jid}')" class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase cursor-pointer hover:bg-red-500 transition-all shadow-sm">${state.jobs.find(j => j.id === jid)?.title || '---'}<i data-lucide="x" class="w-3 h-3"></i></div>`).join('');
+            if(tempEmpSelection.length === 0) { container.innerHTML = `<p class="text-[10px] text-slate-400 italic m-auto text-left">Aucun métier</p>`; return; }
+            container.innerHTML = tempEmpSelection.map(jid => `<div onclick="removeJobFromTemp('${jid}')" class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase cursor-pointer hover:bg-red-500 transition-all shadow-sm text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">${state.jobs.find(j => j.id === jid)?.title || '---'}<i data-lucide="x" class="w-3 h-3 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left"></i></div>`).join('');
             lucide.createIcons();
         }
         function handleJobSelect(jid) { if(!jid) return; if(!tempEmpSelection.includes(jid)) { tempEmpSelection.push(jid); renderSelectedJobsList(); } document.getElementById('modalEmpJobSelect').value = ""; }
