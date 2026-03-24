@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-     <link rel="manifest" href="manifest.json">
     <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -651,7 +650,7 @@
                                 <h3 class="text-xl font-black text-slate-800 uppercase italic">Évaluation KIHO</h3>
                                 <button onclick="openHelpModal('eval-kiho')" class="text-indigo-500 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-lg transition-colors flex items-center gap-1.5" title="Comment remplir cette étape ?"><i data-lucide="help-circle" class="w-4 h-4"></i><span class="text-[10px] font-black uppercase tracking-widest">Guide</span></button>
                             </div>
-                            <p class="text-sm text-slate-500 mt-1 font-medium">Évaluation de la maturité des rituels et standards pour les postes de management.</p>
+                            <p class="text-sm text-slate-500 mt-1 font-medium">Évaluation de la maturité des rituels et standards pour les postes de management et processus.</p>
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="relative">
@@ -927,16 +926,18 @@
         const KIHO_STANDARDS = [
             { id: 's1', name: "Point quotidien", title: "Rituel quotidien manager / équipe", category: 'pratiques' },
             { id: 's2', name: "Point info. conducteur", title: "Rituel hebdo/mensuel manager / conducteurs", category: 'pratiques' },
-            { id: 's3', name: "Tournée terrain", title: "Présence terrain", category: 'pratiques' },
+            { id: 's3', name: "Tournée terrain", title: "Présence terrain", category: 'pratiques', type: 'pilotage_manager' },
             { id: 's4', name: "Revue de perf.", title: "Rituel mensuel d'analyse", category: 'pratiques' },
-            { id: 's5', name: "Réunion de coord.", title: "Réunion inter-services", category: 'pratiques' },
+            { id: 's5', name: "Réunion de coord.", title: "Réunion inter-services", category: 'pratiques', type: 'binome' },
             { id: 's6', name: "Résolution problèmes", title: "Démarche structurée", category: 'amelioration' },
             { id: 's7', name: "Démarche 5S", title: "Organisation des espaces", category: 'amelioration' },
-            { id: 's8', name: "Audit de conduite", title: "Audits sur la conduite et respect", category: 'pratiques' },
+            { id: 's8', name: "Audit de conduite", title: "Audits sur la conduite et respect", category: 'pratiques', type: 'pilotage_manager' },
             { id: 's9', name: "Gestion compétences", title: "Évaluation et matrice", category: 'processus' },
-            { id: 's10', name: "Processus (SIPOC)", title: "Formalisation des SIPOC", category: 'processus' },
+            { id: 's10', name: "Formalisation des processus", title: "Formalisation des SIPOC", category: 'processus' },
             { id: 's11', name: "Note d'organisation", title: "Document chapeau filiale", category: 'processus' },
-            { id: 's12', name: "Pratique stratégie", title: "Déclinaison en plans d'actions", category: 'processus' }
+            { id: 's12', name: "Pratique stratégie", title: "Déclinaison en plans d'actions", category: 'processus' },
+            { id: 's13', name: "Pilotage tournées terrain", title: "Pilotage global des tournées", category: 'processus' },
+            { id: 's14', name: "Pilotage audits de conduite", title: "Pilotage global des audits", category: 'processus' }
         ];
 
         const KIHO_SCALES = {
@@ -997,6 +998,18 @@
                 { val: 'niv2', label: 'Niveau 2 : Objectifs définis et communiqués', color: 'amber' },
                 { val: 'niv3', label: 'Niveau 3 : Plans d\'actions formalisés et suivis', color: 'blue' },
                 { val: 'niv4', label: 'Niveau 4 : Déclinée en plans d\'actions mesurables', color: 'green' }
+            ],
+            s13: [
+                { val: 'niv1', label: 'Niveau 1 : Informelles, non tracées', color: 'slate' },
+                { val: 'niv2', label: 'Niveau 2 : Planifiées et tracées', color: 'amber' },
+                { val: 'niv3', label: 'Niveau 3 : Planifiées, tracées et analysées', color: 'blue' },
+                { val: 'niv4', label: 'Niveau 4 : Intégrées AC avec suivi KPI', color: 'green' }
+            ],
+            s14: [
+                { val: 'niv1', label: 'Niveau 1 : Ponctuels, non planifiés', color: 'slate' },
+                { val: 'niv2', label: 'Niveau 2 : Planifiés et tracés', color: 'amber' },
+                { val: 'niv3', label: 'Niveau 3 : Analysés et partagés', color: 'blue' },
+                { val: 'niv4', label: 'Niveau 4 : Intégrés dans plan d\'amélioration', color: 'green' }
             ]
         };
 
@@ -1278,15 +1291,16 @@
                     
                     <ul class="text-[10px] text-slate-600 space-y-3">
                         <li class="flex gap-2"><span class="font-bold text-slate-800">1.</span> <span>Choisissez une catégorie via les boutons colorés (Pratiques Managériales, Amélioration Continue, Gestion des Processus).</span></li>
-                        <li class="flex gap-2"><span class="font-bold text-slate-800">2.</span> <span>Sélectionnez le Standard KIHO spécifique dans le menu déroulant (Ex: S1 - Point quotidien).</span></li>
-                        <li class="flex gap-2"><span class="font-bold text-slate-800">3.</span> <span>Le tableau affiche automatiquement tous les postes marqués comme "Manager" dans votre organigramme (ou les processus pour S9/S10).</span></li>
-                        <li class="flex gap-2"><span class="font-bold text-slate-800">4.</span> <span>Attribuez un niveau de maturité et ajoutez un commentaire ou plan d'action (qui sera repris dans les rapports PDF).</span></li>
+                        <li class="flex gap-2"><span class="font-bold text-slate-800">2.</span> <span>Sélectionnez le Standard KIHO spécifique dans le menu déroulant (Ex: Point quotidien).</span></li>
+                        <li class="flex gap-2"><span class="font-bold text-slate-800">3.</span> <span>Utilisez le filtre <strong>Périmètre (Manager & Équipe)</strong> pour cibler l'évaluation sur un responsable spécifique et ses subordonnés. (Ce filtre se masque automatiquement si le standard s'évalue globalement).</span></li>
+                        <li class="flex gap-2"><span class="font-bold text-slate-800">4.</span> <span>Attribuez un niveau de maturité et ajoutez un commentaire ou plan d'action (qui sera repris dans les exports PDF).</span></li>
                     </ul>
 
                     <div class="bg-slate-100 p-4 rounded-xl mt-4">
-                        <h5 class="text-[10px] font-black text-slate-700 uppercase mb-2">Cas Spéciaux</h5>
-                        <p class="text-[9px] text-slate-600 mb-2"><strong>S3 / S8 :</strong> Une note "Pilotage" globale s'ajoute en haut du tableau pour évaluer la planification globale de ces rituels.</p>
-                        <p class="text-[9px] text-slate-600"><strong>S5 (Réunion de coord.) :</strong> L'évaluation se fait par paires de managers. Cliquez sur "Ajouter un binôme" pour évaluer la qualité de la communication inter-services.</p>
+                        <h5 class="text-[10px] font-black text-slate-700 uppercase mb-2">Cas Spéciaux (Évaluations Globales)</h5>
+                        <p class="text-[9px] text-slate-600 mb-2"><strong>Tournées terrain & Audits :</strong> Une note "Pilotage global" s'ajoute en haut du tableau pour évaluer la planification de ces rituels au niveau de l'établissement.</p>
+                        <p class="text-[9px] text-slate-600 mb-2"><strong>Réunion de coord. :</strong> L'évaluation se fait par paires de managers. Cliquez sur "Ajouter un binôme" pour évaluer la qualité de la communication inter-services.</p>
+                        <p class="text-[9px] text-slate-600"><strong>Standards Entité (Stratégie, Note d'orga, Pilotage tournées) :</strong> Sont évalués sur une ligne unique "Filiale / Établissement".</p>
                     </div>
                 </div>
             `
@@ -2476,509 +2490,7 @@
         function openResetModal() { document.getElementById('reset-modal').classList.remove('hidden'); }
         function closeResetModal() { document.getElementById('reset-modal').classList.add('hidden'); }
 
-        // ================= KIHO EVALUATION LOGIC (RESTORED) =================
-        function changeKihoStandard(stdId) {
-            appData.currentKihoStandardId = stdId;
-            renderKihoEvaluation();
-        }
-
-        function saveKihoVal(key, val) {
-            if(!appData.kihoEvaluation) appData.kihoEvaluation = {};
-            appData.kihoEvaluation[key] = val;
-        }
-
-        function saveKihoComment(key, val) {
-            if(!appData.kihoEvaluation) appData.kihoEvaluation = {};
-            appData.kihoEvaluation[key] = val;
-        }
-
-        function setKihoCategory(cat) {
-            appData.activeKihoCategory = cat;
-            ['pratiques', 'amelioration', 'processus'].forEach(c => {
-                const btn = document.getElementById('btn-cat-' + c);
-                if(btn) {
-                    if(c === cat) {
-                        btn.className = "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition shadow-sm border border-indigo-200 bg-indigo-600 text-white";
-                    } else {
-                        btn.className = "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition shadow-sm border border-slate-200 bg-white text-slate-600 hover:bg-slate-50";
-                    }
-                }
-            });
-
-            const filter = document.getElementById('kiho-standard-filter');
-            if (!filter) return;
-            filter.innerHTML = "";
-            const filteredStandards = KIHO_STANDARDS.filter(s => s.category === cat);
-            filteredStandards.forEach(std => {
-                filter.appendChild(new Option(`${std.id.toUpperCase().replace('S','')} - ${std.name}`, std.id));
-            });
-
-            if (appData.currentKihoStandardId && filteredStandards.some(s => s.id === appData.currentKihoStandardId)) {
-                changeKihoStandard(appData.currentKihoStandardId);
-            } else if (filteredStandards.length > 0) {
-                changeKihoStandard(filteredStandards[0].id);
-            }
-        }
-
-  function renderKihoEvaluation() {
-            const tb = document.getElementById('kiho-table-body');
-            const filter = document.getElementById('kiho-standard-filter');
-            const mgrFilterCont = document.getElementById('kiho-manager-filter-container');
-            const selectedManagerId = document.getElementById('kiho-manager-filter')?.value;
-            
-            if(!tb || !filter) return;
-
-            const currentStdId = appData.currentKihoStandardId || KIHO_STANDARDS[0].id;
-            filter.value = currentStdId;
-            const std = KIHO_STANDARDS.find(s => s.id === currentStdId);
-
-            let items = [];
-            let isProcess = false;
-            let isFiliale = false;
-
-            const th = document.querySelector('#view-kiho table thead tr th:first-child');
-            
-            // Masquer ou afficher le filtre manager selon le standard évalué
-            if (mgrFilterCont) {
-                if (std.id === 's11' || std.id === 's12' || std.id === 's9' || std.id === 's10' || std.type === 'binome') {
-                    mgrFilterCont.classList.add('hidden');
-                } else {
-                    mgrFilterCont.classList.remove('hidden');
-                }
-            }
-
-            if (std.id === 's11' || std.id === 's12') {
-                items = [{ id: 'filiale', name: 'Filiale / Établissement', title: 'Filiale / Établissement' }];
-                isFiliale = true;
-                if (th) th.innerText = 'Entité';
-            } else if (std.id === 's9' || std.id === 's10') {
-                items = getProcessList().filter(p => !p.isExcluded);
-                isProcess = true;
-                if (th) th.innerText = 'Processus';
-            } else if (std.type === 'binome') {
-                items = appData.roles.filter(r => r.isManager);
-                if (th) th.innerText = 'Binômes';
-            } else {
-                // Application du filtre de périmètre (Manager + Équipe subordonnée)
-                if (selectedManagerId && selectedManagerId !== 'all') {
-                    items = getManagerAndSubordinates(selectedManagerId).sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }));
-                } else {
-                    items = [...appData.roles].filter(r => r.isManager).sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }));
-                }
-                if (th) th.innerText = 'Managers';
-            }
-
-            if (std.type !== 'binome' && items.length === 0) {
-                tb.innerHTML = `<tr><td colspan="3" class="p-10 text-center text-slate-400 italic font-bold text-xs">Aucun élément défini.</td></tr>`;
-                return;
-            }
-
-            let bodyHtml = '';
-
-            const renderEvalRow = (item, baseKey, titleText, subText, indent = false) => {
-                const valKey = `${baseKey}_${std.id}`;
-                const commentKey = `${baseKey}_${std.id}_comment`;
-                const val = appData.kihoEvaluation?.[valKey] || '';
-                const comment = appData.kihoEvaluation?.[commentKey] || '';
-                const scale = KIHO_SCALES[std.id] || KIHO_SCALES.base;
-                
-                let optionsHtml = `<option value="" ${val===''?'selected':''}>Choisir un niveau...</option>`;
-                scale.forEach(opt => {
-                    optionsHtml += `<option value="${opt.val}" ${val===opt.val?'selected':''}>${opt.label}</option>`;
-                });
-
-                return `
-                <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td class="py-4 px-6 align-top border-r border-slate-100 w-1/4">
-                        <div class="text-[11px] font-black uppercase text-slate-800 leading-tight ${indent ? 'pl-4 border-l-2 border-indigo-200' : ''}">${titleText}</div>
-                        ${subText}
-                    </td>
-                    <td class="py-4 px-6 align-top border-r border-slate-100 w-1/4">
-                        <select onchange="saveKihoVal('${valKey}', this.value); renderKihoEvaluation()" class="w-full text-[10px] font-bold outline-none rounded-xl border-2 p-3 cursor-pointer appearance-none shadow-sm ${getKihoColorClass(val, std.id)}">
-                            ${optionsHtml}
-                        </select>
-                    </td>
-                    <td class="py-4 px-6 align-top w-1/2">
-                        <textarea oninput="saveKihoComment('${commentKey}', this.value)" rows="2" class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-medium outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all resize-y shadow-sm" placeholder="Ajouter des observations ou actions...">${comment}</textarea>
-                    </td>
-                </tr>`;
-            };
-
-            if (std.type === 'pilotage_manager') {
-                const pKey = `${std.id}_pilotage`;
-                const cKey = `${pKey}_comment`;
-                const val = appData.kihoEvaluation?.[pKey] || '';
-                const comm = appData.kihoEvaluation?.[cKey] || '';
-                const pScale = KIHO_SCALES[`${std.id}_pilotage`];
-                
-                let opts = `<option value="" ${val===''?'selected':''}>Maturité du pilotage...</option>`;
-                pScale.forEach(o => { opts += `<option value="${o.val}" ${val===o.val?'selected':''}>${o.label}</option>`; });
-
-                bodyHtml += `
-                <tr class="bg-indigo-50 border-b-2 border-indigo-100">
-                    <td class="py-4 px-6 align-top border-r border-indigo-100">
-                        <div class="text-[11px] font-black uppercase text-indigo-800">Pilotage global</div>
-                        <div class="text-[9px] text-indigo-500 font-bold mt-1">S3/S8</div>
-                    </td>
-                    <td class="py-4 px-6 align-top border-r border-indigo-100">
-                        <select onchange="saveKihoVal('${pKey}', this.value); renderKihoEvaluation()" class="w-full text-[10px] font-bold outline-none rounded-xl border-2 p-3 cursor-pointer appearance-none shadow-sm ${getKihoColorClass(val, std.id+'_pilotage')}">${opts}</select>
-                    </td>
-                    <td class="py-4 px-6 align-top w-1/2">
-                        <textarea oninput="saveKihoComment('${cKey}', this.value)" rows="2" class="w-full bg-white border border-indigo-200 rounded-xl p-3 text-xs font-medium outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 shadow-sm" placeholder="Commentaire pilotage...">${comm}</textarea>
-                    </td>
-                </tr>
-                `;
-            }
-
-            if (std.type === 'binome') {
-                const bins = appData.kihoEvaluation?.s5_binomes || [];
-                const mgrs = [...appData.roles].filter(r => r.isManager).sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }));
-                
-                let binHtml = `
-                <tr><td colspan="3" class="p-4">
-                <button onclick="addS5Binome()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase mb-4">+ Ajouter Binôme</button>
-                <div class="space-y-4">
-                    ${bins.map((b,i)=>`
-                    <div class="bg-slate-50 p-4 rounded-3xl grid grid-cols-1 md:grid-cols-4 gap-4 items-center border border-slate-200">
-                        <select oninput="updateS5(${i},'m1',this.value)" class="p-2 border rounded-xl text-[10px]"><option value="">Manager 1...</option>${mgrs.map(r=>`<option value="${r.id}" ${b.m1===r.id?'selected':''}>${r.title}${r.depot ? ` (${r.depot})` : ''}</option>`).join('')}</select>
-                        <select oninput="updateS5(${i},'m2',this.value)" class="p-2 border rounded-xl text-[10px]"><option value="">Manager 2...</option>${mgrs.map(r=>`<option value="${r.id}" ${b.m2===r.id?'selected':''}>${r.title}${r.depot ? ` (${r.depot})` : ''}</option>`).join('')}</select>
-                        <select oninput="updateS5(${i},'val',this.value);renderKihoEvaluation()" class="p-2 border-2 rounded-xl text-[10px] font-bold ${getKihoColorClass(b.val,'base')}"><option value="">Niveau...</option>${KIHO_SCALES.base.map(o=>`<option value="${o.val}" ${b.val===o.val?'selected':''}>${o.label}</option>`).join('')}</select>
-                        <div class="flex gap-2"><textarea oninput="updateS5(${i},'comment',this.value)" class="flex-1 p-2 border rounded-xl text-xs" rows="1" placeholder="Commentaires...">${b.comment||''}</textarea><button onclick="removeS5(${i})" class="text-red-400 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>
-                    </div>`).join('')}
-                </div>
-                </td></tr>`;
-                bodyHtml += binHtml;
-            } else if (isProcess) {
-                appData.categories.forEach(cat => {
-                    cat.macros.forEach(macro => {
-                        macro.intermediaries.forEach(inter => {
-                            const validProcs = inter.processes.filter(p => !p.isExcluded);
-                            if (validProcs.length > 0) {
-                                bodyHtml += `
-                                <tr class="bg-slate-100 border-b border-slate-200">
-                                    <td colspan="3" class="py-2.5 px-6">
-                                        <div class="flex items-center gap-3">
-                                            <span class="text-[8px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 px-2 py-1 rounded shadow-sm">${cat.label}</span>
-                                            <span class="text-[10px] font-black uppercase text-indigo-900">${inter.name}</span>
-                                        </div>
-                                    </td>
-                                </tr>`;
-                                validProcs.forEach(item => {
-                                    bodyHtml += renderEvalRow(item, `proc_${item.id}`, item.name, '', true);
-                                });
-                            }
-                        });
-                    });
-                });
-            } else {
-                items.forEach(item => {
-                    const baseKey = isFiliale ? 'filiale' : item.id;
-                    const titleText = isFiliale ? item.name : item.title;
-                    let subText = '';
-                    if (!isFiliale) {
-                        if (item.holder && item.depot) subText = `<div class="text-[10px] text-indigo-500 font-bold mt-1">${item.holder} <span class="text-slate-400 font-normal">|</span> <span class="text-slate-600">${item.depot}</span></div>`;
-                        else if (item.holder) subText = `<div class="text-[10px] text-indigo-500 font-bold mt-1">${item.holder}</div>`;
-                        else if (item.depot) subText = `<div class="text-[10px] text-slate-600 font-bold mt-1">${item.depot}</div>`;
-                    }
-                    bodyHtml += renderEvalRow(item, baseKey, titleText, subText, false);
-                });
-            }
-
-            tb.innerHTML = bodyHtml;
-            if(window.lucide) lucide.createIcons();
-        }
-
-        function updateS5(i,f,v) { if(!appData.kihoEvaluation.s5_binomes) appData.kihoEvaluation.s5_binomes=[]; appData.kihoEvaluation.s5_binomes[i][f]=v; }
-        function addS5Binome() { if(!appData.kihoEvaluation.s5_binomes) appData.kihoEvaluation.s5_binomes=[]; appData.kihoEvaluation.s5_binomes.push({m1:'',m2:'',val:'',comment:''}); renderKihoEvaluation(); }
-        function removeS5(i) { appData.kihoEvaluation.s5_binomes.splice(i,1); renderKihoEvaluation(); }
-
- function renderKihoPrint() {
-            const container = document.getElementById('kiho-print-pages-container');
-            if(!container) return;
-
-            let htmlAllPages = '';
-            const selectedManagerId = document.getElementById('kiho-manager-filter')?.value;
-
-            KIHO_STANDARDS.forEach((std) => {
-                let items = [];
-                let isProcess = false;
-                let isFiliale = false;
-                let thColName = 'Managers';
-
-                if (std.id === 's11' || std.id === 's12') {
-                    items = [{ id: 'filiale', name: 'Filiale / Établissement', title: 'Filiale / Établissement' }];
-                    isFiliale = true;
-                    thColName = 'Entité';
-                } else if (std.id === 's9' || std.id === 's10') {
-                    items = getProcessList().filter(p => !p.isExcluded);
-                    isProcess = true;
-                    thColName = 'Processus';
-                } else if (std.type === 'binome') {
-                    items = appData.kihoEvaluation?.s5_binomes || [];
-                    thColName = 'Binômes';
-                } else {
-                    // Application du filtre pour l'impression
-                    if (selectedManagerId && selectedManagerId !== 'all') {
-                        items = getManagerAndSubordinates(selectedManagerId).sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }));
-                    } else {
-                        items = [...appData.roles].filter(r => r.isManager).sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }));
-                    }
-                }
-
-                let bodyHtml = '';
-
-                const renderPrintRow = (item, baseKey, titleText, subText, indent = false) => {
-                    const valKey = `${baseKey}_${std.id}`;
-                    const commentKey = `${baseKey}_${std.id}_comment`;
-                    const val = appData.kihoEvaluation?.[valKey] || '';
-                    const comment = appData.kihoEvaluation?.[commentKey] || '';
-                    const scale = KIHO_SCALES[std.id] || KIHO_SCALES.base;
-                    const opt = scale.find(o => o.val === val);
-                    const label = opt ? opt.label : 'Non évalué';
-
-                    return `
-                    <tr style="border-bottom: 1px solid #e2e8f0;">
-                        <td class="py-3 px-4 border-r border-slate-200 align-top w-1/4">
-                            <div class="text-[10px] font-black uppercase text-slate-800 leading-tight ${indent ? 'pl-3' : ''}">${indent ? '↳ ' : ''}${titleText}</div>
-                            ${subText}
-                        </td>
-                        <td class="py-3 px-4 border-r border-slate-200 align-top text-center w-1/4">
-                            <div class="inline-block px-3 py-1.5 rounded-lg border text-[9px] font-bold ${getKihoColorClass(val, std.id)}">
-                                ${label}
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 align-top text-[10px] text-slate-700 whitespace-pre-wrap w-1/2">${comment || '-'}</td>
-                    </tr>`;
-                };
-
-                let elementCount = 0;
-
-                if (std.type === 'pilotage_manager') {
-                    const pilotKey = `${std.id}_pilotage`;
-                    const pilotCommKey = `${std.id}_pilotage_comment`;
-                    const val = appData.kihoEvaluation?.[pilotKey] || '';
-                    
-                    if (val !== '' && val !== 'non_concerne') {
-                        elementCount++;
-                        const comment = appData.kihoEvaluation?.[pilotCommKey] || '';
-                        const scale = KIHO_SCALES[`${std.id}_pilotage`];
-                        const opt = scale?.find(o => o.val === val);
-                        const label = opt ? opt.label : 'Non évalué';
-
-                        bodyHtml += `
-                        <tr style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                            <td class="py-3 px-4 border-r border-slate-200 align-top w-1/4">
-                                <div class="text-[10px] font-black uppercase text-indigo-700 leading-tight">Pilotage global</div>
-                            </td>
-                            <td class="py-3 px-4 border-r border-slate-200 align-top text-center w-1/4">
-                                <div class="inline-block px-3 py-1.5 rounded-lg border text-[9px] font-bold ${getKihoColorClass(val, std.id + '_pilotage')}">
-                                    ${label}
-                                </div>
-                            </td>
-                            <td class="py-3 px-4 align-top text-[10px] text-slate-700 whitespace-pre-wrap w-1/2">${comment || '-'}</td>
-                        </tr>`;
-                    }
-                }
-
-                if (std.type === 'binome') {
-                    const evaluatedBinomes = items.filter(b => b.val !== '' && b.val !== 'non_concerne');
-                    if (evaluatedBinomes.length > 0) {
-                        elementCount += evaluatedBinomes.length;
-                        evaluatedBinomes.forEach(b => {
-                            const m1 = getRoleById(b.m1)?.title || 'Inconnu';
-                            const m2 = getRoleById(b.m2)?.title || 'Inconnu';
-                            const scale = KIHO_SCALES.base;
-                            const opt = scale.find(o => o.val === b.val);
-                            const label = opt ? opt.label : 'Non évalué';
-
-                            bodyHtml += `
-                            <tr style="border-bottom: 1px solid #e2e8f0;">
-                                <td class="py-3 px-4 border-r border-slate-200 align-top w-1/4">
-                                    <div class="text-[10px] font-black uppercase text-slate-800 leading-tight">${m1} <br><span class="text-[8px] text-slate-400 font-medium lowercase">avec</span><br> ${m2}</div>
-                                </td>
-                                <td class="py-3 px-4 border-r border-slate-200 align-top text-center w-1/4">
-                                    <div class="inline-block px-3 py-1.5 rounded-lg border text-[9px] font-bold ${getKihoColorClass(b.val, 'base')}">
-                                        ${label}
-                                    </div>
-                                </td>
-                                <td class="py-3 px-4 align-top text-[10px] text-slate-700 whitespace-pre-wrap w-1/2">${b.comment || '-'}</td>
-                            </tr>`;
-                        });
-                    }
-                } else if (isProcess) {
-                    appData.categories.forEach(cat => {
-                        cat.macros.forEach(macro => {
-                            macro.intermediaries.forEach(inter => {
-                                const validProcs = inter.processes.filter(p => !p.isExcluded);
-                                const evaluatedProcs = validProcs.filter(item => {
-                                    const val = appData.kihoEvaluation?.[`proc_${item.id}_${std.id}`] || '';
-                                    return val !== '' && val !== 'non_concerne';
-                                });
-
-                                if (evaluatedProcs.length > 0) {
-                                    elementCount += evaluatedProcs.length;
-                                    bodyHtml += `
-                                    <tr style="background-color: #f1f5f9; border-bottom: 1px solid #e2e8f0;">
-                                        <td colspan="3" class="py-2 px-4">
-                                            <span class="text-[8px] font-black uppercase tracking-widest text-slate-500 mr-2 border border-slate-300 bg-white px-1 py-0.5 rounded">${cat.label}</span>
-                                            <span class="text-[9px] font-black uppercase text-indigo-900">${inter.name}</span>
-                                        </td>
-                                    </tr>`;
-                                    evaluatedProcs.forEach(item => {
-                                        bodyHtml += renderPrintRow(item, `proc_${item.id}`, item.name, '', true);
-                                    });
-                                }
-                            });
-                        });
-                    });
-                } else {
-                    const evaluatedItems = items.filter(item => {
-                        const baseKey = isFiliale ? 'filiale' : item.id;
-                        const val = appData.kihoEvaluation?.[`${baseKey}_${std.id}`] || '';
-                        return val !== '' && val !== 'non_concerne';
-                    });
-
-                    if (evaluatedItems.length > 0) {
-                        elementCount += evaluatedItems.length;
-                        evaluatedItems.forEach(item => {
-                            const baseKey = isFiliale ? 'filiale' : item.id;
-                            const titleText = isFiliale ? item.name : item.title;
-                            let subText = '';
-                            if (!isFiliale) {
-                                if (item.holder && item.depot) subText = `<div class="text-[9px] text-indigo-500 font-bold mt-1">${item.holder} <span class="text-slate-400 font-normal">|</span> <span class="text-slate-600">${item.depot}</span></div>`;
-                                else if (item.holder) subText = `<div class="text-[9px] text-indigo-500 font-bold mt-1">${item.holder}</div>`;
-                                else if (item.depot) subText = `<div class="text-[9px] text-slate-600 font-bold mt-1">${item.depot}</div>`;
-                            }
-                            bodyHtml += renderPrintRow(item, baseKey, titleText, subText, false);
-                        });
-                    }
-                }
-
-                if (elementCount === 0) {
-                    bodyHtml += `<tr><td colspan="3" class="p-10 text-center text-slate-400 italic font-bold text-xs">Aucun élément évalué ou concerné pour ce standard.</td></tr>`;
-                }
-
-                htmlAllPages += `
-                <div class="print-content landscape" style="page-break-after: always; break-after: page;">
-                    <div class="header-viz flex justify-between items-center w-full">
-                        <div class="flex items-center gap-6">
-                            <div class="print-logo-container"></div>
-                            <div class="h-12 w-px bg-slate-100"></div>
-                            <div class="space-y-1">
-                                <h2 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Évaluation KIHO : ${std.name}</h2>
-                                <div class="print-org-name text-3xl font-black uppercase text-slate-900"></div>
-                            </div>
-                        </div>
-                        <div class="print-date text-[10px] font-black text-slate-300 uppercase tracking-widest"></div>
-                    </div>
-                    <div class="w-full flex-1 overflow-auto mt-4">
-                        <table class="w-full border-collapse">
-                            <thead>
-                                <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; text-transform: uppercase;">
-                                    <th class="py-3 px-4 text-left w-1/4 text-[8px] font-black text-slate-500 tracking-widest">${thColName}</th>
-                                    <th class="py-3 px-4 text-center w-1/4 text-[8px] font-black text-slate-500 tracking-widest">Niveau</th>
-                                    <th class="py-3 px-4 text-left w-1/2 text-[8px] font-black text-slate-500 tracking-widest">Commentaires</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${bodyHtml}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>`;
-            });
-
-            container.innerHTML = htmlAllPages;
-            populateHeader();
-        }
-
-
-        // ================= IMPORT / EXPORT =================
-        function triggerImport(stage) { window.currentImportTarget = stage; document.getElementById('import-file').click(); }
-        function handleImport(e) { 
-            const f = e.target.files[0]; if(!f) return; 
-            const r = new FileReader(); 
-            r.onload = (re) => { 
-                try { 
-                    const json = JSON.parse(re.target.result);
-                    if (!json.kiho_export_type || json.kiho_export_type === 'global' || window.currentImportTarget === 'global') {
-                        appData = json.data ? json.data : json; initAll(); switchTab('mapping'); showCustomModal({ message: "Importation globale réussie." });
-                    } else {
-                        const type = json.kiho_export_type; const data = json.data; const pid = appData.currentSipocId;
-                        if (type === 'architecture') { appData.categories = data; renderMapping(); updateFilters('sipoc', 'init', false); } 
-                        else if (type === 'organigramme') { appData.roles = data; renderOrg(); } 
-                        else if (type === 'sipoc') { if(!pid) return showCustomModal({ message: "Sélectionnez un processus." }); appData.sipocs[pid] = data; loadSipoc(pid); } 
-                        else if (type === 'raci') { if(!pid) return showCustomModal({ message: "Sélectionnez un processus." }); appData.raci[pid] = data; renderRaci(); } 
-                        else if (type === 'kiho') { appData.kihoEvaluation = data; renderKihoEvaluation(); }
-                        showCustomModal({ message: `Données (${type}) importées.` });
-                    }
-                } catch(err) { showCustomModal({ message: "Fichier JSON invalide." }); } 
-                e.target.value = ''; 
-            }; r.readAsText(f); 
-        }
-
-        async function exportData(stage) { 
-            const orgName = appData.meta.organization ? appData.meta.organization.replace(/[\s\/\\:*?"<>|]+/g, '_') : 'KIHO';
-            const dateStr = new Date().toISOString().split('T')[0];
-            let filename = `${orgName}_${stage}_${dateStr}.json`;
-            let payload = { kiho_export_type: stage, data: null };
-            const pid = appData.currentSipocId; const proc = getProcessList().find(p => p.id === pid); 
-            const procName = proc ? proc.name.replace(/[\s\/\\:*?"<>|]+/g, '_') : 'Processus';
-            if (stage === 'global') { payload = appData; filename = `${orgName}_GLOBAL_${dateStr}.json`; } 
-            else if (stage === 'architecture') { payload.data = appData.categories; filename = `${orgName}_Cartographie_${dateStr}.json`; } 
-            else if (stage === 'organigramme') { payload.data = appData.roles; filename = `${orgName}_Organigramme_${dateStr}.json`; } 
-            else if (stage === 'sipoc') { if(!pid) return showCustomModal({ message: "Sélectionnez un processus à exporter." }); payload.data = appData.sipocs[pid] || {}; filename = `${orgName}_SIPOC_${procName}_${dateStr}.json`; } 
-            else if (stage === 'raci') { if(!pid) return showCustomModal({ message: "Sélectionnez un processus à exporter." }); payload.data = appData.raci[pid] || []; filename = `${orgName}_RACI_${procName}_${dateStr}.json`; } 
-            else if (stage === 'kiho') { payload.data = appData.kihoEvaluation || {}; filename = `${orgName}_EvaluationKIHO_${dateStr}.json`; }
-            
-            const content = JSON.stringify(payload, null, 2);
-            try {
-                if (window.showSaveFilePicker) {
-                    const handle = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Fichier JSON', accept: { 'application/json': ['.json'] } }] });
-                    const writable = await handle.createWritable();
-                    await writable.write(content);
-                    await writable.close();
-                } else {
-                    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], {type:'application/json'})); a.download = filename; a.click(); 
-                }
-            } catch (err) { if (err.name !== 'AbortError') console.error(err); }
-        }
-
-        async function exportAnnuaire() {
-            const orgName = appData.meta.organization ? appData.meta.organization.replace(/[\s\/\\:*?"<>|]+/g, '_') : 'KIHO';
-            const dateStr = new Date().toISOString().split('T')[0];
-            const filename = `${orgName}_Annuaire_Postes_${dateStr}.txt`;
-            
-            let content = `ANNUAIRE DES POSTES - ${appData.meta.organization || 'Organisation'}\n`;
-            content += `Directeur/Manager : ${appData.meta.manager || 'Non défini'}\n`;
-            content += `Date d'export : ${new Date().toLocaleDateString('fr-FR')}\n`;
-            content += `=================================================\n\n`;
-            
-            if (appData.roles && appData.roles.length > 0) {
-                appData.roles.forEach(r => {
-                    content += `• POSTE : ${r.title}\n`;
-                    if (r.holder) content += `  Titulaire : ${r.holder}\n`;
-                    if (r.depot) content += `  Dépôt/Centre : ${r.depot}\n`;
-                    if (r.isManager) content += `  [Poste de Management]\n`;
-                    content += `\n`;
-                });
-            } else {
-                content += "Aucun poste n'est actuellement défini dans l'organigramme.\n";
-            }
-            
-            try {
-                if (window.showSaveFilePicker) {
-                    const handle = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Fichier Texte', accept: { 'text/plain': ['.txt'] } }] });
-                    const writable = await handle.createWritable();
-                    await writable.write(content);
-                    await writable.close();
-                } else {
-                    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], {type: 'text/plain;charset=utf-8'})); a.download = filename; a.click();
-                }
-            } catch (err) { if (err.name !== 'AbortError') console.error(err); }
-        }
-
-        // ================= EVALUATION SMI LOGIC =================
+        // ================= EVALUATION DU SYSTEME (SMI) =================
         function renderEvaluation() {
             const cont = document.getElementById('evaluation-content');
             if (!cont) return;
@@ -3061,7 +2573,7 @@
             if(window.lucide) lucide.createIcons();
         }
 
-        // ================= INIT =================
+        // ================= KIHO EVALUATION LOGIC (RESTORED) =================
         function getManagerAndSubordinates(startRoleId) {
             let resultIds = [startRoleId];
             let toCheck = [startRoleId];
@@ -3122,7 +2634,7 @@
             filter.innerHTML = "";
             const filteredStandards = KIHO_STANDARDS.filter(s => s.category === cat);
             filteredStandards.forEach(std => {
-                filter.appendChild(new Option(`${std.id.toUpperCase().replace('S','')} - ${std.name}`, std.id));
+                filter.appendChild(new Option(std.name, std.id));
             });
 
             if (appData.currentKihoStandardId && filteredStandards.some(s => s.id === appData.currentKihoStandardId)) {
@@ -3162,14 +2674,14 @@
             const th = document.querySelector('#view-kiho table thead tr th:first-child');
             
             if (mgrFilterCont) {
-                if (std.id === 's11' || std.id === 's12' || std.id === 's9' || std.id === 's10' || std.type === 'binome') {
+                if (std.id === 's11' || std.id === 's12' || std.id === 's13' || std.id === 's14' || std.id === 's9' || std.id === 's10' || std.type === 'binome') {
                     mgrFilterCont.classList.add('hidden');
                 } else {
                     mgrFilterCont.classList.remove('hidden');
                 }
             }
 
-            if (std.id === 's11' || std.id === 's12') {
+            if (std.id === 's11' || std.id === 's12' || std.id === 's13' || std.id === 's14') {
                 items = [{ id: 'filiale', name: 'Filiale / Établissement', title: 'Filiale / Établissement' }];
                 isFiliale = true;
                 if (th) th.innerText = 'Entité';
@@ -3309,6 +2821,296 @@
 
             tb.innerHTML = bodyHtml;
             if(window.lucide) lucide.createIcons();
+        }
+
+        function renderKihoPrint() {
+            const container = document.getElementById('kiho-print-pages-container');
+            if(!container) return;
+
+            let htmlAllPages = '';
+            const selectedManagerId = document.getElementById('kiho-manager-filter')?.value;
+
+            KIHO_STANDARDS.forEach((std) => {
+                let items = [];
+                let isProcess = false;
+                let isFiliale = false;
+                let thColName = 'Managers';
+
+                if (std.id === 's11' || std.id === 's12' || std.id === 's13' || std.id === 's14') {
+                    items = [{ id: 'filiale', name: 'Filiale / Établissement', title: 'Filiale / Établissement' }];
+                    isFiliale = true;
+                    thColName = 'Entité';
+                } else if (std.id === 's9' || std.id === 's10') {
+                    items = getProcessList().filter(p => !p.isExcluded);
+                    isProcess = true;
+                    thColName = 'Processus';
+                } else if (std.type === 'binome') {
+                    items = appData.kihoEvaluation?.s5_binomes || [];
+                    thColName = 'Binômes';
+                } else {
+                    if (selectedManagerId && selectedManagerId !== 'all') {
+                        items = getManagerAndSubordinates(selectedManagerId).sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }));
+                    } else {
+                        items = [...appData.roles].filter(r => r.isManager).sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }));
+                    }
+                }
+
+                let bodyHtml = '';
+                let elementCount = 0;
+
+                const renderPrintRow = (item, baseKey, titleText, subText, indent = false) => {
+                    const valKey = `${baseKey}_${std.id}`;
+                    const commentKey = `${baseKey}_${std.id}_comment`;
+                    const val = appData.kihoEvaluation?.[valKey] || '';
+                    const comment = appData.kihoEvaluation?.[commentKey] || '';
+                    const scale = KIHO_SCALES[std.id] || KIHO_SCALES.base;
+                    const opt = scale.find(o => o.val === val);
+                    const label = opt ? opt.label : 'Non évalué';
+
+                    return `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td class="py-3 px-4 border-r border-slate-200 align-top w-1/4">
+                            <div class="text-[10px] font-black uppercase text-slate-800 leading-tight ${indent ? 'pl-3' : ''}">${indent ? '↳ ' : ''}${titleText}</div>
+                            ${subText}
+                        </td>
+                        <td class="py-3 px-4 border-r border-slate-200 align-top text-center w-1/4">
+                            <div class="inline-block px-3 py-1.5 rounded-lg border text-[9px] font-bold ${getKihoColorClass(val, std.id)}">
+                                ${label}
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 align-top text-[10px] text-slate-700 whitespace-pre-wrap w-1/2">${comment || '-'}</td>
+                    </tr>`;
+                };
+
+                if (std.type === 'pilotage_manager') {
+                    const pilotKey = `${std.id}_pilotage`;
+                    const pilotCommKey = `${std.id}_pilotage_comment`;
+                    const val = appData.kihoEvaluation?.[pilotKey] || '';
+                    
+                    if (val !== '' && val !== 'non_concerne') {
+                        elementCount++;
+                        const comment = appData.kihoEvaluation?.[pilotCommKey] || '';
+                        const scale = KIHO_SCALES[`${std.id}_pilotage`];
+                        const opt = scale?.find(o => o.val === val);
+                        const label = opt ? opt.label : 'Non évalué';
+
+                        bodyHtml += `
+                        <tr style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                            <td class="py-3 px-4 border-r border-slate-200 align-top w-1/4">
+                                <div class="text-[10px] font-black uppercase text-indigo-700 leading-tight">Pilotage global</div>
+                            </td>
+                            <td class="py-3 px-4 border-r border-slate-200 align-top text-center w-1/4">
+                                <div class="inline-block px-3 py-1.5 rounded-lg border text-[9px] font-bold ${getKihoColorClass(val, std.id + '_pilotage')}">
+                                    ${label}
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 align-top text-[10px] text-slate-700 whitespace-pre-wrap w-1/2">${comment || '-'}</td>
+                        </tr>`;
+                    }
+                }
+
+                if (std.type === 'binome') {
+                    const evaluatedBinomes = items.filter(b => b.val !== '' && b.val !== 'non_concerne');
+                    if (evaluatedBinomes.length > 0) {
+                        elementCount += evaluatedBinomes.length;
+                        evaluatedBinomes.forEach(b => {
+                            const m1 = getRoleById(b.m1)?.title || 'Inconnu';
+                            const m2 = getRoleById(b.m2)?.title || 'Inconnu';
+                            const scale = KIHO_SCALES.base;
+                            const opt = scale.find(o => o.val === b.val);
+                            const label = opt ? opt.label : 'Non évalué';
+
+                            bodyHtml += `
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td class="py-3 px-4 border-r border-slate-200 align-top w-1/4">
+                                    <div class="text-[10px] font-black uppercase text-slate-800 leading-tight">${m1} <br><span class="text-[8px] text-slate-400 font-medium lowercase">avec</span><br> ${m2}</div>
+                                </td>
+                                <td class="py-3 px-4 border-r border-slate-200 align-top text-center w-1/4">
+                                    <div class="inline-block px-3 py-1.5 rounded-lg border text-[9px] font-bold ${getKihoColorClass(b.val, 'base')}">
+                                        ${label}
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 align-top text-[10px] text-slate-700 whitespace-pre-wrap w-1/2">${b.comment || '-'}</td>
+                            </tr>`;
+                        });
+                    }
+                } else if (isProcess) {
+                    appData.categories.forEach(cat => {
+                        cat.macros.forEach(macro => {
+                            macro.intermediaries.forEach(inter => {
+                                const validProcs = inter.processes.filter(p => !p.isExcluded);
+                                const evaluatedProcs = validProcs.filter(item => {
+                                    const val = appData.kihoEvaluation?.[`proc_${item.id}_${std.id}`] || '';
+                                    return val !== '' && val !== 'non_concerne';
+                                });
+
+                                if (evaluatedProcs.length > 0) {
+                                    elementCount += evaluatedProcs.length;
+                                    bodyHtml += `
+                                    <tr style="background-color: #f1f5f9; border-bottom: 1px solid #e2e8f0;">
+                                        <td colspan="3" class="py-2 px-4">
+                                            <span class="text-[8px] font-black uppercase tracking-widest text-slate-500 mr-2 border border-slate-300 bg-white px-1 py-0.5 rounded">${cat.label}</span>
+                                            <span class="text-[9px] font-black uppercase text-indigo-900">${inter.name}</span>
+                                        </td>
+                                    </tr>`;
+                                    evaluatedProcs.forEach(item => {
+                                        bodyHtml += renderPrintRow(item, `proc_${item.id}`, item.name, '', true);
+                                    });
+                                }
+                            });
+                        });
+                    });
+                } else {
+                    const evaluatedItems = items.filter(item => {
+                        const baseKey = isFiliale ? 'filiale' : item.id;
+                        const val = appData.kihoEvaluation?.[`${baseKey}_${std.id}`] || '';
+                        return val !== '' && val !== 'non_concerne';
+                    });
+
+                    if (evaluatedItems.length > 0) {
+                        elementCount += evaluatedItems.length;
+                        evaluatedItems.forEach(item => {
+                            const baseKey = isFiliale ? 'filiale' : item.id;
+                            const titleText = isFiliale ? item.name : item.title;
+                            let subText = '';
+                            if (!isFiliale) {
+                                if (item.holder && item.depot) subText = `<div class="text-[9px] text-indigo-500 font-bold mt-1">${item.holder} <span class="text-slate-400 font-normal">|</span> <span class="text-slate-600">${item.depot}</span></div>`;
+                                else if (item.holder) subText = `<div class="text-[9px] text-indigo-500 font-bold mt-1">${item.holder}</div>`;
+                                else if (item.depot) subText = `<div class="text-[9px] text-slate-600 font-bold mt-1">${item.depot}</div>`;
+                            }
+                            bodyHtml += renderPrintRow(item, baseKey, titleText, subText, false);
+                        });
+                    }
+                }
+
+                if (elementCount === 0) {
+                    bodyHtml += `<tr><td colspan="3" class="p-10 text-center text-slate-400 italic font-bold text-xs">Aucun élément évalué ou concerné pour ce standard.</td></tr>`;
+                }
+
+                htmlAllPages += `
+                <div class="print-content landscape" style="page-break-after: always; break-after: page;">
+                    <div class="header-viz flex justify-between items-center w-full">
+                        <div class="flex items-center gap-6">
+                            <div class="print-logo-container"></div>
+                            <div class="h-12 w-px bg-slate-100"></div>
+                            <div class="space-y-1">
+                                <h2 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Évaluation KIHO : ${std.name}</h2>
+                                <div class="print-org-name text-3xl font-black uppercase text-slate-900"></div>
+                            </div>
+                        </div>
+                        <div class="print-date text-[10px] font-black text-slate-300 uppercase tracking-widest"></div>
+                    </div>
+                    <div class="w-full flex-1 overflow-auto mt-4">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; text-transform: uppercase;">
+                                    <th class="py-3 px-4 text-left w-1/4 text-[8px] font-black text-slate-500 tracking-widest">${thColName}</th>
+                                    <th class="py-3 px-4 text-center w-1/4 text-[8px] font-black text-slate-500 tracking-widest">Niveau</th>
+                                    <th class="py-3 px-4 text-left w-1/2 text-[8px] font-black text-slate-500 tracking-widest">Commentaires / Plan d'action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${bodyHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = htmlAllPages;
+            populateHeader();
+        }
+
+        // ================= IMPORT / EXPORT =================
+        function triggerImport(s) { window.currentImportTarget = s; document.getElementById('import-file').click(); }
+        
+        function handleImport(e) { 
+            const f = e.target.files[0]; if(!f) return; 
+            const r = new FileReader(); 
+            r.onload = (re) => { 
+                try { 
+                    const j = JSON.parse(re.target.result); 
+                    if (!j.kiho_export_type || j.kiho_export_type === 'global' || window.currentImportTarget === 'global') { 
+                        appData = j.data ? j.data : j; 
+                        initAll(); 
+                        switchTab('mapping'); 
+                        showCustomModal({ message: "Importation réussie." }); 
+                    } else { 
+                        const t = j.kiho_export_type, d = j.data, pid = appData.currentSipocId; 
+                        if (t === 'architecture') { appData.categories = d; renderMapping(); updateFilters('sipoc', 'init', false); } 
+                        else if (t === 'organigramme') { appData.roles = d; renderOrg(); } 
+                        else if (t === 'sipoc') { if(!pid) return showCustomModal({ message: "Sélectionnez un proc." }); appData.sipocs[pid] = d; loadSipoc(pid); } 
+                        else if (t === 'raci') { if(!pid) return showCustomModal({ message: "Sélectionnez un proc." }); appData.raci[pid] = d; renderRaci(); } 
+                        else if (t === 'kiho') { appData.kihoEvaluation = d; renderKihoEvaluation(); } 
+                        showCustomModal({ message: `Données (${t}) importées.` }); 
+                    } 
+                } catch(err) { showCustomModal({ message: "Fichier invalide." }); } 
+                e.target.value = ''; 
+            }; 
+            r.readAsText(f); 
+        }
+        
+        async function exportData(stage) { 
+            const orgName = appData.meta.organization ? appData.meta.organization.replace(/[\s\/\\:*?"<>|]+/g, '_') : 'KIHO';
+            const dateStr = new Date().toISOString().split('T')[0];
+            let filename = `${orgName}_${stage}_${dateStr}.json`;
+            let payload = { kiho_export_type: stage, data: null };
+            const pid = appData.currentSipocId; 
+            const proc = getProcessList().find(p => p.id === pid); 
+            const procName = proc ? proc.name.replace(/[\s\/\\:*?"<>|]+/g, '_') : 'Processus';
+            
+            if (stage === 'global') { payload = appData; filename = `${orgName}_GLOBAL_${dateStr}.json`; } 
+            else if (stage === 'architecture') { payload.data = appData.categories; filename = `${orgName}_Cartographie_${dateStr}.json`; } 
+            else if (stage === 'organigramme') { payload.data = appData.roles; filename = `${orgName}_Organigramme_${dateStr}.json`; } 
+            else if (stage === 'sipoc') { if(!pid) return showCustomModal({ message: "Sélectionnez un processus." }); payload.data = appData.sipocs[pid] || {}; filename = `${orgName}_SIPOC_${procName}_${dateStr}.json`; } 
+            else if (stage === 'raci') { if(!pid) return showCustomModal({ message: "Sélectionnez un processus." }); payload.data = appData.raci[pid] || []; filename = `${orgName}_RACI_${procName}_${dateStr}.json`; } 
+            else if (stage === 'kiho') { payload.data = appData.kihoEvaluation || {}; filename = `${orgName}_EvaluationKIHO_${dateStr}.json`; }
+            
+            const content = JSON.stringify(payload, null, 2);
+            try {
+                if (window.showSaveFilePicker) {
+                    const handle = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Fichier JSON', accept: { 'application/json': ['.json'] } }] });
+                    const writable = await handle.createWritable();
+                    await writable.write(content);
+                    await writable.close();
+                } else {
+                    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], {type:'application/json'})); a.download = filename; a.click(); 
+                }
+            } catch (err) { if (err.name !== 'AbortError') console.error(err); }
+        }
+
+        async function exportAnnuaire() {
+            const orgName = appData.meta.organization ? appData.meta.organization.replace(/[\s\/\\:*?"<>|]+/g, '_') : 'KIHO';
+            const dateStr = new Date().toISOString().split('T')[0];
+            const filename = `${orgName}_Annuaire_Postes_${dateStr}.txt`;
+            
+            let content = `ANNUAIRE DES POSTES - ${appData.meta.organization || 'Organisation'}\n`;
+            content += `Directeur/Manager : ${appData.meta.manager || 'Non défini'}\n`;
+            content += `Date d'export : ${new Date().toLocaleDateString('fr-FR')}\n`;
+            content += `=================================================\n\n`;
+            
+            if (appData.roles && appData.roles.length > 0) {
+                appData.roles.forEach(r => {
+                    content += `• POSTE : ${r.title}\n`;
+                    if (r.holder) content += `  Titulaire : ${r.holder}\n`;
+                    if (r.depot) content += `  Dépôt/Centre : ${r.depot}\n`;
+                    if (r.isManager) content += `  [Poste de Management]\n`;
+                    content += `\n`;
+                });
+            } else {
+                content += "Aucun poste n'est actuellement défini dans l'organigramme.\n";
+            }
+            
+            try {
+                if (window.showSaveFilePicker) {
+                    const handle = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Fichier Texte', accept: { 'text/plain': ['.txt'] } }] });
+                    const writable = await handle.createWritable();
+                    await writable.write(content);
+                    await writable.close();
+                } else {
+                    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], {type: 'text/plain;charset=utf-8'})); a.download = filename; a.click();
+                }
+            } catch (err) { if (err.name !== 'AbortError') console.error(err); }
         }
 
         function initAll() {
