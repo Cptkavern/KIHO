@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -110,12 +109,12 @@
                     <span>Logo Filiale (.png, .jpg)</span>
                 </button>
                 <button onclick="exportToJson()" class="w-full text-left px-5 py-3.5 hover:bg-slate-50 flex items-center gap-4 text-sm font-bold border-b border-slate-50">
-                    <i data-lucide="download" class="w-5 h-5 text-slate-400"></i>
-                    <span>Exporter</span>
+                    <i data-lucide="save" class="w-5 h-5 text-slate-400"></i>
+                    <span>Enregistrer</span>
                 </button>
                 <button onclick="triggerImport()" class="w-full text-left px-5 py-3.5 hover:bg-slate-50 flex items-center gap-4 text-sm font-bold">
-                    <i data-lucide="upload" class="w-5 h-5 text-slate-400"></i>
-                    <span>Importer</span>
+                    <i data-lucide="folder-open" class="w-5 h-5 text-slate-400"></i>
+                    <span>Ouvrir</span>
                 </button>
                 <div class="h-px bg-slate-100 my-1"></div>
                 <button onclick="showHelpModal()" class="w-full text-left px-5 py-3.5 hover:bg-blue-50 flex items-center gap-4 text-sm font-bold text-blue-600 transition-colors">
@@ -325,11 +324,11 @@
                     Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues.
                 </p>
                 <p class="text-sm text-slate-600 font-medium mb-5 leading-relaxed">
-                    Pensez à exporter régulièrement votre travail à l'aide du bouton Sauvegarder présent dans le menu situé en haut à droite.
+                    Pensez à sauvegarder régulièrement votre travail à l'aide du bouton Enregistrer présent dans le menu situé en haut à droite.
                 </p>
                 <div class="flex items-center justify-center gap-2 bg-white border border-orange-200 text-blue-600 rounded-xl px-4 py-2 font-bold text-xs shadow-sm w-fit mx-auto">
-                    <i data-lucide="download" class="w-4 h-4"></i>
-                    <span>Sauvegarder (.json)</span>
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Enregistrer (.json)</span>
                 </div>
             </div>
             <button onclick="closeWelcomeModal()" class="w-full bg-blue-600 text-white font-bold uppercase text-xs rounded-xl py-3.5 mt-6 flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
@@ -439,7 +438,7 @@
                         <span>Très Important : Sauvegarde</span>
                     </div>
                     <p class="text-xs text-slate-700 leading-relaxed mb-2">L'application fonctionne localement. Si vous videz le cache, vous perdrez vos données.</p>
-                    <p class="text-xs font-bold text-slate-800">Solution : Utilisez le bouton "Exporter" pour télécharger un fichier JSON de sauvegarde.</p>
+                    <p class="text-xs font-bold text-slate-800">Solution : Utilisez le bouton "Enregistrer" pour sauvegarder un fichier JSON sur votre ordinateur.</p>
                 </div>
             </div>
             <div class="p-4 border-t border-slate-100 bg-slate-50">
@@ -645,18 +644,47 @@
             reader.readAsDataURL(file); 
         }
 
-        function exportToJson() { 
+        async function exportToJson() { 
             const filialeName = document.getElementById('filiale_name').value || "FILIALE_SANS_NOM";
             const exportObj = {
                 filiale: filialeName,
                 logo: localStorage.getItem('kiho_tdr_logo'),
                 rituals: savedRituals
             };
-            const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' }); 
-            const link = document.createElement('a'); 
-            link.href = URL.createObjectURL(blob); 
-            link.download = `TDR_KIHO_${filialeName.replace(/\s+/g, '_')}.json`; 
-            link.click(); 
+            
+            const content = JSON.stringify(exportObj, null, 2);
+            const fileName = `TDR_KIHO_${filialeName.replace(/\s+/g, '_')}.json`;
+            
+            try {
+                // Utilisation de l'API File System Access pour choisir l'emplacement (Chrome, Edge, Safari, Opera)
+                if (window.showSaveFilePicker) {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{
+                            description: 'Fichier JSON KIHO',
+                            accept: {'application/json': ['.json']}
+                        }]
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(content);
+                    await writable.close();
+                    showToast("Sauvegarde enregistrée");
+                } else {
+                    // Solution de repli (ex: Firefox)
+                    const blob = new Blob([content], { type: 'application/json' }); 
+                    const link = document.createElement('a'); 
+                    link.href = URL.createObjectURL(blob); 
+                    link.download = fileName; 
+                    link.click(); 
+                    showToast("Sauvegarde enregistrée");
+                }
+            } catch (err) {
+                // Ne rien faire si l'utilisateur annule (AbortError), sinon on peut afficher une erreur
+                if (err.name !== 'AbortError') {
+                    console.error(err);
+                    showToast("Erreur lors de l'enregistrement");
+                }
+            }
         }
 
         function triggerImport() { document.getElementById('importFile').click(); document.getElementById('menu').classList.add('hidden'); }
@@ -679,7 +707,7 @@
                     }
                     saveToStorage(); renderRitualsList(); renderModelList(); 
                     if (savedRituals.length > 0) loadRitual(savedRituals[0].id);
-                    showToast(`${savedRituals.length} rituels importés`); 
+                    showToast(`${savedRituals.length} rituels chargés`); 
                 } catch (err) { showToast("Format invalide"); } 
             }; 
             reader.readAsText(file); 
