@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KIHO - SolveIt RSP Manager</title>
@@ -99,8 +99,8 @@
                         <div id="main-menu" class="hidden absolute right-0 mt-4 w-64 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 shadow-xl z-50">
                             <button onclick="resetData()" class="w-full p-4 flex items-center gap-4 hover:bg-red-50 border-b text-left text-red-600 font-bold"><i data-lucide="trash-2" class="text-red-500"></i> Nouvelle Analyse (Effacer)</button>
                             <button onclick="printReport()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left text-slate-900"><i data-lucide="printer" class="text-slate-600"></i> Imprimer (PDF/A3)</button>
-                            <button onclick="exportJSON()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left"><i data-lucide="download" class="text-blue-500"></i> Sauvegarder (.json)</button>
-                            <label class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 cursor-pointer text-left block"><i data-lucide="upload" class="text-purple-500 inline-block"></i> Charger Projet<input type="file" class="hidden" onchange="importJSON(event)"></label>
+                            <button onclick="exportJSON()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left"><i data-lucide="save" class="text-blue-500"></i> Enregistrer</button>
+                            <label class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 cursor-pointer text-left block"><i data-lucide="folder-open" class="text-purple-500 inline-block"></i> Ouvrir<input type="file" class="hidden" onchange="importJSON(event)"></label>
                             <div class="p-4 bg-slate-50 border-t text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest">Concepteur : D.Ablancourt</div>
                         </div>
                     </div>
@@ -170,10 +170,10 @@
                         Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues.
                     </p>
                     <p class="leading-relaxed text-sm">
-                        Pensez à exporter régulièrement votre travail à l'aide du bouton <strong>Sauvegarder</strong> présent dans le menu <i data-lucide="menu" class="w-4 h-4 inline align-middle mx-1 text-slate-500"></i> situé en haut à droite de l'application.
+                        Pensez à exporter régulièrement votre travail à l'aide du bouton <strong>Enregistrer</strong> présent dans le menu <i data-lucide="menu" class="w-4 h-4 inline align-middle mx-1 text-slate-500"></i> situé en haut à droite de l'application.
                     </p>
                     <div class="mt-4 flex gap-2">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-white rounded-xl border border-orange-200 shadow-sm text-xs font-bold text-slate-700"><i data-lucide="download" class="w-4 h-4 text-blue-500"></i> Sauvegarder (.json)</span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-white rounded-xl border border-orange-200 shadow-sm text-xs font-bold text-slate-700"><i data-lucide="save" class="w-4 h-4 text-blue-500"></i> Enregistrer</span>
                     </div>
                 </div>
             </div>
@@ -920,6 +920,7 @@
                     content = `<div class="space-y-6"><div class="p-5 bg-yellow-50 border-l-4 border-yellow-500 rounded-r-[1.5rem] mb-6 shadow-sm"><h4 class="text-[10px] font-black uppercase text-yellow-700 tracking-widest mb-2 flex items-center gap-2"><i data-lucide="award" class="w-3 h-3"></i> Bilan</h4><p class="text-sm text-slate-700"><strong>Objectif :</strong> Clore la RSP. C'est le moment de féliciter l'équipe pour le travail accompli, de valider l'efficacité finale et de partager les leçons apprises (Retours d'Expérience) avec le reste de l'organisation.</p></div><div class="p-6 bg-yellow-50 rounded-[2.5rem] border border-yellow-100 shadow-sm text-center"><h2 class="text-xl font-black text-slate-800">Félicitations !</h2></div><div><label class="text-[10px] font-black uppercase text-slate-400 ml-1">Preuve d'efficacité</label><textarea class="w-full h-32 p-6 border-2 border-slate-100 rounded-3xl outline-none mt-2 focus:border-yellow-400" oninput="formData.effectiveness = this.value">${formData.effectiveness}</textarea></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="text-[10px] font-black uppercase text-slate-400 ml-1">Leçons</label><textarea class="w-full h-40 p-4 border-2 border-slate-100 rounded-2xl outline-none mt-1 focus:border-blue-400" oninput="formData.lessonsLearned = this.value">${formData.lessonsLearned || ''}</textarea></div><div><label class="text-[10px] font-black uppercase text-slate-400 ml-1">Améliorations</label><textarea class="w-full h-40 p-4 border-2 border-slate-100 rounded-2xl outline-none mt-1 focus:border-green-400" oninput="formData.improvements = this.value">${formData.improvements || ''}</textarea></div></div><div class="p-6 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm"><h3 class="text-xs font-black uppercase text-indigo-600 mb-4 flex items-center gap-2">Partage</h3><div class="space-y-3"><label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer custom-checkbox"><input type="checkbox" class="hidden" ${formData.checklist.informed ? 'checked' : ''} onchange="updateChecklist('informed', this.checked)"><div class="w-6 h-6 rounded-lg border-2 border-slate-300 bg-white flex items-center justify-center"><i data-lucide="check" class="w-4 h-4 text-white hidden"></i></div><span class="text-sm font-medium text-slate-700">Informés ?</span></label><label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer custom-checkbox"><input type="checkbox" class="hidden" ${formData.checklist.applicable ? 'checked' : ''} onchange="updateChecklist('applicable', this.checked)"><div class="w-6 h-6 rounded-lg border-2 border-slate-300 bg-white flex items-center justify-center"><i data-lucide="check" class="w-4 h-4 text-white hidden"></i></div><span class="text-sm font-medium text-slate-700">Applicable ailleurs ?</span></label><label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer custom-checkbox"><input type="checkbox" class="hidden" ${formData.checklist.congratulated ? 'checked' : ''} onchange="updateChecklist('congratulated', this.checked)"><div class="w-6 h-6 rounded-lg border-2 border-slate-300 bg-white flex items-center justify-center"><i data-lucide="check" class="w-4 h-4 text-white hidden"></i></div><span class="text-sm font-medium text-slate-700">Équipe félicitée ?</span></label></div></div></div>`;
                     break;
             }
+            
             container.innerHTML = header + content;
             if(window.lucide) lucide.createIcons();
         }
@@ -972,13 +973,18 @@
         function removeIshikawaItem(cat, index) { formData.ishikawa[cat].splice(index, 1); renderContent(); }
 
         function getAvailableCauses() {
-            let available = [];
-            Object.values(formData.ishikawa).forEach(list => {
-                list.forEach(cause => {
-                    const isGrouped = formData.customFamilies.some(f => f.causes.some(c => c.id === cause.id));
-                    if (!isGrouped) available.push(cause);
-                });
-            });
+            const groupedCauseIds = new Set();
+            for (const family of formData.customFamilies) {
+                for (const cause of family.causes) {
+                    groupedCauseIds.add(cause.id);
+                }
+            }
+            const available = [];
+            for (const list of Object.values(formData.ishikawa)) {
+                for (const cause of list) {
+                    if (!groupedCauseIds.has(cause.id)) available.push(cause);
+                }
+            }
             return available;
         }
 
@@ -1304,23 +1310,26 @@
             return `<tr>${renderNode(treeRoot, 0, true)}`;
         }
 
-        function getRootCauseNodes(node) {
-            let nodes = [];
-            if (node.children.length === 0) {
-                if (node.text && node.text.trim() !== "") nodes.push(node);
+        function getRootCauseNodes(node, outArray) {
+            if (!node.children || node.children.length === 0) {
+                if (node.text && node.text.trim() !== "") outArray.push(node);
             } else {
-                node.children.forEach(child => nodes = nodes.concat(getRootCauseNodes(child)));
+                for (const child of node.children) {
+                    getRootCauseNodes(child, outArray);
+                }
             }
-            return nodes;
+            return outArray;
         }
 
         function getAllRootCauseNodes() {
-            let allNodes = [];
-            formData.analyses.forEach(analysis => {
-                if (analysis.tree.children.length > 0) {
-                    analysis.tree.children.forEach(child => allNodes = allNodes.concat(getRootCauseNodes(child)));
+            const allNodes = [];
+            for (const analysis of formData.analyses) {
+                if (analysis.tree.children && analysis.tree.children.length > 0) {
+                    for (const child of analysis.tree.children) {
+                        getRootCauseNodes(child, allNodes);
+                    }
                 }
-            });
+            }
             return allNodes;
         }
 
@@ -1376,11 +1385,38 @@
         }
         function closeHelpModal() { const modal = document.getElementById('help-modal'); modal.classList.add('hidden'); modal.classList.remove('flex'); }
 
-        function exportJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(formData));
+        async function exportJSON() {
             const safeTitle = formData.resolutionTitle ? formData.resolutionTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_').substring(0, 50) : 'KIHO_RSP';
-            const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", `${safeTitle}_${new Date().toISOString().split('T')[0]}.json`);
-            dl.click(); toggleMenu();
+            const fileName = `${safeTitle}_${new Date().toISOString().split('T')[0]}.json`;
+            const jsonStr = JSON.stringify(formData, null, 2);
+
+            // API moderne pour ouvrir la boîte de dialogue "Enregistrer sous"
+            if (window.showSaveFilePicker) {
+                try {
+                    const fileHandle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{ description: 'Fichier JSON KIHO', accept: {'application/json': ['.json']} }],
+                    });
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(jsonStr);
+                    await writable.close();
+                    showToast("Projet enregistré avec succès.", "success");
+                } catch (err) {
+                    // Ignore l'erreur si l'utilisateur annule la boîte de dialogue
+                    if (err.name !== 'AbortError') {
+                        console.error(err);
+                        showToast("Erreur lors de l'enregistrement.", "error");
+                    }
+                }
+            } else {
+                // Fallback classique si le navigateur (ex: vieux Safari) ne supporte pas l'API
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonStr);
+                const dl = document.createElement('a'); 
+                dl.setAttribute("href", dataStr); 
+                dl.setAttribute("download", fileName);
+                dl.click(); 
+            }
+            toggleMenu();
         }
 
         function importJSON(event) {
