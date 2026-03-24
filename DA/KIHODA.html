@@ -1,730 +1,839 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-      <link rel="manifest" href="manifest.json">
+       <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KIHO - Déclaration d'Accident</title>
-    <!-- Tailwind CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Nunito:wght@800;900&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- HTML2PDF pour la génération PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
+    <title>KIHO Bilan sécurité - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        /* Import des polices Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&family=Nunito:wght@800;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; 
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+        }
+
+        .title-font { font-family: 'Bebas Neue', cursive; }
         .font-nunito { font-family: 'Nunito', sans-serif; }
-        
-        .text-kiho { color: #005B63; }
-        .bg-kiho { background-color: #005B63; }
-        .border-kiho { border-color: #005B63; }
 
-        .input-label { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; color: #9ca3af; margin-bottom: 0.5rem; letter-spacing: 0.1em; }
-        .input-field { width: 100%; padding: 0.75rem; border: 2px solid #f3f4f6; border-radius: 0.75rem; outline: none; font-size: 0.875rem; font-weight: bold; background-color: white; transition: all 0.2s; }
-        .input-field:focus { border-color: #3b82f6; }
-        
-        .nav-btn { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; border-left: 4px solid transparent; color: #9ca3af; transition: all 0.2s; width: 100%; text-align: left; background: none; cursor: pointer; }
-        .nav-btn:hover { background-color: #f3f4f6; }
-        .nav-btn.active { border-left-color: #2563eb; background-color: #eff6ff; color: #1d4ed8; font-weight: 900; }
-        .nav-icon { width: 1.25rem; height: 1.25rem; stroke: #d1d5db; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-        .nav-btn.active .nav-icon { stroke: #2563eb; }
+        /* --- BARRE D'APERÇU (FIXE) --- */
+        #preview-bar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: #0f172a;
+            z-index: 10000000;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            color: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
 
-        .statut-btn { background-color: white; border: 2px solid #f3f4f6; color: #4b5563; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: bold; transition: all 0.2s; cursor: pointer; }
-        .statut-btn:hover { border-color: #14b8a6; }
-        .statut-btn.active { background-color: #005B63; color: white; border-color: #005B63; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        /* --- ZONE DU BUS --- */
+        .bus-container {
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            background-color: #ffffff; 
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            height: 450px;
+            box-shadow: 0 4px 15px -5px rgba(0, 0, 0, 0.05);
+        }
 
-        .btn-check { background-color: white; color: #374151; border: 2px solid #e5e7eb; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 900; transition: all 0.2s; cursor: pointer; }
-        .btn-check.active-blue { background-color: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .btn-check.active-teal { background-color: #0d9488; color: white; border-color: #0d9488; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .bus-photo {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; display: none;
+        }
 
-        .radio-label { display: flex; align-items: center; gap: 0.75rem; cursor: pointer; font-size: 0.875rem; font-weight: 900; color: #374151; }
-        .radio-input { width: 1.25rem; height: 1.25rem; accent-color: #2563eb; }
+        .bus-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+        }
 
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .bus-draw-body { fill: #f8fafc; stroke: #334155; stroke-width: 2.5; }
+        .bus-draw-window { fill: #f1f5f9; stroke: #334155; stroke-width: 1.5; }
+        .bus-draw-wheel { fill: #1e293b; stroke: #334155; stroke-width: 2; }
+        .bus-draw-detail { stroke: #94a3b8; stroke-width: 1.5; fill: none; }
+
+        .marker-dot {
+            cursor: pointer; transition: all 0.2s ease;
+            fill: rgba(51, 65, 85, 0.1); stroke: rgba(51, 65, 85, 0.2); stroke-width: 1;
+        }
+        .marker-dot:hover { fill: rgba(37, 99, 235, 0.4); stroke: #2563eb; r: 9; }
+        .marker-dot.active { fill: #ef4444; stroke: #ffffff; stroke-width: 2; r: 10; }
+        .marker-dot.selected { fill: #3b82f6; stroke: #1e293b; stroke-width: 3; r: 12; }
+
+        /* Tooltips : Fond noir, texte blanc, chiffres rouges */
+        .tooltip-bg { fill: #000000; rx: 8; }
+        .text-main { font-size: 14px; fill: #ffffff; font-weight: 700; }
+        .text-sub { font-size: 19px; fill: #ef4444; font-weight: 900; }
+
+        /* --- MODE APERÇU (AFFICHE) --- */
+        body.is-preview {
+            background-color: #334155;
+            padding-top: 100px !important;
+        }
+
+        body.is-preview .page-wrapper {
+            background-color: white !important;
+            padding: 10mm 15mm !important; 
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
+            width: 297mm !important;
+            height: 210mm !important;
+            max-height: 210mm !important;
+            margin: 0 auto;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+        }
+
+        .poster-header, .poster-footer {
+            display: none;
+        }
+
+        body.is-preview .poster-header {
+            display: flex !important;
+            align-items: center;
+            border-bottom: 6px solid #ef4444 !important;
+            padding-bottom: 10px !important;
+            margin-bottom: 5px !important;
+            flex-shrink: 0 !important;
+        }
+
+        body.is-preview .poster-footer {
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 5px !important;
+            padding-top: 10px !important;
+            border-top: 2px solid #e2e8f0 !important;
+            flex-shrink: 0 !important;
+        }
+
+        body.is-preview .no-print-element { display: none !important; }
+
+        /* Forcer l'affichage des bulles actives en preview */
+        body.is-preview .active-tooltip { opacity: 1 !important; }
+
+        /* Hauteur automatique pour absorber l'espace restant sans dépasser */
+        body.is-preview .bus-container {
+            height: auto !important;
+            flex: 1 1 0% !important;
+            min-height: 0 !important;
+            margin: 5mm 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* --- MODE IMPRESSION STRICT --- */
+        @media print {
+            @page { size: A4 landscape; margin: 0; }
+            body { background-color: white !important; padding: 0 !important; margin: 0 !important; }
+            
+            .page-wrapper { 
+                width: 297mm !important; 
+                height: 209mm !important; 
+                max-height: 209mm !important;
+                padding: 10mm 15mm !important; 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                border-radius: 0 !important; 
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                overflow: hidden !important;
+                page-break-after: avoid !important;
+            }
+            
+            #preview-bar { display: none !important; }
+            .no-print-element { display: none !important; }
+            
+            .poster-header {
+                display: flex !important;
+                align-items: center;
+                border-bottom: 6px solid #ef4444 !important;
+                padding-bottom: 10px !important;
+                margin-bottom: 5px !important;
+                flex-shrink: 0 !important;
+            }
+            .poster-footer {
+                display: flex !important;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 5px !important;
+                padding-top: 10px !important;
+                border-top: 2px solid #e2e8f0 !important;
+                flex-shrink: 0 !important;
+            }
+            
+            .bus-container {
+                height: auto !important;
+                flex: 1 1 0% !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            
+            .active-tooltip { opacity: 1 !important; }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        .hidden { display: none !important; }
-        
-        /* Spécifique au PDF caché */
-        #pdf-content { display: none; background: white; padding: 20px; color: black; font-family: 'Inter', sans-serif; width: 794px; }
-        .pdf-box { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }
-        .pdf-title { font-family: 'Nunito', sans-serif; font-weight: 900; color: #005B63; font-size: 14px; text-transform: uppercase; border-bottom: 2px solid #f3f4f6; padding-bottom: 4px; margin-bottom: 8px; }
-        .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .pdf-label { font-size: 9px; font-weight: 900; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 1px; }
-        .pdf-value { font-size: 12px; font-weight: 600; color: #111827; }
     </style>
 </head>
-<body class="min-h-screen bg-gray-50 text-gray-900 pb-20 relative">
+<body>
 
-    <!-- WELCOME MODAL -->
-    <div id="welcome-modal" class="fixed inset-0 flex items-center justify-center p-4" style="background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 50000;">
-        <div class="bg-white shadow-2xl w-full relative overflow-hidden p-8" style="border-radius: 1.5rem; max-width: 450px;">
-            <!-- Barre supérieure bleue -->
-            <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
-            
-            <!-- En-tête -->
-            <div class="flex items-start gap-4 mb-6 mt-2">
-                <div class="bg-blue-50 text-blue-600 p-3 flex-shrink-0" style="border-radius: 1rem;">
-                    <i data-lucide="shield-check" class="w-8 h-8"></i>
+    <!-- FENÊTRE MODALE DE BIENVENUE -->
+    <div id="welcome-modal" class="fixed inset-0 z-[20000000] hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4 no-print-element">
+        <div class="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full overflow-hidden border-t-[10px] border-blue-600 animate-in fade-in zoom-in duration-300">
+            <div class="p-8 md:p-10">
+                <div class="flex items-center gap-5 mb-8">
+                    <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900 leading-tight uppercase tracking-tight text-left">Bienvenue dans KIHO bus scan</h2>
+                        <p class="text-xs font-bold text-blue-500 uppercase tracking-widest mt-1 text-left">Confidentialité & Sauvegarde</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 class="text-xl font-black text-gray-800 leading-tight mb-1">Bienvenue dans l'application KIHO déclaration d'un accident</h2>
-                    <p class="text-xs uppercase text-gray-400 font-bold" style="letter-spacing: 0.1em;">Confidentialité & Sauvegarde</p>
+                <div class="space-y-6">
+                    <p class="text-slate-600 leading-relaxed text-sm font-medium text-left">
+                        Afin de garantir la stricte confidentialité de vos données, cette application <span class="text-slate-900 font-bold">ne transfère aucune information sur Internet</span>. Tout votre travail reste local.
+                    </p>
+                    <div class="bg-amber-50 border border-amber-100 p-5 rounded-3xl flex gap-4 items-start shadow-sm">
+                        <div class="text-amber-600 flex-shrink-0 mt-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        </div>
+                        <div>
+                            <p class="text-[13px] font-bold text-amber-900 leading-snug text-left">
+                                Attention : Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues.
+                            </p>
+                            <p class="text-[11px] text-amber-700 mt-2 font-medium italic text-left">Pensez à enregistrer votre travail régulièrement.</p>
+                        </div>
+                    </div>
                 </div>
+                <button onclick="closeWelcomeModal()" class="mt-10 w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-[1.25rem] transition-all shadow-xl shadow-blue-200 flex items-center justify-center gap-3 uppercase tracking-[0.15em] text-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                    J'ai compris
+                </button>
             </div>
-            
-            <!-- Encart Avertissement -->
-            <div class="border p-5 mb-6" style="background-color: #fff7ed; border-color: #fed7aa; color: #7c2d12; border-radius: 1rem;">
-                <h3 class="font-black flex items-center gap-2 mb-3 uppercase text-sm" style="color: #ea580c;">
-                    <i data-lucide="alert-triangle" class="w-5 h-5"></i> Important
-                </h3>
-                <p class="font-bold text-sm mb-3">Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues.</p>
-                <p class="text-sm leading-relaxed mb-4" style="color: #9a3412;">Pensez à sauvegarder régulièrement votre travail à l'aide du bouton <strong>Enregistrer</strong> présent dans le menu situé en haut à droite.</p>
-                
-                <!-- Faux badge visuel -->
-                <div class="bg-white border px-3 py-2 flex items-center justify-center gap-2 text-sm font-bold shadow-sm text-gray-700 w-fit mx-auto" style="border-color: #fed7aa; border-radius: 0.5rem;">
-                    <i data-lucide="save" class="w-4 h-4 text-blue-600"></i> Enregistrer (.json)
-                </div>
-            </div>
-            
-            <!-- Bouton d'action -->
-            <button onclick="closeWelcomeModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 font-black uppercase flex items-center justify-center gap-2 transition-colors shadow-lg focus:outline-none" style="border-radius: 0.75rem; letter-spacing: 0.1em;">
-                J'ai compris <i data-lucide="check" class="w-5 h-5"></i>
-            </button>
         </div>
     </div>
 
+    <!-- Barre d'aperçu dynamique -->
+    <div id="preview-bar">
+        <div class="flex items-center gap-3">
+            <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+            <span class="font-black text-sm uppercase tracking-widest text-white">Bilan Carrosserie - Format Affiche</span>
+        </div>
+        <div class="h-8 w-px bg-slate-700"></div>
+        <button onclick="exitPreview()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-black uppercase transition-all flex items-center gap-2 border border-slate-600 cursor-pointer text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Retour Saisie
+        </button>
+        <button onclick="window.print()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-black uppercase transition-all shadow-xl shadow-blue-900/40 flex items-center gap-2 cursor-pointer text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+            Imprimer le Bilan
+        </button>
+    </div>
+
     <!-- HEADER -->
-    <header class="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm">
-        <div class="mx-auto px-4 h-16 flex items-center justify-between" style="max-width: 1400px;">
-            <div class="flex items-center gap-3">
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 z-40 sticky top-0 no-print-element">
+        <!-- Bloc Logo et Titre -->
+        <div class="flex items-center gap-3">
+            <div class="h-[22px] flex items-center overflow-hidden">
                 <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" 
-                     style="height: 22px; width: auto; object-fit: contain;" alt="Logo Keolis" 
-                     onerror="this.outerHTML='<span style=\'font-weight:900; font-style:italic; font-size:24px; color:#005B63; letter-spacing:-1px;\'>Keolis</span>'" />
-                <div class="w-px h-6 bg-gray-200 ml-2 mr-2"></div>
-                <h1 class="font-nunito font-black text-lg md:text-xl uppercase tracking-tighter flex items-center gap-1">
-                    <span class="text-kiho">KIHO</span>
-                    <span class="text-blue-600">DÉCLARATION D'ACCIDENT</span>
-                </h1>
+                     alt="Logo Keolis" 
+                     class="h-full w-auto object-contain"
+                     onerror="this.style.display='none'; document.getElementById('logo-fallback').classList.remove('hidden');">
+                <div id="logo-fallback" class="hidden text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8a2 2 0 012 2v10s0 2-2 2H8s-2 0-2-2V9a2 2 0 012-2zm0 0V5a2 2 0 012-2h4a2 2 0 012 2v2M9 17v1m6-1v1" /></svg>
+                </div>
             </div>
-            
-            <div class="relative">
-                <button id="menu-btn" class="p-2 hover:bg-gray-100 rounded-lg text-gray-600 focus:outline-none">
-                    <i data-lucide="menu" id="menu-icon"></i>
-                </button>
-                <div id="dropdown-menu" class="hidden absolute right-0 mt-4 bg-white shadow-2xl border border-gray-200 overflow-hidden" style="width: 16rem; border-radius: 0.75rem; z-index: 60;">
-                    <div class="p-2 space-y-1">
-                        <!-- Import/Export & PDF -->
-                        <button onclick="document.getElementById('import-file').click()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-blue-50 rounded-lg text-gray-700 font-bold transition-colors">
-                            <i data-lucide="folder-open" class="w-4 h-4 text-blue-600"></i> Ouvrir
-                        </button>
-                        <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
-                        
-                        <button onclick="exportData()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-blue-50 rounded-lg text-gray-700 font-bold transition-colors">
-                            <i data-lucide="save" class="w-4 h-4 text-blue-600"></i> Enregistrer
-                        </button>
+            <h1 class="font-nunito text-[30px] font-[900] tracking-tighter leading-none select-none">
+                <span style="color: #005C7A">KIHO BUS</span>
+                <span style="color: #00A3A6">SCAN</span>
+            </h1>
+        </div>
 
-                        <div class="h-px bg-gray-100 my-1"></div>
+        <!-- Bloc Menu -->
+        <div class="relative">
+            <button onclick="toggleDropdown()" id="burger-btn" class="p-3 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all border border-slate-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
 
-                        <button onclick="generatePDF()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 rounded-lg text-gray-700 font-bold transition-colors" id="btn-dl-pdf">
-                            <i data-lucide="file-down" class="w-4 h-4"></i> <span id="pdf-btn-text">Enregistrer le PDF</span>
-                        </button>
-
-                        <button onclick="sendEmail()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 rounded-lg text-gray-700 font-bold transition-colors">
-                            <i data-lucide="mail" class="w-4 h-4"></i> Envoyer par e-mail
-                        </button>
-
-                        <div class="h-px bg-gray-100 my-1"></div>
-
-                        <button onclick="resetForm()" class="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-red-50 rounded-lg text-red-600 font-bold transition-colors">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i> Vider le formulaire
-                        </button>
+            <!-- Menu Déroulant -->
+            <div id="dropdown-menu" class="hidden absolute right-0 mt-4 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div class="p-3 space-y-1">
+                    <div class="px-4 py-2 mb-2 border-b border-slate-50">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Réglages Analyse</p>
+                        <div class="mt-2 space-y-2">
+                            <div class="flex flex-col">
+                                <label class="text-[8px] font-bold text-slate-500 uppercase ml-1 text-left">Semaine</label>
+                                <input type="text" id="week-label" oninput="updateGlobalTotals()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-black text-slate-700 focus:ring-1 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-[8px] font-bold text-slate-500 uppercase ml-1 text-left">Référence Cumul</label>
+                                <input type="text" id="since-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-black text-slate-700 focus:ring-1 focus:ring-blue-500 outline-none" value="01 Janvier 2024">
+                            </div>
+                        </div>
                     </div>
+
+                    <button onclick="newAnalysis()" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600 rounded-2xl transition-all group">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        <span class="text-sm font-bold">Nouvelle Analyse (Effacer)</span>
+                    </button>
+
+                    <button onclick="exportData()" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-slate-700 rounded-2xl transition-all group">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                        <span class="text-sm font-bold text-left">Enregistrer</span>
+                    </button>
+
+                    <label class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-slate-700 rounded-2xl transition-all group cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                        <span class="text-sm font-bold text-left">Ouvrir</span>
+                        <input type="file" accept=".json" class="hidden" onchange="importData(event)">
+                    </label>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- PROGRESS BAR -->
-    <div class="mx-auto px-4 pt-6" style="max-width: 64rem;">
-        <div class="flex justify-between mb-2" id="progress-bar"></div>
-    </div>
-
-    <!-- MAIN APP CONTAINER -->
-    <main class="mx-auto my-6 px-4" style="max-width: 64rem;">
-        <div id="app-container" class="bg-white shadow-xl border border-gray-200 overflow-hidden flex flex-col md:flex-row" style="border-radius: 1.5rem; min-height: 800px;">
-            
-            <!-- SIDEBAR -->
-            <nav class="w-full md:w-64 bg-gray-50 border-r border-gray-200">
-                <div class="flex flex-col py-6 sticky top-20">
-                    <button class="nav-btn active" onclick="goToStep(1)">
-                        <i data-lucide="user" class="nav-icon"></i><span class="text-xs uppercase tracking-widest">Victime</span>
-                    </button>
-                    <button class="nav-btn" onclick="goToStep(2)">
-                        <i data-lucide="clock" class="nav-icon"></i><span class="text-xs uppercase tracking-widest">L'Accident</span>
-                    </button>
-                    <button class="nav-btn" onclick="goToStep(3)">
-                        <i data-lucide="stethoscope" class="nav-icon"></i><span class="text-xs uppercase tracking-widest">Médical</span>
-                    </button>
-                    <button class="nav-btn" onclick="goToStep(4)">
-                        <i data-lucide="alert-triangle" class="nav-icon"></i><span class="text-xs uppercase tracking-widest">Lésions</span>
-                    </button>
-                    <button class="nav-btn" onclick="goToStep(5)">
-                        <i data-lucide="users" class="nav-icon"></i><span class="text-xs uppercase tracking-widest">Alerte & Témoins</span>
-                    </button>
+    <div class="page-wrapper max-w-[1200px] mx-auto mt-6 px-4 text-center">
+        
+        <!-- HEADER POSTER -->
+        <header class="poster-header">
+            <div class="w-48 h-20 flex items-center justify-center border-r-2 border-slate-100 pr-6">
+                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" alt="Logo Keolis" class="max-h-full max-w-full object-contain">
+            </div>
+            <div class="flex-1 text-center pr-48">
+                <h2 class="text-6xl font-black title-font tracking-wider text-red-600 uppercase italic leading-none mb-3">Bilan Sécurité Carrosserie</h2>
+                <div class="flex justify-center gap-10 text-xl font-black text-slate-500 uppercase tracking-widest">
+                    <span id="print-week-display" class="text-red-600 bg-red-50 px-6 py-1 rounded-full border-2 border-red-200"></span>
+                    <span id="print-date-display" class="py-1"></span>
                 </div>
-            </nav>
+            </div>
+        </header>
 
-            <!-- CONTENT AREA -->
-            <div class="flex-1 p-6 md:p-10 bg-white overflow-y-auto custom-scrollbar" style="max-height: 85vh;">
-                
-                <!-- STEP 1 : VICTIME -->
-                <div id="step-1" class="step-content space-y-8">
-                    <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3 border-b-2 border-gray-100 pb-4">
-                        <i data-lucide="user" class="text-kiho"></i> Identité de la victime
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div><label class="input-label">Nom</label><input type="text" data-bind="victime.nom" class="input-field" /></div>
-                        <div><label class="input-label">Prénom</label><input type="text" data-bind="victime.prenom" class="input-field" /></div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="input-label">Âge</label><input type="number" data-bind="victime.age" class="input-field" /></div>
-                            <div><label class="input-label">Téléphone</label><input type="tel" data-bind="victime.telephone" class="input-field" /></div>
-                        </div>
-                        <div><label class="input-label">Site de rattachement</label><input type="text" data-bind="victime.site" class="input-field" /></div>
-                        <div><label class="input-label">Fonction</label><input type="text" data-bind="victime.fonction" class="input-field" /></div>
-                        <div class="md:col-span-2">
-                            <label class="input-label">Statut du collaborateur</label>
-                            <div class="flex flex-wrap gap-2">
-                                <button onclick="setStatut('CDI')" class="statut-btn">CDI</button>
-                                <button onclick="setStatut('CDD')" class="statut-btn">CDD</button>
-                                <button onclick="setStatut('Apprenti')" class="statut-btn">Apprenti</button>
-                                <button onclick="setStatut('Stagiaire')" class="statut-btn">Stagiaire</button>
-                                <button onclick="setStatut('Intérimaire')" class="statut-btn">Intérimaire</button>
-                            </div>
-                        </div>
-                        <div class="md:col-span-2"><label class="input-label">Adresse exacte de l'accident</label><textarea data-bind="victime.adresseAccident" class="input-field custom-scrollbar" style="height: 100px;"></textarea></div>
-                    </div>
-                </div>
-
-                <!-- STEP 2 : ACCIDENT -->
-                <div id="step-2" class="step-content hidden space-y-8">
-                    <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3 border-b-2 border-gray-100 pb-4">
-                        <i data-lucide="clock" class="text-kiho"></i> Détails temporels
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div><label class="input-label">Date</label><input type="date" data-bind="accident.date" class="input-field" /></div>
-                        <div><label class="input-label">Heure</label><input type="time" data-bind="accident.heure" class="input-field" /></div>
-                        <div class="md:col-span-2"><label class="input-label">Lieu exact (Atelier, trajet, etc.)</label><input type="text" data-bind="accident.lieu" class="input-field" /></div>
-                        <div><label class="input-label">Horaire de travail ce jour</label><input type="text" data-bind="accident.horaireTravail" placeholder="Ex: 08h30 - 16h30" class="input-field" /></div>
-                    </div>
-                </div>
-
-                <!-- STEP 3 : MÉDICAL -->
-                <div id="step-3" class="step-content hidden space-y-10">
-                    <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3 border-b-2 border-gray-100 pb-4">
-                        <i data-lucide="stethoscope" class="text-kiho"></i> Suivi Médical
-                    </h2>
-                    <div class="p-8 bg-gray-50 rounded-2xl flex items-center justify-between border border-gray-200">
-                        <span class="font-bold">Premiers soins prodigués ?</span>
-                        <div class="flex gap-4">
-                            <button onclick="setRadio('medical.premiersSoins','Oui',this)" class="btn-check btn-soins">Oui</button>
-                            <button onclick="setRadio('medical.premiersSoins','Non',this)" class="btn-check btn-soins">Non</button>
-                        </div>
-                    </div>
-                    <div id="heure-soins-container" class="hidden"><label class="input-label">À quelle heure ?</label><input type="time" data-bind="medical.heureSoins" class="input-field md:w-1/2" /></div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            <label class="input-label">Prise en charge par :</label>
-                            <div class="grid grid-cols-2 gap-2">
-                                <button onclick="setRadio('medical.typePriseEnCharge','Médecin gén.',this)" class="btn-check btn-pec px-2 py-2 text-xs">Médecin gén.</button>
-                                <button onclick="setRadio('medical.typePriseEnCharge','Pompier',this)" class="btn-check btn-pec px-2 py-2 text-xs">Pompier</button>
-                                <button onclick="setRadio('medical.typePriseEnCharge','SAMU',this)" class="btn-check btn-pec px-2 py-2 text-xs">SAMU</button>
-                                <button onclick="setRadio('medical.typePriseEnCharge','Aucun',this)" class="btn-check btn-pec px-2 py-2 text-xs">Aucun</button>
-                            </div>
-                        </div>
-                        <div><label class="input-label">Délai d'intervention</label><input type="text" data-bind="medical.delaiPriseEnCharge" placeholder="Ex: 15 min" class="input-field" /></div>
-                        <div>
-                            <label class="input-label">Rapport de police ?</label>
-                            <select data-bind="medical.etablissementPolice" class="input-field cursor-pointer"><option>Non</option><option>Oui</option></select>
-                        </div>
-                    </div>
-
-                    <div class="p-8 rounded-2xl border space-y-6" style="background-color: #fff7ed; border-color: #ffedd5;">
-                        <h3 class="font-black text-sm uppercase tracking-widest flex items-center gap-2" style="color: #9a3412;">
-                            <i data-lucide="activity"></i> Arrêt de travail consécutif
-                        </h3>
-                        <div class="flex gap-8">
-                            <label class="radio-label"><input type="radio" name="arret_travail" value="Oui" onchange="handleArret(this.value)" class="radio-input"> Oui</label>
-                            <label class="radio-label"><input type="radio" name="arret_travail" value="Non" onchange="handleArret(this.value)" class="radio-input"> Non</label>
-                            <label class="radio-label"><input type="radio" name="arret_travail" value="À confirmer" onchange="handleArret(this.value)" class="radio-input"> À confirmer</label>
-                        </div>
-                        <div id="arret-details" class="hidden grid grid-cols-2 gap-6 border-t pt-4" style="border-color: #fed7aa;">
-                            <div><label class="input-label" style="color: #9a3412;">Date de l'arrêt</label><input type="date" data-bind="medical.dateArret" class="input-field" /></div>
-                            <div><label class="input-label" style="color: #9a3412;">Durée prévisionnelle</label><input type="text" data-bind="medical.dureeArret" placeholder="Ex: 5 jours" class="input-field" /></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 4 : LÉSIONS -->
-                <div id="step-4" class="step-content hidden space-y-10">
-                    <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3 border-b-2 border-gray-100 pb-4">
-                        <i data-lucide="alert-triangle" class="text-kiho"></i> Cartographie des Lésions
-                    </h2>
-                    <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Cliquer sur un repère pour spécifier le traumatisme.</p>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 py-4 justify-items-center">
-                        <div class="flex flex-col items-center">
-                            <h3 class="text-xs font-black text-gray-400 mb-6 uppercase tracking-widest">Face (Antérieure)</h3>
-                            <div class="relative bg-gray-50 rounded-2xl border border-gray-200 shadow-sm" id="box-front" style="width: 300px; height: 600px;">
-                                <div id="silhouette-front-points" class="absolute inset-0 w-full h-full z-10"></div>
-                            </div>
-                        </div>
-                        <div class="flex flex-col items-center">
-                            <h3 class="text-xs font-black text-gray-400 mb-6 uppercase tracking-widest">Dos (Postérieure)</h3>
-                            <div class="relative bg-gray-50 rounded-2xl border border-gray-200 shadow-sm" id="box-back" style="width: 300px; height: 600px;">
-                                <div id="silhouette-back-points" class="absolute inset-0 w-full h-full z-10"></div>
-                            </div>
-                        </div>
-                        
-                        <!-- Modal -->
-                        <div id="lesion-modal" class="hidden fixed inset-0 flex items-center justify-center p-6" style="background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 100;">
-                            <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h3 class="font-black text-lg flex items-center gap-2"><i data-lucide="activity" class="text-red-500"></i> Nature</h3>
-                                    <button onclick="document.getElementById('lesion-modal').classList.add('hidden')" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg"><i data-lucide="x"></i></button>
-                                </div>
-                                <div class="mb-4 p-3 rounded-xl" style="background-color: #eff6ff;"><span class="text-[10px] font-black uppercase block" style="color: #60a5fa;">Zone ciblée</span><span id="modal-zone-name" class="font-black text-lg" style="color: #1d4ed8;">...</span></div>
-                                <div id="lesion-options" class="overflow-y-auto space-y-1 custom-scrollbar" style="max-height: 300px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 5 : ALERTE & TÉMOINS -->
-                <div id="step-5" class="step-content hidden space-y-12">
-                    <section class="space-y-6">
-                        <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3 border-b-2 border-gray-100 pb-4">
-                            <i data-lucide="bell" class="text-kiho"></i> Identité de la première personne avisée
-                        </h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-8 rounded-2xl border border-gray-200">
-                            <div><label class="input-label">Nom</label><input type="text" data-bind="alerte.nom" class="input-field" /></div>
-                            <div><label class="input-label">Prénom</label><input type="text" data-bind="alerte.prenom" class="input-field" /></div>
-                            <div><label class="input-label">Fonction</label><input type="text" data-bind="alerte.fonction" class="input-field" /></div>
-                            <div><label class="input-label">Téléphone</label><input type="tel" data-bind="alerte.telephone" class="input-field" /></div>
-                            <div><label class="input-label">Date et heure</label><input type="datetime-local" data-bind="alerte.dateHeure" class="input-field" /></div>
-                            <div><label class="input-label">Site géographique</label><input type="text" data-bind="alerte.site" class="input-field" /></div>
-                            <div class="md:col-span-2"><label class="input-label">Nom de l'entreprise extérieure (si ext.)</label><input type="text" data-bind="alerte.entrepriseExt" class="input-field" /></div>
-                            <div class="md:col-span-2">
-                                <label class="input-label">Première personne avisée par :</label>
-                                <div class="flex gap-8">
-                                    <label class="radio-label"><input type="radio" name="alerte_par" value="La victime" onchange="formData.alerte.aviseePar=this.value" class="radio-input"> La victime</label>
-                                    <label class="radio-label"><input type="radio" name="alerte_par" value="Un tiers" onchange="formData.alerte.aviseePar=this.value" class="radio-input"> Un tiers</label>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="space-y-6">
-                        <header class="border-b-2 border-gray-100 pb-4 flex justify-between items-center">
-                            <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3">
-                                <i data-lucide="users" class="text-kiho"></i> Identité des témoins
-                            </h2>
-                            <button onclick="addWitness()" class="bg-blue-600 text-white text-xs px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-blue-700 transition-colors">
-                                <i data-lucide="plus-circle" class="w-4 h-4"></i> Nouveau Témoin
+        <!-- RÉCAPITULATIF SUPÉRIEUR (App uniquement) -->
+        <div class="no-print-element mb-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                        Impacts enregistrés
+                    </h3>
+                    <div class="flex gap-2">
+                        <div class="flex bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
+                            <label class="cursor-pointer hover:bg-slate-100 text-slate-600 text-[10px] px-3 py-1.5 transition-all font-black uppercase border-r border-slate-200">
+                                Charger Photo Bus
+                                <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                            </label>
+                            <button onclick="removeBusPhoto()" id="btn-remove-photo" class="hidden hover:bg-red-50 text-red-600 text-[10px] px-3 py-1.5 transition-all font-black uppercase">
+                                Supprimer Photo
                             </button>
-                        </header>
-                        <div id="witnesses-container" class="grid gap-6"></div>
-                    </section>
-                </div>
-            </div>
-        </div>
-
-        <!-- FOOTER NAV -->
-        <footer class="mt-8 flex justify-between items-center no-print">
-            <button id="btn-prev" onclick="goToStep(currentStep-1)" class="flex items-center gap-2 px-8 py-3 font-black text-xs uppercase tracking-widest transition-all rounded-2xl text-gray-300 pointer-events-none">
-                <i data-lucide="chevron-left" class="w-5 h-5"></i> Retour
-            </button>
-            <button id="btn-next" onclick="goToStep(currentStep+1)" class="flex items-center gap-2 px-10 py-3 bg-blue-600 text-white rounded-2xl shadow-md font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all">
-                Étape Suivante <i data-lucide="chevron-right" id="btn-next-icon" class="w-5 h-5"></i>
-            </button>
-        </footer>
-    </main>
-
-    <!-- HIDDEN PDF TEMPLATE (Design ultra-pro pour 1-2 pages) -->
-    <div style="position: absolute; left: -9999px; top: 0;">
-        <div id="pdf-content">
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid #005B63; padding-bottom: 10px; margin-bottom: 16px;">
-                <div style="font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 24px; color: #005B63; font-style: italic;">KEOLIS <span style="font-size: 14px; color:#6b7280; font-style: normal; margin-left: 8px;">KIHO SYSTEM</span></div>
-                <div style="text-align: right;">
-                    <div style="font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 18px; color: #2563eb;">RAPPORT D'ACCIDENT DU TRAVAIL</div>
-                    <div style="font-size: 10px; font-weight: 900; color: #9ca3af; letter-spacing: 0.1em; margin-top: 4px;" id="pdf-ref"></div>
-                </div>
-            </div>
-
-            <div class="pdf-grid">
-                <!-- Victime -->
-                <div class="pdf-box">
-                    <div class="pdf-title">Identité de la Victime</div>
-                    <div style="margin-bottom: 8px;"><span class="pdf-label">Nom & Prénom</span><span class="pdf-value" id="pdf-nom"></span></div>
-                    <div class="pdf-grid" style="margin-bottom: 8px;">
-                        <div><span class="pdf-label">Statut</span><span class="pdf-value" id="pdf-statut"></span></div>
-                        <div><span class="pdf-label">Âge</span><span class="pdf-value" id="pdf-age"></span></div>
-                    </div>
-                    <div class="pdf-grid" style="margin-bottom: 8px;">
-                        <div><span class="pdf-label">Fonction</span><span class="pdf-value" id="pdf-fonction"></span></div>
-                        <div><span class="pdf-label">Site</span><span class="pdf-value" id="pdf-site"></span></div>
-                    </div>
-                    <div><span class="pdf-label">Téléphone</span><span class="pdf-value" id="pdf-tel"></span></div>
-                </div>
-
-                <!-- Contexte -->
-                <div class="pdf-box">
-                    <div class="pdf-title">Contexte de l'Accident</div>
-                    <div class="pdf-grid" style="margin-bottom: 8px;">
-                        <div><span class="pdf-label">Date</span><span class="pdf-value" id="pdf-date"></span></div>
-                        <div><span class="pdf-label">Heure</span><span class="pdf-value" id="pdf-heure"></span></div>
-                    </div>
-                    <div style="margin-bottom: 8px;"><span class="pdf-label">Lieu</span><span class="pdf-value" id="pdf-lieu"></span></div>
-                    <div style="margin-bottom: 8px;"><span class="pdf-label">Adresse exacte</span><span class="pdf-value" id="pdf-adresse" style="font-style: italic; color: #4b5563;"></span></div>
-                    <div><span class="pdf-label">Horaire de travail</span><span class="pdf-value" id="pdf-horaire"></span></div>
-                </div>
-            </div>
-
-            <div class="pdf-grid">
-                <!-- Médical -->
-                <div class="pdf-box">
-                    <div class="pdf-title">Bilan Médical</div>
-                    <div class="pdf-grid" style="margin-bottom: 8px;">
-                        <div><span class="pdf-label">1ers Soins</span><span class="pdf-value" id="pdf-soins"></span></div>
-                        <div><span class="pdf-label">Prise en charge</span><span class="pdf-value" id="pdf-pec"></span></div>
-                    </div>
-                    <div class="pdf-grid" style="margin-bottom: 8px;">
-                        <div><span class="pdf-label">Rapport Police</span><span class="pdf-value" id="pdf-police"></span></div>
-                        <div><span class="pdf-label">Arrêt de Travail</span><span class="pdf-value" id="pdf-arret" style="color: #ea580c;"></span></div>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Lésions -->
-                <div class="pdf-box">
-                    <div class="pdf-title">Cartographie des Lésions</div>
-                    <div id="pdf-lesions" style="font-size: 13px; line-height: 1.5; color: #111827;"></div>
-                </div>
-            </div>
-
-            <!-- Alerte & Témoins -->
-            <div class="pdf-box">
-                <div class="pdf-title">Identité de la première personne avisée</div>
-                <div class="pdf-grid" style="margin-bottom: 12px; border-bottom: 1px solid #f3f4f6; padding-bottom: 12px;">
-                    <div><span class="pdf-label">Première personne avisée par</span><span class="pdf-value" id="pdf-alerte-par"></span></div>
-                    <div><span class="pdf-label">Date de l'alerte</span><span class="pdf-value" id="pdf-alerte-date"></span></div>
-                    <div><span class="pdf-label">Personne avisée</span><span class="pdf-value" id="pdf-alerte-nom"></span></div>
-                    <div><span class="pdf-label">Fonction / Tél</span><span class="pdf-value" id="pdf-alerte-contact"></span></div>
-                    <div style="grid-column: span 2;"><span class="pdf-label">Entreprise extérieure</span><span class="pdf-value" id="pdf-alerte-ent"></span></div>
-                </div>
-                <div class="pdf-title" style="margin-top: 12px;">Identité des témoins</div>
-                <div id="pdf-temoins" style="font-size: 13px; line-height: 1.5; color: #111827;"></div>
-            </div>
-
-            <!-- Signatures -->
-            <div class="pdf-grid" style="margin-top: 20px; page-break-inside: avoid;">
-                <div style="border-top: 2px solid #e5e7eb; padding-top: 8px; height: 80px;">
-                    <span class="pdf-label">Visa Manager / Encadrant</span>
-                </div>
-                <div style="border-top: 2px solid #e5e7eb; padding-top: 8px; height: 80px;">
-                    <span class="pdf-label">Visa Collaborateur / Victime</span>
+                <div id="full-chocs-list" class="flex gap-4 overflow-x-auto pb-2 custom-scrollbar min-h-[60px] items-center text-slate-300 italic text-xs w-full text-center justify-center">
+                    Aucun impact saisi.
                 </div>
             </div>
             
-            <div style="text-align: center; font-size: 9px; color: #9ca3af; margin-top: 10px; border-top: 1px solid #f3f4f6; padding-top: 8px;">
-                Document confidentiel généré par l'application KIHO - Keolis
+            <div class="flex flex-col justify-center">
+                <button onclick="enterPreview()" class="w-full h-full bg-blue-600 text-white font-black rounded-2xl shadow-lg shadow-blue-100 flex flex-col items-center justify-center gap-1 hover:bg-blue-700 transition-all uppercase text-[10px] tracking-widest active:scale-95 group">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    Aperçu Affiche
+                </button>
             </div>
         </div>
+
+        <!-- ZONE DU BUS -->
+        <div class="bus-container">
+            <img id="main-bus-image" src="" alt="" class="bus-photo">
+            <svg viewBox="0 0 1000 450" class="bus-overlay" id="bus-svg">
+                <g id="bus-blueprint">
+                    <path class="bus-draw-body" d="M100,340 L100,120 Q100,80 160,80 L880,80 Q940,80 940,120 L940,340 L880,340 L880,320 L780,320 L780,340 L220,340 L220,320 L120,320 L120,340 Z" />
+                    <rect class="bus-draw-window" x="115" y="95" width="80" height="150" rx="10" />
+                    <rect class="bus-draw-window" x="210" y="95" width="130" height="120" rx="4" />
+                    <rect class="bus-draw-window" x="350" y="95" width="130" height="120" rx="4" />
+                    <rect class="bus-draw-window" x="490" y="95" width="130" height="120" rx="4" />
+                    <rect class="bus-draw-window" x="630" y="95" width="130" height="120" rx="4" />
+                    <rect class="bus-draw-window" x="770" y="95" width="155" height="150" rx="10" />
+                    <rect class="bus-draw-detail" x="210" y="225" width="130" height="115" />
+                    <rect class="bus-draw-detail" x="630" y="225" width="130" height="115" />
+                    <line class="bus-draw-detail" x1="275" y1="225" x2="275" y2="340" />
+                    <line class="bus-draw-detail" x1="695" y1="225" x2="695" y2="340" />
+                    <circle class="bus-draw-wheel" cx="170" cy="340" r="45" />
+                    <circle cx="170" cy="340" r="18" fill="#f8fafc" />
+                    <circle class="bus-draw-wheel" cx="830" cy="340" r="45" />
+                    <circle cx="830" cy="340" r="18" fill="#f8fafc" />
+                    <path class="bus-draw-body" d="M100,180 Q60,180 60,210 L60,250 Q60,270 80,270 L100,250 Z" />
+                </g>
+                <g id="grid-markers"></g>
+            </svg>
+        </div>
+
+        <!-- ÉDITEUR FLOTTANT -->
+        <div id="editor-panel" class="no-print-element fixed bottom-8 left-1/2 -translate-x-1/2 w-[600px] bg-white p-6 rounded-3xl shadow-2xl border border-slate-200 hidden z-[9999]">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                <h3 class="font-black text-xs uppercase tracking-widest text-slate-800 text-left">Saisie d'incident</h3>
+                <button onclick="closeEditor()" class="text-slate-400 hover:text-red-500 transition-colors">✕</button>
+            </div>
+            <div id="existing-impacts" class="max-h-32 overflow-y-auto mb-4 custom-scrollbar text-[10px] space-y-2"></div>
+            <div class="grid grid-cols-3 gap-3 text-left">
+                <div class="col-span-1">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Nature</label>
+                    <input type="text" id="input-name" placeholder="Vitre, choc..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div class="col-span-1">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Coût (€)</label>
+                    <input type="number" id="input-cost" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 font-black text-lg outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div class="col-span-1">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Date</label>
+                    <input type="date" id="input-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 font-bold text-[10px] outline-none">
+                </div>
+            </div>
+            <button onclick="addImpactToPoint()" class="w-full bg-slate-900 text-white font-black mt-4 py-4 rounded-2xl hover:bg-slate-800 transition-all text-xs uppercase tracking-widest active:scale-95">Enregistrer</button>
+        </div>
+
+        <!-- PIED DE PAGE POSTER -->
+        <footer class="poster-footer">
+            <div class="stat-card-white flex-1 p-5 rounded-3xl border-l-[16px] border-red-500 max-w-[420px] bg-white text-left">
+                <div class="flex justify-between items-start mb-1">
+                    <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">Bilan <span id="current-week-title">Semaine</span></p>
+                    <div class="text-right">
+                        <p class="text-[9px] font-black text-slate-300 uppercase leading-none">Nb Incidents</p>
+                        <p class="text-2xl font-black text-red-600 leading-none mt-1" id="count-week">0</p>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <p class="text-5xl font-black text-slate-900" id="total-week-display">0</p>
+                    <p class="text-xl font-black text-red-500">€</p>
+                </div>
+            </div>
+            <div class="text-center px-6 flex-1">
+                <p class="text-[10px] text-slate-300 font-bold uppercase tracking-widest">Affiche Générée KIHO</p>
+            </div>
+            <div class="stat-card-white flex-1 p-5 rounded-3xl border-l-[16px] border-amber-500 max-w-[420px] bg-white text-left">
+                <div class="flex justify-between items-start mb-1">
+                    <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">Cumul Période</p>
+                    <div class="text-right">
+                        <p class="text-[9px] font-black text-slate-300 uppercase leading-none">Nb Incidents</p>
+                        <p class="text-2xl font-black text-amber-600 leading-none mt-1" id="count-cumulative">0</p>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <p class="text-5xl font-black text-slate-900" id="total-cumulative-display">0</p>
+                    <p class="text-xl font-black text-amber-500">€</p>
+                </div>
+                <button onclick="setHistory()" class="no-print-element text-[9px] text-amber-600 font-bold uppercase border border-amber-100 rounded px-2 mt-2">Ajuster Historique</button>
+            </div>
+        </footer>
     </div>
 
     <script>
-        let currentStep = 1;
-        let selectedPartId = null;
-        
-        // Données (Exemple pré-rempli)
-        const formData = {
-            victime: { nom: 'Dupont', prenom: 'Jean', age: '45', fonction: 'Chauffeur', telephone: '0612345678', site: 'Dépôt', statut: 'CDI', adresseAccident: 'Quai 3' },
-            accident: { date: '2026-03-11', heure: '14:30', lieu: 'Atelier', horaireTravail: '08h-16h' },
-            medical: { premiersSoins: 'Oui', heureSoins: '14:35', typePriseEnCharge: 'Pompier', delaiPriseEnCharge: '15min', etablissementPolice: 'Non', accidentAvecArret: 'Oui', dateArret: '2026-03-12', dureeArret: '10j' },
-            lesions: { 'arm-r':'Fracture/fêlure', 'h-r':'Plaies (coupures...)' }, 
-            alerte: { nom: 'Martin', prenom: 'Sophie', fonction: "Chef", dateHeure: '2026-03-11T14:32', telephone: '0698765432', site: 'Dépôt', entrepriseExt: '', aviseePar: 'Un tiers' },
-            temoins: [{ id: Date.now(), type: 'Oculaire', nom: 'Bernard', prenom: 'Luc', metier: 'Mécanicien', telephone: '0711223344' }]
-        };
+        const gridX = 22; const gridY = 12; 
+        let pointsData = {}; let historyBase = 0; let selectedId = null;
 
-        const natureOptions = ["Fracture/fêlure","Brûlure","Gelure","Amputation","Plaies (coupures...)","Piqûre","Contusion","Inflammation","Entorse","Luxation","Asphyxie","Commotion","Présence corps étranger","Hernie","Douleur, lumbago","Intoxication","Dermite","Troubles visuels","Troubles auditifs","Déchirures musculaires","Non corporel","Autres lésions"];
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
 
-        const ptsF = [{i:'head',n:'Visage',x:50,y:11},{i:'ear-l',n:'Oreille D',x:44,y:11},{i:'ear-r',n:'Oreille G',x:56,y:11},{i:'neck',n:'Cou',x:50,y:18},{i:'sh-l',n:'Épaule D',x:33,y:22},{i:'sh-r',n:'Épaule G',x:67,y:22},{i:'chest',n:'Poitrine',x:50,y:28},{i:'abd',n:'Abdomen',x:50,y:42},{i:'pelv',n:'Bassin',x:50,y:55},{i:'arm-l',n:'Bras D',x:25,y:35},{i:'elb-l',n:'Coude D',x:22,y:45},{i:'fa-l',n:'Av-bras D',x:19,y:55},{i:'h-l',n:'Main D',x:15,y:65},{i:'arm-r',n:'Bras G',x:75,y:35},{i:'elb-r',n:'Coude G',x:78,y:45},{i:'fa-r',n:'Av-bras G',x:81,y:55},{i:'h-r',n:'Main G',x:85,y:65},{i:'th-l',n:'Cuisse D',x:42,y:68},{i:'kn-l',n:'Genou D',x:38,y:80},{i:'leg-l',n:'Tibia D',x:36,y:88},{i:'ft-l',n:'Pied D',x:33,y:97},{i:'th-r',n:'Cuisse G',x:58,y:68},{i:'kn-r',n:'Genou G',x:62,y:80},{i:'leg-r',n:'Tibia G',x:64,y:88},{i:'ft-r',n:'Pied G',x:67,y:97}];
-        const ptsB = [{i:'h-b',n:'Arr. tête',x:50,y:11},{i:'ear-lb',n:'Or. G',x:44,y:11},{i:'ear-rb',n:'Or. D',x:56,y:11},{i:'nk-b',n:'Nuque',x:50,y:18},{i:'sh-lb',n:'Omo. G',x:33,y:22},{i:'sh-rb',n:'Omo. D',x:67,y:22},{i:'up-b',n:'Haut dos',x:50,y:28},{i:'mid-b',n:'Mil. dos',x:50,y:38},{i:'low-b',n:'Lombaires',x:50,y:48},{i:'but',n:'Fessiers',x:50,y:56},{i:'arm-lb',n:'Bras G',x:25,y:35},{i:'elb-lb',n:'Coude G',x:22,y:45},{i:'h-lb',n:'Main G',x:15,y:65},{i:'arm-rb',n:'Bras D',x:75,y:35},{i:'elb-rb',n:'Coude D',x:78,y:45},{i:'h-rb',n:'Main D',x:85,y:65},{i:'th-lb',n:'Arr. cuisse G',x:42,y:68},{i:'kn-lb',n:'Poplité G',x:38,y:80},{i:'cf-l',n:'Mollet G',x:36,y:88},{i:'hl-l',n:'Talon G',x:33,y:97},{i:'th-rb',n:'Arr. cuisse D',x:58,y:68},{i:'kn-rb',n:'Poplité D',x:62,y:80},{i:'cf-r',n:'Mollet D',x:64,y:88},{i:'hl-r',n:'Talon D',x:67,y:97}];
-        
-        // Init
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('[data-bind]').forEach(el => el.addEventListener('input', e => { const [s, f] = e.target.getAttribute('data-bind').split('.'); formData[s][f] = e.target.value; }));
-            document.getElementById('menu-btn').onclick = () => { document.getElementById('dropdown-menu').classList.toggle('hidden'); };
-            injectSVG(); initFormValues(); renderProgressBar(); renderSilhouettes(); renderLesionOptions(); renderWitnesses(); lucide.createIcons();
+        const svgGrid = document.getElementById('grid-markers');
+        for (let y = 0; y < gridY; y++) {
+            for (let x = 0; x < gridX; x++) {
+                const id = `pt-${x}-${y}`;
+                const cx = (x + 0.5) * (1000 / gridX);
+                const cy = (y + 0.5) * (450 / gridY);
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("id", id); circle.setAttribute("cx", cx); circle.setAttribute("cy", cy);
+                circle.setAttribute("r", "5.5"); circle.setAttribute("class", "marker-dot");
+                circle.addEventListener('click', () => selectPoint(id));
+                svgGrid.appendChild(circle);
+
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("id", `tip-${id}`);
+                g.setAttribute("class", "opacity-0 transition-opacity duration-300 pointer-events-none");
+                
+                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("id", `rect-${id}`);
+                rect.setAttribute("x", cx - 85); rect.setAttribute("y", cy + 15);
+                rect.setAttribute("width", "170"); rect.setAttribute("height", "55");
+                rect.setAttribute("class", "tooltip-bg");
+                
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("id", `text-${id}`);
+                text.setAttribute("x", cx); text.setAttribute("y", cy + 35);
+                text.setAttribute("text-anchor", "middle");
+                
+                const tspan1 = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                tspan1.setAttribute("id", `text1-${id}`);
+                tspan1.setAttribute("x", cx); tspan1.setAttribute("dy", "0");
+                tspan1.setAttribute("class", "text-main font-bold");
+                
+                const tspan2 = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                tspan2.setAttribute("id", `text2-${id}`);
+                tspan2.setAttribute("x", cx); tspan2.setAttribute("dy", "24");
+                tspan2.setAttribute("class", "text-sub font-black");
+                
+                text.appendChild(tspan1); text.appendChild(tspan2);
+                g.appendChild(rect); g.appendChild(text); svgGrid.appendChild(g);
+            }
+        }
+
+        function selectPoint(id) {
+            if(selectedId) {
+                const prev = document.getElementById(selectedId);
+                if(prev) prev.classList.remove('selected');
+            }
+            selectedId = id;
+            const el = document.getElementById(id);
+            if(el) el.classList.add('selected');
+            
+            const panel = document.getElementById('editor-panel');
+            if(panel) panel.classList.remove('hidden');
+
+            const impacts = pointsData[selectedId] || [];
+            if (impacts.length > 0) {
+                document.getElementById('input-name').value = impacts[impacts.length-1].name;
+                document.getElementById('input-cost').value = impacts[impacts.length-1].cost;
+                document.getElementById('input-date').value = impacts[impacts.length-1].date;
+            } else {
+                document.getElementById('input-name').value = '';
+                document.getElementById('input-cost').value = '';
+                document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+            }
+            renderImpactsList();
+        }
+
+        function toggleDropdown() {
+            const menu = document.getElementById('dropdown-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('dropdown-menu');
+            const btn = document.getElementById('burger-btn');
+            if (menu && !menu.contains(event.target) && !btn.contains(event.target)) {
+                menu.classList.add('hidden');
+            }
         });
 
-        function closeWelcomeModal() {
-            document.getElementById('welcome-modal').classList.add('hidden');
+        function renderImpactsList() {
+            const listEl = document.getElementById('existing-impacts');
+            const impacts = pointsData[selectedId] || [];
+            if (impacts.length === 0) { listEl.innerHTML = `<p class="italic text-slate-300 text-center">Point vierge.</p>`; return; }
+            let html = '';
+            impacts.forEach((imp, index) => {
+                html += `<div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg mb-1">
+                    <span class="font-bold uppercase text-slate-700 text-[10px] text-left">${imp.name} (${imp.date}) — <span class="text-red-600">${imp.cost}€</span></span>
+                    <button onclick="removeImpact(${index})" class="text-red-500 hover:font-bold">✕</button>
+                </div>`;
+            });
+            listEl.innerHTML = html;
         }
 
-        function injectSVG() {
-            const svgBody = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; opacity:0.8;"><g fill="#f1f5f9" stroke="#9ca3af" stroke-width="0.8"><circle cx="50" cy="11" r="6"/><path d="M47 16L53 16L54 22L46 22Z"/><path d="M33 22C40 18,60 18,67 22C72 26,68 53,62 55Q50 60,38 55C32 53,28 26,33 22Z"/><path d="M33 22C30 25,25 35,22 45C19 55,17 63,14 65C13 67,18 68,19 64C22 55,26 45,29 35C31 30,35 25,33 22Z"/><path d="M67 22C70 25,75 35,78 45C81 55,83 63,86 65C87 67,82 68,81 64C78 55,74 45,71 35C69 30,65 25,67 22Z"/><path d="M42 55C42 65,41 75,38 80C36 88,34 95,33 97C32 99,38 99,39 97C40 93,43 85,44 80C46 72,48 62,50 57C48 55,44 55,42 55Z"/><path d="M58 55C58 65,59 75,62 80C64 88,66 95,67 97C68 99,62 99,61 97C60 93,57 85,56 80C54 72,52 62,50 57C52 55,56 55,58 55Z"/></g><g fill="none" stroke="#d1d5db" stroke-width="0.4">XXX</g></svg>`;
-            document.getElementById('box-front').insertAdjacentHTML('afterbegin', svgBody.replace('XXX', '<path d="M38 28C45 32,55 32,62 28"/><path d="M40 42Q50 45 60 42"/>'));
-            document.getElementById('box-back').insertAdjacentHTML('afterbegin', svgBody.replace('XXX', '<path d="M50 16L50 52"/><path d="M38 28C45 25,55 25,62 28"/>'));
-        }
-
-        function initFormValues() {
-            document.querySelectorAll('[data-bind]').forEach(el => { const [s, f] = el.getAttribute('data-bind').split('.'); el.value = formData[s][f] || ''; });
-            setStatut(formData.victime.statut);
-            ['premiersSoins', 'typePriseEnCharge'].forEach(f => document.querySelectorAll(`.btn-${f==='premiersSoins'?'soins':'pec'}`).forEach(b => { if (b.innerText === formData.medical[f]) setRadio(`medical.${f}`, b.innerText, b, true); }));
-            document.querySelectorAll('input[type="radio"]').forEach(r => { if(r.name==='arret_travail' && r.value===formData.medical.accidentAvecArret){r.checked=true; handleArret(r.value);} if(r.name==='alerte_par' && r.value===formData.alerte.aviseePar) r.checked=true; });
-        }
-
-        // Navigation
-        function goToStep(n) {
-            if(n<1 || n>5) return; currentStep = n;
-            document.querySelectorAll('.step-content').forEach((el, i) => el.classList.toggle('hidden', i+1 !== n));
-            document.querySelectorAll('.nav-btn').forEach((btn, i) => { btn.className = `nav-btn ${i+1===n?'active':''}`; });
-            renderProgressBar(); updateFooterButtons(); lucide.createIcons();
-        }
-        function renderProgressBar() { document.getElementById('progress-bar').innerHTML = Array.from({length:5}).map((_,i)=>`<div style="height:6px; border-radius:10px; width:19%; background-color:${currentStep>i?'#2563eb':'#e5e7eb'}; transition:all 0.3s;"></div>`).join(''); }
-        
-        function updateFooterButtons() {
-            const p = document.getElementById('btn-prev'), n = document.getElementById('btn-next');
-            if(currentStep===1) { p.style.backgroundColor = 'transparent'; p.style.color = '#d1d5db'; p.style.borderColor = 'transparent'; p.style.pointerEvents = 'none'; } 
-            else { p.style.backgroundColor = 'white'; p.style.color = '#4b5563'; p.style.borderColor = '#e5e7eb'; p.style.pointerEvents = 'auto'; }
+        function addImpactToPoint() {
+            if(!selectedId) return;
+            const nameEl = document.getElementById('input-name');
+            const costEl = document.getElementById('input-cost');
+            const dateEl = document.getElementById('input-date');
             
-            n.innerHTML = currentStep===5 ? 'Enregistrer le PDF <i data-lucide="file-down" class="w-5 h-5 ml-2"></i>' : 'Étape Suivante <i data-lucide="chevron-right" class="w-5 h-5 ml-2"></i>';
-            n.onclick = currentStep===5 ? generatePDF : () => goToStep(currentStep + 1);
-        }
-
-        // Form Logic
-        function setStatut(val) { formData.victime.statut = val; document.querySelectorAll('.statut-btn').forEach(b => b.className = `statut-btn ${b.innerText===val ? 'active' : ''}`); }
-        function setRadio(path, val, btn, init=false) {
-            const [s, f] = path.split('.'); if(!init) formData[s][f] = val; const cls = f==="premiersSoins" ? "active-blue" : "active-teal";
-            Array.from(btn.parentElement.children).forEach(sib => { sib.classList.toggle(cls, sib===btn); sib.style.borderColor = sib===btn ? '' : '#e2e8f0'; });
-            if(f==="premiersSoins") { document.getElementById('heure-soins-container').classList.toggle('hidden', val!=='Oui'); if(val==='Non') formData.medical.heureSoins=''; }
-        }
-        function handleArret(val) { formData.medical.accidentAvecArret = val; document.getElementById('arret-details').classList.toggle('hidden', val!=='Oui'); if(val!=='Oui'){ formData.medical.dateArret=''; formData.medical.dureeArret=''; document.querySelectorAll('[data-bind^="medical.d"]').forEach(e=>e.value=''); } }
-
-        // Silhouettes
-        function renderSilhouettes() {
-            const draw = (p) => {
-                const hl = formData.lesions[p.i];
-                const bg = hl ? 'background-color:#ef4444; border-color:#991b1b; animation: pulse 2s infinite;' : 'background-color:rgba(255,255,255,0.8); border-color:#374151;';
-                return `<button onclick="openLesionModal('${p.i}','${p.n.replace(/'/g, "\\'")}')" style="position:absolute; width:16px; height:16px; margin-left:-8px; margin-top:-8px; border:2px solid; border-radius:2px; ${bg} left:${p.x}%; top:${p.y}%; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);"></button>` + 
-                       (hl ? `<div style="position:absolute; white-space:nowrap; background-color:#dc2626; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:900; ${p.x>50?`left:${p.x+3}%`:`right:${100-p.x+3}%`}; top:${p.y}%; transform:translateY(-50%); display:flex; align-items:center; gap:4px; z-index:30;">${hl}<button onclick="removeLesion('${p.i}')" style="background:rgba(255,255,255,0.2); border:none; border-radius:2px; padding:2px; cursor:pointer;"><i data-lucide="x" style="width:10px; height:10px;"></i></button></div>` : '');
-            };
-            document.getElementById('silhouette-front-points').innerHTML = ptsF.map(draw).join('');
-            document.getElementById('silhouette-back-points').innerHTML = ptsB.map(draw).join('');
-            lucide.createIcons();
-        }
-        function openLesionModal(id, n) { selectedPartId=id; document.getElementById('modal-zone-name').innerText=n; document.getElementById('lesion-modal').classList.remove('hidden'); }
-        function closeLesionModal() { selectedPartId=null; document.getElementById('lesion-modal').classList.add('hidden'); }
-        function renderLesionOptions() { document.getElementById('lesion-options').innerHTML = natureOptions.map(n => `<button onclick="selectLesion('${n}')" style="width:100%; text-align:left; padding:12px; font-size:14px; font-weight:bold; border-radius:8px; border:none; background:transparent; cursor:pointer;" onmouseover="this.style.backgroundColor='#fef2f2'; this.style.color='#b91c1c'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='inherit'">${n}</button>`).join(''); }
-        function selectLesion(n) { if(selectedPartId) formData.lesions[selectedPartId] = n; renderSilhouettes(); closeLesionModal(); }
-        function removeLesion(id) { delete formData.lesions[id]; renderSilhouettes(); }
-
-        // Witnesses
-        function addWitness() { formData.temoins.push({ id: Date.now(), type: 'Oculaire', nom: '', prenom: '', metier: '', telephone: '' }); renderWitnesses(); }
-        function removeWitness(id) { formData.temoins = formData.temoins.filter(t => t.id !== id); renderWitnesses(); }
-        function updateWitness(id, f, v) { formData.temoins.find(t=>t.id===id)[f]=v; if(f==='type') renderWitnesses(); }
-        function renderWitnesses() {
-            document.getElementById('witnesses-container').innerHTML = formData.temoins.map(t => `
-                <div class="p-6 bg-white border-2 border-gray-200 rounded-2xl relative">
-                    <button onclick="removeWitness(${t.id})" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="md:col-span-2 flex gap-8 border-b pb-4">
-                            <label class="radio-label" style="color: ${t.type==='Oculaire'?'#2563eb':'#4b5563'}"><input type="radio" value="Oculaire" ${t.type==='Oculaire'?'checked':''} onchange="updateWitness(${t.id},'type',this.value)" class="radio-input"> Oculaire</label>
-                            <label class="radio-label" style="color: ${t.type==='Auditif'?'#2563eb':'#4b5563'}"><input type="radio" value="Auditif" ${t.type==='Auditif'?'checked':''} onchange="updateWitness(${t.id},'type',this.value)" class="radio-input"> Auditif</label>
-                        </div>
-                        <div><label class="input-label">Nom</label><input type="text" value="${t.nom}" oninput="updateWitness(${t.id},'nom',this.value)" class="input-field p-2" /></div>
-                        <div><label class="input-label">Prénom</label><input type="text" value="${t.prenom}" oninput="updateWitness(${t.id},'prenom',this.value)" class="input-field p-2" /></div>
-                        <div><label class="input-label">Métier</label><input type="text" value="${t.metier}" oninput="updateWitness(${t.id},'metier',this.value)" class="input-field p-2" /></div>
-                        <div><label class="input-label">Tél</label><input type="tel" value="${t.telephone}" oninput="updateWitness(${t.id},'telephone',this.value)" class="input-field p-2" /></div>
-                    </div>
-                </div>`).join('');
-            lucide.createIcons();
-        }
-
-        // --- IMPORT / EXPORT DATA ---
-        async function exportData() {
-            document.getElementById('dropdown-menu').classList.add('hidden');
-            const dataStr = JSON.stringify(formData, null, 2);
-            const defaultName = `rapport_accident_${formData.victime.nom || 'inconnu'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.json`;
+            const name = nameEl.value || "Choc";
+            const cost = parseFloat(costEl.value) || 0;
+            const dateStr = dateEl.value;
             
-            try {
-                // Utilise l'API moderne pour afficher la fenêtre "Enregistrer sous..."
-                if (window.showSaveFilePicker) {
-                    const handle = await window.showSaveFilePicker({
-                        suggestedName: defaultName,
-                        types: [{
-                            description: 'Fichier de sauvegarde JSON',
-                            accept: {'application/json': ['.json']},
-                        }],
-                    });
-                    const writable = await handle.createWritable();
-                    await writable.write(dataStr);
-                    await writable.close();
-                } else {
-                    // Fallback classique si le navigateur ne supporte pas showSaveFilePicker
-                    const dataUri = "data:text/json;charset=utf-8," + encodeURIComponent(dataStr);
-                    const dlAnchorElem = document.createElement('a');
-                    dlAnchorElem.setAttribute("href", dataUri);
-                    dlAnchorElem.setAttribute("download", defaultName);
-                    dlAnchorElem.click();
-                }
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    alert("Erreur lors de l'enregistrement des données.");
-                    console.error(err);
-                }
-            }
+            if (cost <= 0 || !dateStr) return;
+            const weekNum = getWeekNumber(new Date(dateStr));
+            if (!pointsData[selectedId]) pointsData[selectedId] = [];
+            pointsData[selectedId].push({ name, cost, date: dateStr, week: "Semaine " + weekNum });
+            updatePointVisual(selectedId);
+            updateGlobalTotals();
+            renderImpactsList();
+            renderGlobalSummary();
         }
 
-        function importData(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                try {
-                    const importedData = JSON.parse(event.target.result);
-                    Object.assign(formData, importedData);
-                    initFormValues();
-                    renderSilhouettes();
-                    renderWitnesses();
-                    document.getElementById('dropdown-menu').classList.add('hidden');
-                    alert("Données ouvertes avec succès !");
-                } catch(err) {
-                    alert("Le fichier sélectionné n'est pas valide.");
-                }
-            };
-            reader.readAsText(file);
-            e.target.value = ''; // Reset input
+        function removeImpact(index) {
+            if(!selectedId || !pointsData[selectedId]) return;
+            pointsData[selectedId].splice(index, 1);
+            if (pointsData[selectedId].length === 0) delete pointsData[selectedId];
+            updatePointVisual(selectedId);
+            updateGlobalTotals();
+            renderImpactsList();
+            renderGlobalSummary();
         }
 
-        // --- GENERATION DU PDF ---
-        function populatePDF() {
-            const d = formData;
-            document.getElementById('pdf-ref').innerText = `Réf: ${d.victime.nom.substring(0,3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
-            
-            // Victime
-            document.getElementById('pdf-nom').innerText = `${(d.victime.nom||'').toUpperCase()} ${d.victime.prenom}`;
-            document.getElementById('pdf-statut').innerText = d.victime.statut;
-            document.getElementById('pdf-age').innerText = d.victime.age ? `${d.victime.age} ans` : '-';
-            document.getElementById('pdf-fonction').innerText = d.victime.fonction || '-';
-            document.getElementById('pdf-site').innerText = d.victime.site || '-';
-            document.getElementById('pdf-tel').innerText = d.victime.telephone || '-';
-
-            // Accident
-            document.getElementById('pdf-date').innerText = d.accident.date ? new Date(d.accident.date).toLocaleDateString('fr-FR') : '-';
-            document.getElementById('pdf-heure').innerText = d.accident.heure || '-';
-            document.getElementById('pdf-lieu').innerText = d.accident.lieu || '-';
-            document.getElementById('pdf-adresse').innerText = d.victime.adresseAccident || '-';
-            document.getElementById('pdf-horaire').innerText = d.accident.horaireTravail || '-';
-
-            // Médical
-            document.getElementById('pdf-soins').innerText = d.medical.premiersSoins === 'Oui' ? `Oui (à ${d.medical.heureSoins})` : 'Non';
-            document.getElementById('pdf-pec').innerText = d.medical.typePriseEnCharge + (d.medical.delaiPriseEnCharge ? ` (Délai: ${d.medical.delaiPriseEnCharge})` : '');
-            document.getElementById('pdf-police').innerText = d.medical.etablissementPolice;
-            document.getElementById('pdf-arret').innerText = d.medical.accidentAvecArret === 'Oui' ? `Oui (du ${d.medical.dateArret} - Prévu: ${d.medical.dureeArret})` : d.medical.accidentAvecArret;
-
-            // Lésions
-            const lContainer = document.getElementById('pdf-lesions');
-            if(Object.keys(d.lesions).length > 0) {
-                lContainer.innerHTML = Object.entries(d.lesions).map(([id,v])=> `<div><b>${([...ptsF,...ptsB].find(x=>x.i===id)||{}).n||id}</b> : ${v}</div>`).join('');
+        function updatePointVisual(id) {
+            const circle = document.getElementById(id);
+            const tipGroup = document.getElementById(`tip-${id}`);
+            const t1 = document.getElementById(`text1-${id}`);
+            const t2 = document.getElementById(`text2-${id}`);
+            const rectEl = document.getElementById(`rect-${id}`);
+            const impacts = pointsData[id] || [];
+            if (impacts.length > 0) {
+                const totalPoint = impacts.reduce((sum, item) => sum + item.cost, 0);
+                circle.classList.add('active');
+                tipGroup.classList.add('active-tooltip');
+                t1.textContent = `${impacts[0].name} (${impacts.length})`;
+                t2.textContent = `${totalPoint.toLocaleString('fr-FR')} €`;
+                const width = Math.max(t1.textContent.length * 9, t2.textContent.length * 11) + 40;
+                rectEl.setAttribute("width", width);
+                rectEl.setAttribute("x", parseFloat(circle.getAttribute("cx")) - (width/2));
+                tipGroup.classList.remove('opacity-0');
             } else {
-                lContainer.innerHTML = '<i>Aucune lésion déclarée.</i>';
-            }
-
-            // Alerte & Témoins
-            document.getElementById('pdf-alerte-par').innerText = d.alerte.aviseePar;
-            document.getElementById('pdf-alerte-date').innerText = d.alerte.dateHeure ? new Date(d.alerte.dateHeure).toLocaleString('fr-FR') : '-';
-            document.getElementById('pdf-alerte-nom').innerText = `${d.alerte.nom||''} ${d.alerte.prenom||''}`.trim() || '-';
-            document.getElementById('pdf-alerte-contact').innerText = `${d.alerte.fonction||'-'} / ${d.alerte.telephone||'-'}`;
-            document.getElementById('pdf-alerte-ent').innerText = d.alerte.entrepriseExt || 'N/A';
-
-            const tContainer = document.getElementById('pdf-temoins');
-            const validT = d.temoins.filter(t => t.nom || t.prenom);
-            if(validT.length > 0) {
-                tContainer.innerHTML = validT.map(t=> `<div><b>${t.type}</b>: ${t.nom} ${t.prenom} (${t.metier}) - Tél: ${t.telephone}</div>`).join('');
-            } else {
-                tContainer.innerHTML = '<i>Aucun témoin.</i>';
+                circle.classList.remove('active');
+                tipGroup.classList.remove('active-tooltip');
+                tipGroup.classList.add('opacity-0');
             }
         }
 
-        // --- VIDER LE FORMULAIRE ---
-        function resetForm() {
-            if(confirm("Voulez-vous vraiment vider tout le formulaire ? Toutes les données non sauvegardées seront perdues.")) {
-                // On réinitialise toutes les données à vide
-                Object.assign(formData, {
-                    victime: { nom: '', prenom: '', age: '', fonction: '', telephone: '', site: '', statut: 'CDI', adresseAccident: '' },
-                    accident: { date: '', heure: '', lieu: '', horaireTravail: '' },
-                    medical: { premiersSoins: 'Non', heureSoins: '', typePriseEnCharge: 'Aucun', delaiPriseEnCharge: '', etablissementPolice: 'Non', accidentAvecArret: 'Non', dateArret: '', dureeArret: '' },
-                    lesions: {}, 
-                    alerte: { nom: '', prenom: '', fonction: '', dateHeure: '', telephone: '', site: '', entrepriseExt: '', aviseePar: 'La victime' },
-                    temoins: []
-                });
-                
-                // On met à jour l'interface
-                initFormValues();
-                renderSilhouettes();
-                renderWitnesses();
-                
-                // Retour à l'étape 1 et fermeture du menu
-                goToStep(1);
-                document.getElementById('dropdown-menu').classList.add('hidden');
-            }
-        }
+        function renderGlobalSummary() {
+            const summaryContainer = document.getElementById('full-chocs-list');
+            let allChocs = [];
+            Object.keys(pointsData).forEach(id => {
+                pointsData[id].forEach(imp => allChocs.push({ ...imp, id }));
+            });
 
-        function generatePDF() {
-            populatePDF();
-            const element = document.getElementById('pdf-content');
-            element.style.display = 'block'; // Make visible for render
+            if (allChocs.length === 0) {
+                summaryContainer.innerHTML = `<p class="text-slate-300 italic text-xs w-full text-center">Aucun impact saisi.</p>`;
+                return;
+            }
+
+            summaryContainer.innerHTML = '';
+            allChocs.sort((a,b) => new Date(b.date) - new Date(a.date));
             
-            const fileName = `Rapport_Accident_${formData.victime.nom || 'Inconnu'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.pdf`;
-            
-            const opt = {
-                margin:       5,
-                filename:     fileName,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            
-            const btn = document.getElementById('btn-next');
-            const oldHtml = btn.innerHTML;
-            btn.innerHTML = 'Création PDF... <svg class="animate-spin w-5 h-5 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
-            
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.style.display = 'none';
-                btn.innerHTML = oldHtml;
-                lucide.createIcons();
-                document.getElementById('dropdown-menu').classList.add('hidden');
+            allChocs.forEach(choc => {
+                const card = document.createElement('div');
+                card.className = "flex-shrink-0 bg-slate-50 border border-slate-100 p-2 rounded-xl flex flex-col min-w-[120px] cursor-pointer hover:bg-white transition-colors shadow-sm";
+                card.innerHTML = `
+                    <span class="text-[8px] font-black text-slate-400 uppercase leading-none mb-1 text-left">${choc.week}</span>
+                    <span class="text-[10px] font-bold text-slate-800 uppercase leading-tight truncate text-left">${choc.name}</span>
+                    <span class="text-xs font-black text-red-600 mt-1 text-left">${choc.cost}€</span>
+                `;
+                card.onclick = () => selectPoint(choc.id);
+                summaryContainer.appendChild(card);
             });
         }
 
-        // Email
-        function sendEmail() {
-            const d=formData, dt=d.accident.date?new Date(d.accident.date).toLocaleDateString('fr-FR'):'N/C';
-            const n=d.victime.nom?d.victime.nom.toUpperCase():'INC', p=d.victime.prenom||'';
-            const ls=Object.entries(d.lesions).map(([id,v])=>`- ${([...ptsF,...ptsB].find(x=>x.i===id)||{}).n||id}: ${v}`).join('\n') || "Aucune lésion";
-            const tm=d.temoins.filter(t=>t.nom).map(t=>`- ${t.type}: ${t.nom} ${t.prenom} (${t.telephone})`).join('\n') || "Aucun témoin";
+        function updateGlobalTotals() {
+            const weekLabelEl = document.getElementById('week-label');
+            const weekTitleEl = document.getElementById('current-week-title');
             
-            const body=`Bonjour,\n\nCompte-rendu d'accident : ${n} ${p} le ${dt}\n\n📋 VICTIME\nNom: ${n} ${p} (${d.victime.age} ans)\nTél: ${d.victime.telephone}\nStatut: ${d.victime.statut}\nLieu: ${d.victime.adresseAccident}\n\n🕒 ACCIDENT\nDate/Heure: ${dt} à ${d.accident.heure}\nLieu: ${d.accident.lieu}\n\n🏥 MEDICAL\nSoins: ${d.medical.premiersSoins} (${d.medical.heureSoins})\nPrise en charge: ${d.medical.typePriseEnCharge} (${d.medical.delaiPriseEnCharge})\nArrêt: ${d.medical.accidentAvecArret} (du ${d.medical.dateArret})\n\n🤕 LÉSIONS\n${ls}\n\n📞 IDENTITÉ DE LA PREMIÈRE PERSONNE AVISÉE\nPremière personne avisée par: ${d.alerte.aviseePar}\nPersonne: ${d.alerte.nom} ${d.alerte.prenom} - ${d.alerte.telephone}\nDate: ${d.alerte.dateHeure ? new Date(d.alerte.dateHeure).toLocaleString('fr-FR') : '-'}\nEntreprise extérieure: ${d.alerte.entrepriseExt || 'N/A'}\n\n👥 IDENTITÉ DES TÉMOINS\n${tm}\n\nCordialement.`;
+            const totalWeekEl = document.getElementById('total-week-display');
+            const totalCumulEl = document.getElementById('total-cumulative-display');
+            const countWeekEl = document.getElementById('count-week');
+            const countCumulEl = document.getElementById('count-cumulative');
+
+            if (!weekLabelEl) return;
+
+            const filterWeek = weekLabelEl.value.trim();
+            if (weekTitleEl) weekTitleEl.innerText = filterWeek || "Total";
             
-            window.location.href=`mailto:?subject=${encodeURIComponent(`Déclaration - ${dt} - ${n} ${p}`)}&body=${encodeURIComponent(body)}`;
+            let totalWeek = 0; let countWeek = 0;
+            let totalGeneral = 0; let countGeneral = 0;
+
+            Object.values(pointsData).forEach(arr => {
+                arr.forEach(imp => {
+                    totalGeneral += imp.cost;
+                    countGeneral++;
+                    if (filterWeek && imp.week.toLowerCase() === filterWeek.toLowerCase()) {
+                        totalWeek += imp.cost;
+                        countWeek++;
+                    }
+                });
+            });
+
+            if (totalWeekEl) totalWeekEl.innerText = totalWeek.toLocaleString('fr-FR');
+            if (countWeekEl) countWeekEl.innerText = countWeek;
+            if (totalCumulEl) totalCumulEl.innerText = (totalGeneral + historyBase).toLocaleString('fr-FR');
+            if (countCumulEl) countCumulEl.innerText = countGeneral;
+        }
+
+        function setHistory() {
+            const val = prompt("Montant historique (€) :", historyBase);
+            if (val !== null) { historyBase = parseFloat(val) || 0; updateGlobalTotals(); }
+        }
+
+        function newAnalysis() {
+            if(confirm("Êtes-vous sûr de vouloir effacer tous les chocs ? Cette action est irréversible.")) {
+                pointsData = {};
+                historyBase = 0;
+                document.querySelectorAll('.marker-dot').forEach(marker => {
+                    marker.classList.remove('active');
+                    const tip = document.getElementById(`tip-${marker.id}`);
+                    if(tip) { tip.classList.add('opacity-0'); tip.classList.remove('active-tooltip'); }
+                });
+                removeBusPhoto();
+                updateGlobalTotals();
+                renderGlobalSummary();
+                document.getElementById('dropdown-menu').classList.add('hidden');
+            }
+        }
+
+        async function exportData() {
+            const data = {
+                pointsData,
+                historyBase,
+                settings: {
+                    sinceDate: document.getElementById('since-date').value,
+                    weekLabel: document.getElementById('week-label').value
+                }
+            };
+            const jsonString = JSON.stringify(data, null, 2);
+            const fileName = `kiho-bus-scan-${new Date().toISOString().split('T')[0]}.json`;
+
+            // Utilisation de File System Access API pour ouvrir la fenêtre de dialogue "Enregistrer sous"
+            if ('showSaveFilePicker' in window) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{
+                            description: 'Fichier KIHO (.json)',
+                            accept: { 'application/json': ['.json'] },
+                        }],
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(jsonString);
+                    await writable.close();
+                } catch (err) {
+                    if (err.name !== 'AbortError') console.error(err);
+                }
+            } else {
+                // Fallback classique
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
             document.getElementById('dropdown-menu').classList.add('hidden');
         }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    pointsData = data.pointsData || {};
+                    historyBase = data.historyBase || 0;
+                    if (data.settings) {
+                        if (data.settings.sinceDate) document.getElementById('since-date').value = data.settings.sinceDate;
+                        if (data.settings.weekLabel) document.getElementById('week-label').value = data.settings.weekLabel;
+                    }
+                    
+                    Object.keys(pointsData).forEach(id => updatePointVisual(id));
+                    document.querySelectorAll('.marker-dot').forEach(marker => {
+                        if (!pointsData[marker.id]) {
+                            marker.classList.remove('active');
+                            const tip = document.getElementById(`tip-${marker.id}`);
+                            if(tip) { tip.classList.add('opacity-0'); tip.classList.remove('active-tooltip'); }
+                        }
+                    });
+
+                    updateGlobalTotals();
+                    renderGlobalSummary();
+                    document.getElementById('dropdown-menu').classList.add('hidden');
+                } catch (err) {
+                    alert("Erreur lors de l'ouverture.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function enterPreview() {
+            updateGlobalTotals();
+            document.getElementById('print-week-display').innerText = document.getElementById('week-label').value;
+            document.getElementById('print-date-display').innerText = "Bilan depuis le " + document.getElementById('since-date').value;
+            document.body.classList.add('is-preview');
+            document.getElementById('preview-bar').style.display = 'flex';
+            window.scrollTo(0, 0);
+        }
+
+        function exitPreview() {
+            document.body.classList.remove('is-preview');
+            document.getElementById('preview-bar').style.display = 'none';
+        }
+
+        function closeWelcomeModal() {
+            const modal = document.getElementById('welcome-modal');
+            if(modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        }
+
+        function closeEditor() {
+            if(selectedId) {
+                const el = document.getElementById(selectedId);
+                if(el) el.classList.remove('selected');
+            }
+            const panel = document.getElementById('editor-panel');
+            if(panel) panel.classList.add('hidden');
+            selectedId = null;
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) { 
+                    const img = document.getElementById('main-bus-image');
+                    const blueprint = document.getElementById('bus-blueprint');
+                    img.src = e.target.result; 
+                    img.style.display = 'block';
+                    if(blueprint) blueprint.style.display = 'none';
+                    const btnRemove = document.getElementById('btn-remove-photo');
+                    if(btnRemove) btnRemove.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeBusPhoto() {
+            const img = document.getElementById('main-bus-image');
+            const blueprint = document.getElementById('bus-blueprint');
+            img.src = "";
+            img.style.display = 'none';
+            if(blueprint) blueprint.style.display = 'block';
+            const btnRemove = document.getElementById('btn-remove-photo');
+            if(btnRemove) btnRemove.classList.add('hidden');
+        }
+
+        window.onload = function() { 
+            const currentWeek = getWeekNumber(new Date());
+            const weekLabelEl = document.getElementById('week-label');
+            if (weekLabelEl) { weekLabelEl.value = "Semaine " + currentWeek; }
+            updateGlobalTotals(); 
+            const modal = document.getElementById('welcome-modal');
+            if(modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+        };
     </script>
+
+    <!-- Signature Concepteur -->
+    <div class="fixed bottom-4 right-6 text-[10px] font-black text-slate-400 uppercase tracking-widest z-[9999] no-print-element">
+        Concepteur : D.Ablancourt
+    </div>
 </body>
 </html>
