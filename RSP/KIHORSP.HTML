@@ -60,7 +60,7 @@
         @media print {
             @page { size: A3 landscape; margin: 5mm; }
             body { background: white; overflow: visible; height: auto; }
-            #app, #toast-container, #reset-modal { display: none !important; }
+            #kiho-app-wrapper, #toast-container, #reset-modal, #welcome-modal, #help-modal { display: none !important; }
             #print-area { display: block !important; width: 100%; height: 100%; }
             .print-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; }
             .print-box { border: 2px solid #334155; border-radius: 8px; overflow: hidden; page-break-inside: avoid; }
@@ -76,146 +76,278 @@
 </head>
 <body class="bg-slate-200 text-slate-900 h-screen w-screen overflow-hidden">
 
-    <div id="app" class="w-full h-full flex items-center justify-center relative">
-        <!-- Main Card -->
-        <div id="main-card" class="bg-white flex flex-col overflow-hidden relative text-sm sm:text-base w-full h-full">
+    <!-- ========================================================== -->
+    <!-- ÉCRAN DE CONNEXION KIHO                                    -->
+    <!-- Pour ajouter/modifier des utilisateurs, éditez KIHO_USERS  -->
+    <!-- ========================================================== -->
+    <script>
+        // ============================================================
+        // GESTION DES UTILISATEURS — À PERSONNALISER
+        // Ajoutez, modifiez ou supprimez des entrées selon vos besoins
+        // Format : { login: "identifiant", password: "motdepasse", name: "Prénom Nom" }
+        // ============================================================
+        const KIHO_USERS = [
+            { login: "Cptkavern",    password: "Alana2009",  name: "David" },
+            { login: "Axelle-KIHO",  password: "Axelle-KIHO", name: "Axelle" },
+            { login: "Karim-KIHO",  password: "Karim-KIHO", name: "Karim" },
+            { login: "Nicolas-KIHO",  password: "Nicolas-KIHO", name: "Nicolas" },
+            { login: "Christophe-KIHO",  password: "Christophe-KIHO", name: "Christophe" },
+            { login: "Mathieu-KIHO",  password: "Mathieu-KIHO", name: "Mathieu" },
+            { login: "Gerald-KIHO",  password: "Gerald-KIHO", name: "Gerald" }
+            // Ajoutez vos utilisateurs ici...
+        ];
+
+        const SESSION_KEY = "kiho_session";
+
+        function kihoLogin() {
+            const login = document.getElementById('kiho-login-input').value.trim();
+            const password = document.getElementById('kiho-password-input').value;
+            const errorEl = document.getElementById('kiho-login-error');
+            const user = KIHO_USERS.find(u => u.login === login && u.password === password);
             
-            <!-- Header -->
-            <header class="bg-white border-b border-slate-200 px-6 py-4 text-slate-900 flex items-center justify-between z-40 shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="h-[22px] flex items-center shrink-0">
-                        <img id="app-logo" src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" alt="Keolis Logo" class="h-full w-auto object-contain" onerror="this.style.display='none'; document.getElementById('logo-fallback').classList.remove('hidden');">
-                        <div id="logo-fallback" class="hidden text-blue-600"><i data-lucide="bus" class="w-6 h-6"></i></div>
+            if (user) {
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify({ login: user.login, name: user.name }));
+                document.getElementById('kiho-login-screen').style.display = 'none';
+                document.getElementById('kiho-app-wrapper').style.display = 'block';
+                document.getElementById('kiho-user-badge').textContent = user.name;
+                
+                // On affiche la modale de bienvenue au 1er lancement de session
+                if (!sessionStorage.getItem('kiho_welcome_shown')) {
+                    const welcomeModal = document.getElementById('welcome-modal');
+                    if (welcomeModal) {
+                        welcomeModal.classList.remove('hidden');
+                        welcomeModal.classList.add('flex');
+                        sessionStorage.setItem('kiho_welcome_shown', 'true');
+                    }
+                }
+            } else {
+                errorEl.classList.remove('hidden');
+                document.getElementById('kiho-password-input').value = '';
+                document.getElementById('kiho-password-input').focus();
+            }
+        }
+
+        function kihoLogout() {
+            sessionStorage.removeItem(SESSION_KEY);
+            sessionStorage.removeItem('kiho_welcome_shown');
+            document.getElementById('kiho-login-screen').style.display = 'flex';
+            document.getElementById('kiho-app-wrapper').style.display = 'none';
+            document.getElementById('kiho-login-input').value = '';
+            document.getElementById('kiho-password-input').value = '';
+            document.getElementById('kiho-login-error').classList.add('hidden');
+            toggleMenu(); // Fermer le menu s'il était ouvert
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const session = sessionStorage.getItem(SESSION_KEY);
+            if (session) {
+                const user = JSON.parse(session);
+                document.getElementById('kiho-login-screen').style.display = 'none';
+                document.getElementById('kiho-app-wrapper').style.display = 'block';
+                document.getElementById('kiho-user-badge').textContent = user.name;
+            } else {
+                document.getElementById('kiho-login-screen').style.display = 'flex';
+                document.getElementById('kiho-app-wrapper').style.display = 'none';
+            }
+        });
+    </script>
+
+    <!-- ÉCRAN DE LOGIN -->
+    <div id="kiho-login-screen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900 no-print" style="display:flex;">
+        <div class="w-full max-w-sm mx-4">
+            <!-- Logo / titre -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-indigo-600 shadow-2xl shadow-indigo-900/50 mb-5">
+                    <span style="font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:white;letter-spacing:-1px;">KIHO</span>
+                </div>
+                <h1 style="font-family:'Inter',sans-serif;font-weight:800;font-size:24px;color:white;letter-spacing:-0.5px;">Système de Management</h1>
+                <p style="color:#94a3b8;font-size:13px;margin-top:4px;">Accès réservé aux utilisateurs autorisés</p>
+            </div>
+
+            <!-- Carte login -->
+            <div style="background:#1e293b;border-radius:24px;padding:32px;border:1px solid #334155;box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.5);">
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin-bottom:8px;">Identifiant</label>
+                    <input id="kiho-login-input" type="text" autocomplete="username"
+                        placeholder="Votre identifiant"
+                        style="width:100%;background:#0f172a;border:1.5px solid #334155;border-radius:12px;padding:12px 16px;font-size:14px;color:white;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#334155'"
+                        onkeydown="if(event.key==='Enter')document.getElementById('kiho-password-input').focus()">
+                </div>
+                <div style="margin-bottom:24px;">
+                    <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin-bottom:8px;">Mot de passe</label>
+                    <input id="kiho-password-input" type="password" autocomplete="current-password"
+                        placeholder="Votre mot de passe"
+                        style="width:100%;background:#0f172a;border:1.5px solid #334155;border-radius:12px;padding:12px 16px;font-size:14px;color:white;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#334155'"
+                        onkeydown="if(event.key==='Enter')kihoLogin()">
+                </div>
+                <!-- Message d'erreur -->
+                <div id="kiho-login-error" class="hidden" style="background:#450a0a;border:1px solid #7f1d1d;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#fca5a5;text-align:center;">
+                    Identifiant ou mot de passe incorrect.
+                </div>
+                <!-- Bouton -->
+                <button onclick="kihoLogin()"
+                    style="width:100%;background:#4f46e5;color:white;border:none;border-radius:12px;padding:14px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;transition:background 0.2s;box-sizing:border-box;"
+                    onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">
+                    Se connecter
+                </button>
+            </div>
+
+            <p style="text-align:center;color:#475569;font-size:11px;margin-top:20px;">KIHO — Keolis Excellence Opérationnelle</p>
+        </div>
+    </div>
+
+
+    <!-- ========================================================== -->
+    <!-- APPLICATION PRINCIPALE (Masquée par défaut)                -->
+    <!-- ========================================================== -->
+    <div id="kiho-app-wrapper" style="display:none;" class="w-full h-full">
+        <div id="app" class="w-full h-full flex items-center justify-center relative">
+            <!-- Main Card -->
+            <div id="main-card" class="bg-white flex flex-col overflow-hidden relative text-sm sm:text-base w-full h-full">
+                
+                <!-- Header -->
+                <header class="bg-white border-b border-slate-200 px-6 py-4 text-slate-900 flex items-center justify-between z-40 shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="h-[22px] flex items-center shrink-0">
+                            <img id="app-logo" src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" alt="Keolis Logo" class="h-full w-auto object-contain" onerror="this.style.display='none'; document.getElementById('logo-fallback').classList.remove('hidden');">
+                            <div id="logo-fallback" class="hidden text-blue-600"><i data-lucide="bus" class="w-6 h-6"></i></div>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <h1 class="text-[30px] tracking-tighter leading-none mt-0.5" style="font-family: 'Nunito', sans-serif; font-weight: 900; color: #005C7A;">KIHO <span id="app-variant-badge" style="color: #00A3A6;">RSP</span></h1>
+                        </div>
                     </div>
-                    <div class="flex flex-col justify-center">
-                        <h1 class="text-[30px] tracking-tighter leading-none mt-0.5" style="font-family: 'Nunito', sans-serif; font-weight: 900; color: #005C7A;">KIHO <span id="app-variant-badge" style="color: #00A3A6;">RSP</span></h1>
+                    <div class="flex items-center gap-3">
+                        <!-- Badge Utilisateur (Mis à jour via JS) -->
+                        <span id="kiho-user-badge" class="hidden sm:block px-3 py-1.5 bg-slate-100 text-slate-600 rounded-full text-xs font-bold shadow-sm border border-slate-200"></span>
+                        
+                        <div class="relative">
+                            <button onclick="toggleMenu()" class="p-2 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all text-slate-600">
+                                <i data-lucide="menu" id="menu-icon"></i>
+                            </button>
+                            <div id="main-menu" class="hidden absolute right-0 mt-4 w-64 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 shadow-xl z-50">
+                                <button onclick="resetData()" class="w-full p-4 flex items-center gap-4 hover:bg-red-50 border-b text-left text-red-600 font-bold"><i data-lucide="trash-2" class="text-red-500"></i> Nouvelle Analyse (Effacer)</button>
+                                <button onclick="printReport()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left text-slate-900"><i data-lucide="printer" class="text-slate-600"></i> Imprimer (PDF/A3)</button>
+                                <button onclick="exportJSON()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left"><i data-lucide="save" class="text-blue-500"></i> Enregistrer</button>
+                                <label class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b cursor-pointer text-left block"><i data-lucide="folder-open" class="text-purple-500 inline-block"></i> Ouvrir<input type="file" class="hidden" onchange="importJSON(event)"></label>
+                                <button onclick="kihoLogout()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left text-slate-700 font-bold"><i data-lucide="log-out" class="text-red-500"></i> Se déconnecter</button>
+                                <div class="p-4 bg-slate-50 text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest">Concepteur : D.Ablancourt</div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Navigation Étapes -->
+                <div id="stepper" class="flex w-full overflow-x-auto bg-slate-50 border-b scrollbar-hide snap-x no-scrollbar shrink-0"></div>
+
+                <!-- Content -->
+                <main class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 bg-white relative" id="main-content">
+                    <div id="loading-message">
+                        <div class="animate-pulse flex flex-col items-center gap-4">
+                            <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                            <span class="font-bold">Initialisation de l'application KIHO...</span>
+                            <span class="text-xs font-normal">Si ce message persiste, vérifiez que JavaScript est activé.</span>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <!-- TOAST NOTIFICATIONS -->
+        <div id="toast-container" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[30000] flex flex-col gap-2 pointer-events-none"></div>
+
+        <!-- MODAL CONFIRMATION RESET -->
+        <div id="reset-modal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-[20000] backdrop-blur-sm">
+            <div class="bg-white p-6 rounded-3xl shadow-2xl w-[400px] max-w-[90%] fade-in border border-slate-100">
+                <div class="flex items-center gap-3 mb-4 text-red-600">
+                    <div class="p-3 bg-red-100 rounded-full">
+                        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-lg font-black uppercase">Effacer les données</h3>
+                </div>
+                <p class="text-sm text-slate-600 mb-6 font-medium leading-relaxed">
+                    Êtes-vous sûr de vouloir tout effacer et recommencer une nouvelle analyse ? <br><br>
+                    <span class="text-red-500 font-bold bg-red-50 p-2 rounded-lg block">Toutes les données actuelles non sauvegardées seront perdues.</span>
+                </p>
+                <div class="flex justify-end gap-3">
+                    <button onclick="closeResetModal()" class="px-5 py-2.5 text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold transition-colors">Annuler</button>
+                    <button onclick="executeResetData()" class="px-5 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-xl font-bold shadow-lg shadow-red-200 transition-colors flex items-center gap-2">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Effacer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL DE BIENVENUE (Info Sauvegarde) -->
+        <div id="welcome-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[50000] backdrop-blur-sm fade-in">
+            <div class="bg-white p-8 rounded-3xl shadow-2xl w-[450px] max-w-[90%] border border-slate-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl shadow-inner border border-blue-100">
+                        <i data-lucide="shield-check" class="w-8 h-8"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-slate-800 tracking-tight">Bienvenue dans l'application Kiho RSP</h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Confidentialité & Sauvegarde</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <div class="relative">
-                        <button onclick="toggleMenu()" class="p-2 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all text-slate-600">
-                            <i data-lucide="menu" id="menu-icon"></i>
-                        </button>
-                        <div id="main-menu" class="hidden absolute right-0 mt-4 w-64 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 shadow-xl z-50">
-                            <button onclick="resetData()" class="w-full p-4 flex items-center gap-4 hover:bg-red-50 border-b text-left text-red-600 font-bold"><i data-lucide="trash-2" class="text-red-500"></i> Nouvelle Analyse (Effacer)</button>
-                            <button onclick="printReport()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left text-slate-900"><i data-lucide="printer" class="text-slate-600"></i> Imprimer (PDF/A3)</button>
-                            <button onclick="exportJSON()" class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 border-b text-left"><i data-lucide="save" class="text-blue-500"></i> Enregistrer</button>
-                            <label class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 cursor-pointer text-left block"><i data-lucide="folder-open" class="text-purple-500 inline-block"></i> Ouvrir<input type="file" class="hidden" onchange="importJSON(event)"></label>
-                            <div class="p-4 bg-slate-50 border-t text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest">Concepteur : D.Ablancourt</div>
+                <div class="space-y-4 text-sm text-slate-600 font-medium">
+                    <div class="p-5 bg-orange-50 rounded-2xl border border-orange-200 text-orange-900 shadow-sm">
+                        <div class="flex items-center gap-2 mb-3 font-black text-orange-600 uppercase tracking-wider text-xs">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-orange-500"></i> Important
+                        </div>
+                        <p class="leading-relaxed mb-4 font-bold text-slate-800">
+                            Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues.
+                        </p>
+                        <p class="leading-relaxed text-sm">
+                            Pensez à exporter régulièrement votre travail à l'aide du bouton <strong>Enregistrer</strong> présent dans le menu <i data-lucide="menu" class="w-4 h-4 inline align-middle mx-1 text-slate-500"></i> situé en haut à droite de l'application.
+                        </p>
+                        <div class="mt-4 flex gap-2">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-white rounded-xl border border-orange-200 shadow-sm text-xs font-bold text-slate-700"><i data-lucide="save" class="w-4 h-4 text-blue-500"></i> Enregistrer</span>
                         </div>
                     </div>
                 </div>
-            </header>
+                <div class="mt-8">
+                    <button onclick="closeWelcomeModal()" class="w-full px-6 py-3.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95 flex justify-center items-center gap-2">
+                        <i data-lucide="check" class="w-5 h-5"></i> J'ai compris
+                    </button>
+                </div>
+            </div>
+        </div>
 
-            <!-- Navigation Étapes -->
-            <div id="stepper" class="flex w-full overflow-x-auto bg-slate-50 border-b scrollbar-hide snap-x no-scrollbar shrink-0"></div>
-
-            <!-- Content -->
-            <main class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 bg-white relative" id="main-content">
-                <div id="loading-message">
-                    <div class="animate-pulse flex flex-col items-center gap-4">
-                        <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span class="font-bold">Initialisation de l'application KIHO...</span>
-                        <span class="text-xs font-normal">Si ce message persiste, vérifiez que JavaScript est activé.</span>
+        <!-- MODAL D'AIDE DE L'ÉTAPE -->
+        <div id="help-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[50000] backdrop-blur-sm fade-in">
+            <div class="bg-white p-8 rounded-3xl shadow-2xl w-[550px] max-w-[90%] border border-slate-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
+                <button onclick="closeHelpModal()" class="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl shadow-inner border border-blue-100">
+                        <i data-lucide="help-circle" class="w-8 h-8"></i>
+                    </div>
+                    <div>
+                        <h3 id="help-modal-title" class="text-xl font-black text-slate-800 tracking-tight">Aide</h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Guide de l'étape</p>
                     </div>
                 </div>
-            </main>
-        </div>
-    </div>
-
-    <!-- TOAST NOTIFICATIONS -->
-    <div id="toast-container" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[30000] flex flex-col gap-2 pointer-events-none"></div>
-
-    <!-- MODAL CONFIRMATION RESET -->
-    <div id="reset-modal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-[20000] backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl w-[400px] max-w-[90%] fade-in border border-slate-100">
-            <div class="flex items-center gap-3 mb-4 text-red-600">
-                <div class="p-3 bg-red-100 rounded-full">
-                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
-                </div>
-                <h3 class="text-lg font-black uppercase">Effacer les données</h3>
-            </div>
-            <p class="text-sm text-slate-600 mb-6 font-medium leading-relaxed">
-                Êtes-vous sûr de vouloir tout effacer et recommencer une nouvelle analyse ? <br><br>
-                <span class="text-red-500 font-bold bg-red-50 p-2 rounded-lg block">Toutes les données actuelles non sauvegardées seront perdues.</span>
-            </p>
-            <div class="flex justify-end gap-3">
-                <button onclick="closeResetModal()" class="px-5 py-2.5 text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold transition-colors">Annuler</button>
-                <button onclick="executeResetData()" class="px-5 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-xl font-bold shadow-lg shadow-red-200 transition-colors flex items-center gap-2">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i> Effacer
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE BIENVENUE (Info Sauvegarde) -->
-    <div id="welcome-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[50000] backdrop-blur-sm fade-in">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl w-[450px] max-w-[90%] border border-slate-100 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
-            <div class="flex items-center gap-4 mb-6">
-                <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl shadow-inner border border-blue-100">
-                    <i data-lucide="shield-check" class="w-8 h-8"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-black text-slate-800 tracking-tight">Bienvenue dans l'application Kiho RSP</h3>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Confidentialité & Sauvegarde</p>
-                </div>
-            </div>
-            <div class="space-y-4 text-sm text-slate-600 font-medium">
-                <div class="p-5 bg-orange-50 rounded-2xl border border-orange-200 text-orange-900 shadow-sm">
-                    <div class="flex items-center gap-2 mb-3 font-black text-orange-600 uppercase tracking-wider text-xs">
-                        <i data-lucide="alert-triangle" class="w-5 h-5 text-orange-500"></i> Important
+                <div class="space-y-4 text-sm text-slate-600 font-medium">
+                    <div class="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 text-blue-900 shadow-sm">
+                        <h4 class="font-black uppercase text-xs mb-2 flex items-center gap-2 text-blue-700"><i data-lucide="target" class="w-4 h-4"></i> Objectif de l'étape</h4>
+                        <p id="help-modal-objective" class="leading-relaxed"></p>
                     </div>
-                    <p class="leading-relaxed mb-4 font-bold text-slate-800">
-                        Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues.
-                    </p>
-                    <p class="leading-relaxed text-sm">
-                        Pensez à exporter régulièrement votre travail à l'aide du bouton <strong>Enregistrer</strong> présent dans le menu <i data-lucide="menu" class="w-4 h-4 inline align-middle mx-1 text-slate-500"></i> situé en haut à droite de l'application.
-                    </p>
-                    <div class="mt-4 flex gap-2">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-white rounded-xl border border-orange-200 shadow-sm text-xs font-bold text-slate-700"><i data-lucide="save" class="w-4 h-4 text-blue-500"></i> Enregistrer</span>
+                    <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm">
+                        <h4 class="font-black text-slate-800 uppercase text-xs mb-2 flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4"></i> Comment compléter le fichier ?</h4>
+                        <p id="help-modal-how" class="leading-relaxed"></p>
                     </div>
                 </div>
-            </div>
-            <div class="mt-8">
-                <button onclick="closeWelcomeModal()" class="w-full px-6 py-3.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95 flex justify-center items-center gap-2">
-                    <i data-lucide="check" class="w-5 h-5"></i> J'ai compris
-                </button>
+                <div class="mt-8">
+                    <button onclick="closeHelpModal()" class="w-full px-6 py-3.5 bg-slate-800 text-white hover:bg-slate-900 rounded-xl font-black uppercase tracking-widest shadow-lg transition-all active:scale-95 flex justify-center items-center gap-2">
+                        <i data-lucide="check" class="w-5 h-5"></i> C'est clair
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-
-    <!-- MODAL D'AIDE DE L'ÉTAPE -->
-    <div id="help-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[50000] backdrop-blur-sm fade-in">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl w-[550px] max-w-[90%] border border-slate-100 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
-            <button onclick="closeHelpModal()" class="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
-            <div class="flex items-center gap-4 mb-6">
-                <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl shadow-inner border border-blue-100">
-                    <i data-lucide="help-circle" class="w-8 h-8"></i>
-                </div>
-                <div>
-                    <h3 id="help-modal-title" class="text-xl font-black text-slate-800 tracking-tight">Aide</h3>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Guide de l'étape</p>
-                </div>
-            </div>
-            <div class="space-y-4 text-sm text-slate-600 font-medium">
-                <div class="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 text-blue-900 shadow-sm">
-                    <h4 class="font-black uppercase text-xs mb-2 flex items-center gap-2 text-blue-700"><i data-lucide="target" class="w-4 h-4"></i> Objectif de l'étape</h4>
-                    <p id="help-modal-objective" class="leading-relaxed"></p>
-                </div>
-                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm">
-                    <h4 class="font-black text-slate-800 uppercase text-xs mb-2 flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4"></i> Comment compléter le fichier ?</h4>
-                    <p id="help-modal-how" class="leading-relaxed"></p>
-                </div>
-            </div>
-            <div class="mt-8">
-                <button onclick="closeHelpModal()" class="w-full px-6 py-3.5 bg-slate-800 text-white hover:bg-slate-900 rounded-xl font-black uppercase tracking-widest shadow-lg transition-all active:scale-95 flex justify-center items-center gap-2">
-                    <i data-lucide="check" class="w-5 h-5"></i> C'est clair
-                </button>
-            </div>
-        </div>
-    </div>
+    </div> <!-- /APP WRAPPER -->
 
     <!-- ZONE D'IMPRESSION (Invisible à l'écran) -->
     <div id="print-area"></div>
@@ -330,39 +462,52 @@
                 combien: "85% des bus de la Ligne 4 sont hors tolérance (retard > 3 min). Impact sur environ 2500 voyageurs/jour.", 
                 pourquoi: "Dégradation brutale du service perçu par les usagers, fort risque de pénalités financières par l'AOM." 
             },
-            problemStatement: "Depuis la mi-janvier 2026, suite à la mise en place du nouveau réseau d'hiver, la ligne 4 subit des retards systématiques de 12 minutes en moyenne entre 7h30 et 9h00 sur le tronçon Gare-Hôpital. Cela touche 85% des passages et génère une très forte insatisfaction client.",
+            problemStatement: "Depuis la mi-janvier 2026, suite à la mise en place du nouveau réseau d'hiver, la ligne 4 subit des retards systématiques de 12 minutes en moyenne entre 7h30 et 9h00 sur le tronçon Gare-Hôpital. Cela touche 85% passages et génère une très forte insatisfaction client.",
             objectives: "Ramener le taux de ponctualité matinale de la Ligne 4 à un minimum de 95% (tolérance retard < 3 min) d'ici la fin du mois de mars 2026.", 
             ishikawa: { 
                 "Main d'œuvre": [
                     { id: "c_mo1", text: "Temps de relève au dépôt plus long que prévu" },
-                    { id: "c_mo2", text: "Conducteurs peu familiarisés avec le nouveau tracé de janvier" }
+                    { id: "c_mo2", text: "Conducteurs peu familiarisés avec le nouveau tracé de janvier" },
+                    { id: "c_mo3", text: "Manque de formation sur la gestion des conflits passagers (ralentissements)" },
+                    { id: "c_mo4", text: "Retards fréquents à la prise de poste de certains conducteurs" }
                 ], 
                 "Matériel": [
                     { id: "c_mat1", text: "Lenteur d'ouverture/fermeture des portes sur les nouveaux bus articulés (modèle GX430)" },
-                    { id: "c_mat2", text: "Système billettique trop lent lors du scan simultané de plusieurs cartes abonnés" }
+                    { id: "c_mat2", text: "Système billettique trop lent lors du scan simultané de plusieurs cartes abonnés" },
+                    { id: "c_mat3", text: "Pannes récurrentes de la rampe d'accès PMR (Personne à Mobilité Réduite)" }
                 ], 
                 "Matière": [
-                    { id: "c_matr1", text: "Manque de monnaie pour rendre l'appoint (ralentit drastiquement la vente à bord)" }
+                    { id: "c_matr1", text: "Manque de monnaie pour rendre l'appoint (ralentit drastiquement la vente à bord)" },
+                    { id: "c_matr2", text: "Rupture de rouleaux de tickets dans les valideurs nécessitant un remplacement manuel" },
+                    { id: "c_matr3", text: "Mauvaise qualité de l'encre des tickets provoquant des erreurs de lecture" }
                 ], 
                 "Méthode": [
                     { id: "c_meth1", text: "Temps de parcours théorique (feuille de route) fortement sous-évalué en heure de pointe" },
-                    { id: "c_meth2", text: "Procédure d'encaissement complexe pour le nouveau titre 'Dépannage bord'" }
+                    { id: "c_meth2", text: "Procédure d'encaissement complexe pour le nouveau titre 'Dépannage bord'" },
+                    { id: "c_meth3", text: "Temps de battement aux terminus insuffisants pour absorber les retards" }
                 ], 
                 "Milieu": [
                     { id: "c_mil1", text: "Travaux d'assainissement inopinés sur l'Avenue de Gaulle (réduction de voie)" },
-                    { id: "c_mil2", text: "Forte affluence concentrée à l'arrêt Université créant un effet 'goulot d'étranglement'" }
+                    { id: "c_mil2", text: "Forte affluence concentrée à l'arrêt Université créant un effet 'goulot d'étranglement'" },
+                    { id: "c_mil3", text: "Véhicules de livraison fréquemment stationnés en double file sur le couloir bus" }
                 ], 
                 "Mesure": [
-                    { id: "c_mes1", text: "Le Système d'Aide à l'Exploitation (SAE) remonte parfois de fausses avances" }
+                    { id: "c_mes1", text: "Le Système d'Aide à l'Exploitation (SAE) remonte parfois de fausses avances" },
+                    { id: "c_mes2", text: "Cellules de comptage passagers aux portes défaillantes ou mal calibrées" },
+                    { id: "c_mes3", text: "Mauvaise détection des balises de priorité aux feux tricolores (décalage)" }
                 ] 
             },
             customFamilies: [
                 {
                     id: "f_1",
-                    name: "Planning et Temps de Parcours",
+                    name: "Planning, Formation et Temps de Parcours",
                     causes: [
-                        { id: "c_meth1", text: "Temps de parcours théorique (feuille de route) fortement sous-évalué en heure de pointe" },
-                        { id: "c_mo1", text: "Temps de relève au dépôt plus long que prévu" }
+                        { id: "c_meth1", text: "Temps de parcours théorique fortement sous-évalué en heure de pointe" },
+                        { id: "c_meth3", text: "Temps de battement aux terminus insuffisants pour absorber les retards" },
+                        { id: "c_mo1", text: "Temps de relève au dépôt plus long que prévu" },
+                        { id: "c_mo2", text: "Conducteurs peu familiarisés avec le nouveau tracé de janvier" },
+                        { id: "c_mo3", text: "Manque de formation sur la gestion des conflits passagers (ralentissements)" },
+                        { id: "c_mo4", text: "Retards fréquents à la prise de poste de certains conducteurs" }
                     ]
                 },
                 {
@@ -371,7 +516,29 @@
                     causes: [
                         { id: "c_mat1", text: "Lenteur d'ouverture/fermeture des portes sur les nouveaux bus articulés (modèle GX430)" },
                         { id: "c_mat2", text: "Système billettique trop lent lors du scan simultané de plusieurs cartes abonnés" },
-                        { id: "c_matr1", text: "Manque de monnaie pour rendre l'appoint (ralentit drastiquement la vente à bord)" }
+                        { id: "c_mat3", text: "Pannes récurrentes de la rampe d'accès PMR (Personne à Mobilité Réduite)" },
+                        { id: "c_matr1", text: "Manque de monnaie pour rendre l'appoint (ralentit drastiquement la vente à bord)" },
+                        { id: "c_matr2", text: "Rupture de rouleaux de tickets dans les valideurs nécessitant un remplacement manuel" },
+                        { id: "c_matr3", text: "Mauvaise qualité de l'encre des tickets provoquant des erreurs de lecture" },
+                        { id: "c_meth2", text: "Procédure d'encaissement complexe pour le nouveau titre 'Dépannage bord'" }
+                    ]
+                },
+                {
+                    id: "f_3",
+                    name: "Environnement de la Ligne & Aléas",
+                    causes: [
+                        { id: "c_mil1", text: "Travaux d'assainissement inopinés sur l'Avenue de Gaulle (réduction de voie)" },
+                        { id: "c_mil2", text: "Forte affluence concentrée à l'arrêt Université créant un effet 'goulot d'étranglement'" },
+                        { id: "c_mil3", text: "Véhicules de livraison fréquemment stationnés en double file sur le couloir bus" }
+                    ]
+                },
+                {
+                    id: "f_4",
+                    name: "Systèmes et Outils de Mesure",
+                    causes: [
+                        { id: "c_mes1", text: "Le Système d'Aide à l'Exploitation (SAE) remonte parfois de fausses avances" },
+                        { id: "c_mes2", text: "Cellules de comptage passagers aux portes défaillantes ou mal calibrées" },
+                        { id: "c_mes3", text: "Mauvaise détection des balises de priorité aux feux tricolores (décalage)" }
                     ]
                 }
             ],
@@ -379,42 +546,105 @@
             analyses: [
                 {
                     familyId: "f_1",
-                    familyName: "Planning et Temps de Parcours",
+                    familyName: "Planning, Formation et Temps de Parcours",
                     tree: {
-                        id: "root_1", text: "Temps de parcours théorique (feuille de route) fortement sous-évalué en heure de pointe",
+                        id: "root_1", text: "Planning, Formation et Temps de Parcours",
                         children: [
                             {
-                                id: "w_1_1", text: "La feuille de route alloue 35 minutes au lieu des 45 nécessaires en pointe matinale",
+                                id: "w_1_1", text: "Temps de parcours théorique fortement sous-évalué en heure de pointe",
                                 children: [
                                     {
-                                        id: "w_1_2", text: "Les temps alloués ont été calculés par le logiciel de Graphicage sur la base d'une vitesse moyenne d'heure creuse",
+                                        id: "w_1_1_1", text: "La feuille de route alloue 35 minutes au lieu des 45 nécessaires",
                                         children: [
                                             {
-                                                id: "w_1_3", text: "Le paramétrage des 'coefficients de congestion' (profil horaire) a été oublié lors de la migration logicielle de décembre",
-                                                children: []
+                                                id: "w_1_1_2", text: "Le logiciel de planning utilise les temps de parcours de l'été (fluide) au lieu de l'hiver",
+                                                children: [
+                                                    {
+                                                        id: "w_1_1_3a", text: "La base de données n'a pas été mise à jour lors de la création du nouveau service",
+                                                        children: [
+                                                            {
+                                                                id: "w_1_1_4a", text: "La procédure de changement de service n'inclut pas l'étape de mise à jour des temps",
+                                                                children: []
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        id: "w_1_1_3b", text: "L'agent en charge du planning n'a pas réussi à faire l'importation des nouvelles données",
+                                                        children: [
+                                                            {
+                                                                id: "w_1_1_4b", text: "L'agent n'a jamais été formé sur l'utilisation du nouveau module d'importation",
+                                                                children: []
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
                                             }
                                         ]
                                     }
                                 ]
-                            }
-                        ]
-                    }
-                },
-                {
-                    familyId: "f_2",
-                    familyName: "Matériel Roulant & Temps d'arrêt en station",
-                    tree: {
-                        id: "root_2", text: "Lenteur d'ouverture/fermeture des portes sur les nouveaux bus articulés (modèle GX430)",
-                        children: [
+                            },
                             {
-                                id: "w_2_1", text: "Les portes pneumatiques mettent 4 secondes de plus à se refermer que sur nos bus standards",
+                                id: "w_1_2", text: "Temps de battement aux terminus insuffisants pour absorber les retards",
                                 children: [
                                     {
-                                        id: "w_2_2", text: "Le compresseur d'air du bus perd trop de pression en raison d'arrêts hyper rapprochés (tous les 300m)",
+                                        id: "w_1_2_1", text: "Réduction des temps de battement de 10 à 5 minutes au dernier changement",
                                         children: [
                                             {
-                                                id: "w_2_3", text: "Ce modèle spécifique (GX430) n'est techniquement pas conçu pour un usage hyper-centre avec des sollicitations de portes aussi fréquentes",
-                                                children: []
+                                                id: "w_1_2_2", text: "Le service méthode a appliqué une baisse drastique directement dans l'outil",
+                                                children: [
+                                                    {
+                                                        id: "w_1_2_3", text: "L'impact de la réduction sur la ponctualité n'a jamais été mesuré ni simulé avant application",
+                                                        children: []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                id: "w_1_3", text: "Temps de relève au dépôt plus long que prévu",
+                                children: [
+                                    {
+                                        id: "w_1_3_1", text: "Gros embouteillages de bus au portail de sortie du dépôt entre 7h00 et 7h30",
+                                        children: [
+                                            {
+                                                id: "w_1_3_2", text: "Un seul portail (le portail Sud) est ouvert pour évacuer l'ensemble des 80 bus",
+                                                children: [
+                                                    {
+                                                        id: "w_1_3_3", text: "Le portail Nord est bloqué en position fermée depuis 3 semaines",
+                                                        children: [
+                                                            {
+                                                                id: "w_1_3_4", text: "L'ordre de réparation n'a jamais été transmis au service de maintenance",
+                                                                children: [
+                                                                    {
+                                                                        id: "w_1_3_5", text: "L'agent de sécurité n'a pas noté la panne dans le registre des anomalies bâtiment",
+                                                                        children: []
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                id: "w_1_4", text: "Conducteurs peu familiarisés avec le nouveau tracé de janvier",
+                                children: [
+                                    {
+                                        id: "w_1_4_1", text: "Hésitations aux carrefours entraînant d'importantes pertes de temps",
+                                        children: [
+                                            {
+                                                id: "w_1_4_2", text: "Le plan détaillé de la nouvelle ligne n'a pas été affiché en salle de prise de poste",
+                                                children: [
+                                                    {
+                                                        id: "w_1_4_3", text: "Le service exploitation a tout simplement oublié de l'imprimer et de le diffuser",
+                                                        children: []
+                                                    }
+                                                ]
                                             }
                                         ]
                                     }
@@ -424,37 +654,57 @@
                     }
                 }
             ], 
-            selectedRootIds: ["w_1_3", "w_2_3"], 
+            selectedRootIds: ["w_1_1_4a", "w_1_1_4b", "w_1_2_3", "w_1_3_5", "w_1_4_3"], 
             actions: [
                 {
                     id: "act_1",
-                    task: "Recalibrer et injecter les coefficients de congestion matinale dans le logiciel HASTUS",
+                    task: "Ajouter l'étape 'Mise à jour des temps' dans la checklist de changement de service",
                     who: "Sophie Martin",
                     when: "2026-03-01",
-                    linkedRootId: "w_1_3",
-                    linkedRootText: "Le paramétrage des 'coefficients de congestion' (profil horaire) a été oublié lors de la migration logicielle de décembre",
+                    linkedRootId: "w_1_1_4a",
+                    linkedRootText: "La procédure de changement de service n'inclut pas l'étape de mise à jour des temps",
                     status: "realise",
-                    standardization: "Mettre à jour la procédure de recette informatique (IT-PR-45) : intégrer un contrôle croisé et obligatoire des tables de congestion avant chaque validation de service."
+                    standardization: "Mise à jour du document qualité (PR-04) : aucun nouveau service validé sans cette étape cochée par le directeur."
                 },
                 {
                     id: "act_2",
-                    task: "Réaffecter les bus articulés GX430 sur la Ligne 1 (Express/Périurbain) et basculer les bus standards sur la Ligne 4",
-                    who: "Marc Dupont & Atelier",
-                    when: "2026-03-05",
-                    linkedRootId: "w_2_3",
-                    linkedRootText: "Ce modèle spécifique (GX430) n'est techniquement pas conçu pour un usage hyper-centre avec des sollicitations de portes aussi fréquentes",
-                    status: "boucle",
-                    standardization: "Création d'une Matrice d'Affectation Matériel (Doc Exploitation v2) interdisant strictement l'usage des véhicules à portes pneumatiques lourdes sur les lignes de l'hyper-centre."
+                    task: "Former les agents du planning au module d'importation des temps de parcours",
+                    who: "Service IT",
+                    when: "2026-03-10",
+                    linkedRootId: "w_1_1_4b",
+                    linkedRootText: "L'agent n'a jamais été formé sur l'utilisation du nouveau module d'importation",
+                    status: "encours",
+                    standardization: "Intégrer systématiquement ce module dans le plan de formation initial des agents planning."
                 },
                 {
                     id: "act_3",
-                    task: "Lancer une campagne 'Achat de titre sur mobile' pour réduire les flux de vente de tickets à bord par le conducteur",
-                    who: "Service Marketing",
-                    when: "2026-03-15",
-                    linkedRootId: null,
-                    linkedRootText: "",
-                    status: "encours",
-                    standardization: ""
+                    task: "Instaurer une règle de test (simulation) avant toute baisse de temps de battement",
+                    who: "Dir. Méthodes",
+                    when: "2026-03-12",
+                    linkedRootId: "w_1_2_3",
+                    linkedRootText: "L'impact de la réduction sur la ponctualité n'a jamais été mesuré ni simulé avant application",
+                    status: "attente",
+                    standardization: "Règle de conception ajoutée au manuel d'exploitation : interdiction de réduire un battement sans marche à blanc."
+                },
+                {
+                    id: "act_4",
+                    task: "Afficher un QR Code de signalement direct d'anomalie sur chaque portail du dépôt",
+                    who: "Service Maintenance",
+                    when: "2026-03-05",
+                    linkedRootId: "w_1_3_5",
+                    linkedRootText: "L'agent de sécurité n'a pas noté la panne dans le registre des anomalies bâtiment",
+                    status: "boucle",
+                    standardization: "Digitalisation complète du registre des anomalies via l'outil GMAO mobile."
+                },
+                {
+                    id: "act_5",
+                    task: "Imprimer les plans en format A0 et les afficher sur les tableaux d'information",
+                    who: "Service Com.",
+                    when: "2026-02-18",
+                    linkedRootId: "w_1_4_3",
+                    linkedRootText: "Le service exploitation a tout simplement oublié de l'imprimer et de le diffuser",
+                    status: "realise",
+                    standardization: "Ajout à la checklist de lancement de ligne : Affichage des plans obligatoires à J-5."
                 }
             ], 
             effectiveness: "Les ajustements de Graphicage et le changement d'affectation du matériel roulant ont été effectifs au 5 mars. \n\nLe suivi des données SAE du 6 au 20 mars indique une ponctualité remontée à 96.2% (Objectif initial : >95%). Les temps d'arrêts en station ont baissé de 25% grâce au changement de bus. Les plaintes clients ont diminué de 80%. Le problème est considéré comme clos et résolu.",
