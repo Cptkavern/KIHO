@@ -66,391 +66,520 @@
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-900 overflow-hidden print:overflow-visible">
 
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl z-[100] opacity-0 pointer-events-none flex items-center gap-3 font-bold text-sm">
-        <i data-lucide="info" class="text-[#00A3A6] w-5 h-5"></i>
-        <span id="toast-message">Action effectuée</span>
-    </div>
-
-    <!-- HEADER -->
-    <header id="mainHeader" class="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between sticky top-0 z-50 no-print">
-        <div class="flex items-center gap-4">
-            <div class="flex items-center shrink-0">
-                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" alt="Keolis" class="h-[22px] w-auto">
-            </div>
-            <h1 class="font-black text-[#005C7A] text-[24px] tracking-tighter leading-none uppercase">
-                KIHO <span class="text-[#00A3A6] font-bold">TERMES DE RÉFÉRENCE</span>
-            </h1>
-        </div>
-
-        <div class="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 focus-within:bg-white focus-within:border-[#00A3A6] focus-within:ring-2 focus-within:ring-[#00A3A6]/10 transition-all w-64">
-            <i data-lucide="building-2" class="w-4 h-4 text-slate-400 shrink-0"></i>
-            <input type="text" id="filiale_name" oninput="saveFiliale()" class="bg-transparent border-none outline-none text-sm font-black text-[#005C7A] placeholder:text-slate-300 w-full text-center uppercase" placeholder="NOM DE LA FILIALE">
-        </div>
-
-        <div class="relative">
-            <button onclick="toggleMenu(event)" class="p-3 bg-slate-100 rounded-xl text-slate-600 hover:bg-slate-200 transition-all focus:outline-none">
-                <i data-lucide="menu" class="w-6 h-6"></i>
-            </button>
-            <div id="menu" class="hidden absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 overflow-hidden z-[60]">
-                <button onclick="confirmLoadExample()" class="w-full text-left px-5 py-3.5 bg-amber-50 hover:bg-amber-100 flex items-center gap-4 text-sm font-bold border-b border-amber-100 text-amber-700">
-                    <i data-lucide="sparkles" class="w-5 h-5"></i>
-                    <span>Charger l'exemple complet</span>
-                </button>
-                <button onclick="showCartography()" class="w-full text-left px-5 py-3.5 hover:bg-slate-50 flex items-center gap-4 text-sm font-bold border-b border-slate-50">
-                    <i data-lucide="map" class="w-5 h-5 text-[#00A3A6]"></i>
-                    <span>Cartographie des rituels</span>
-                </button>
-                <button onclick="triggerPrint()" class="w-full text-left px-5 py-3.5 hover:bg-slate-50 flex items-center gap-4 text-sm font-bold border-b border-slate-50">
-                    <i data-lucide="printer" class="w-5 h-5 text-slate-400"></i>
-                    <span>Imprimer / PDF</span>
-                </button>
-                <button onclick="triggerLogoImport()" class="w-full text-left px-5 py-3.5 hover:bg-slate-50 flex items-center gap-4 text-sm font-bold border-b border-slate-50">
-                    <i data-lucide="image" class="w-5 h-5 text-slate-400"></i>
-                    <span>Logo Filiale (.png, .jpg)</span>
-                </button>
-                <button onclick="exportToJson()" class="w-full text-left px-5 py-3.5 hover:bg-slate-50 flex items-center gap-4 text-sm font-bold border-b border-slate-50">
-                    <i data-lucide="save" class="w-5 h-5 text-slate-400"></i>
-                    <span>Enregistrer</span>
-                </button>
-                <button onclick="triggerImport()" class="w-full text-left px-5 py-3.5 hover:bg-slate-50 flex items-center gap-4 text-sm font-bold">
-                    <i data-lucide="folder-open" class="w-5 h-5 text-slate-400"></i>
-                    <span>Ouvrir</span>
-                </button>
-                <div class="h-px bg-slate-100 my-1"></div>
-                <button onclick="showHelpModal()" class="w-full text-left px-5 py-3.5 hover:bg-blue-50 flex items-center gap-4 text-sm font-bold text-blue-600 transition-colors">
-                    <i data-lucide="help-circle" class="w-5 h-5"></i>
-                    <span>Mode d'emploi / Aide</span>
-                </button>
-                <input type="file" id="logoFile" class="hidden" accept="image/*" onchange="importFilialeLogo(event)">
-                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importFromJson(event)">
-            </div>
-        </div>
-    </header>
-
-    <div id="appContainer" class="app-container">
-        <!-- SIDEBAR -->
-        <aside class="sidebar no-print">
-            <div class="p-6 border-b border-slate-50">
-                <button onclick="showNewRitualModal()" class="w-full bg-[#00A3A6] text-white px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#008f91] transition-all shadow-lg shadow-[#00A3A6]/20">
-                    <i data-lucide="plus-circle" class="w-5 h-5"></i> Nouveau Rituel
-                </button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4" id="ritualsList">
-                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mb-3">Mes Termes de Référence</h3>
-            </div>
-        </aside>
-
-        <!-- MAIN CONTENT AREA -->
-        <div class="content">
-            <div id="welcomeMessage" class="flex-1 flex flex-col items-center justify-center text-slate-400 p-20 text-center min-h-full">
-                <i data-lucide="file-text" class="w-20 h-20 mb-6 opacity-10"></i>
-                <h2 class="text-3xl font-black text-slate-600 tracking-tight uppercase">KIHO TDR</h2>
-                <p class="max-w-md mt-2 font-medium text-slate-500">Sélectionnez un rituel ou importez vos données.</p>
-            </div>
-
-            <!-- DOCUMENT TDR -->
-            <main id="tdrDocument" class="hidden max-w-[210mm] mx-auto my-8 bg-white shadow-2xl print:shadow-none print:m-0 overflow-hidden print-area border border-slate-200 text-left">
-                <div class="p-8 border-b-4 border-[#005C7A] flex justify-between items-center">
-                    <div>
-                        <h2 class="text-4xl font-black text-[#005C7A] tracking-tighter leading-none uppercase">KIHO</h2>
-                        <h3 class="text-xl font-bold text-[#00A3A6] uppercase tracking-wide mt-1 text-nowrap">Termes de Référence</h3>
-                    </div>
-                    <div class="text-right flex flex-col items-end gap-2">
-                        <div class="h-12 w-auto flex items-center justify-end">
-                            <img id="tdrLogo" src="channels4_profile.jpg" alt="Logo" class="h-full w-auto object-contain">
-                        </div>
-                        <div id="docFilialeDisplay" class="text-[10px] font-black text-[#005C7A] uppercase tracking-widest">FILIALE NON DÉFINIE</div>
-                    </div>
+    <!-- ÉCRAN DE LOGIN -->
+    <div id="kiho-login-screen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900 no-print" style="display:flex;">
+        <div class="w-full max-w-sm mx-4">
+            <!-- Logo / titre -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-indigo-600 shadow-2xl shadow-indigo-900/50 mb-5">
+                    <span style="font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:white;letter-spacing:-1px;">KIHO</span>
                 </div>
+                <h1 style="font-family:'Inter',sans-serif;font-weight:800;font-size:24px;color:white;letter-spacing:-0.5px;">Termes de référence</h1>
+                <p style="color:#94a3b8;font-size:13px;margin-top:4px;">Accès réservé aux utilisateurs autorisés</p>
+            </div>
 
-                <div class="p-0 border-x border-b border-slate-200">
-                    <div class="grid grid-cols-4 w-full border-b border-slate-200">
-                        <div class="tdr-cell bg-slate-50/50">
-                            <label class="tdr-label">Nom du Rituel</label>
-                            <textarea id="rituel_nom" rows="1" oninput="capitalizeFirstLetter(this); this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'; autoSave()" class="input-clean text-lg text-[#005C7A] font-black" placeholder="Nom du rituel"></textarea>
-                        </div>
-                        <div class="tdr-cell border-l border-slate-200">
-                            <label class="tdr-label">Fréquence</label>
-                            <div class="flex flex-col gap-0.5">
-                                <select id="frequence_base" onchange="autoSave()" class="input-clean font-bold text-[#005C7A] bg-transparent appearance-none outline-none">
-                                    <option value="Quotidienne">Quotidienne</option>
-                                    <option value="Hebdomadaire">Hebdomadaire</option>
-                                    <option value="Mensuelle">Mensuelle</option>
-                                    <option value="Annuelle">Annuelle</option>
-                                </select>
-                                <input type="text" id="frequence_prec" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean text-[11px] italic font-normal text-slate-500" placeholder="Préciser la récurrence">
-                            </div>
-                        </div>
-                        <div class="tdr-cell border-l border-slate-200">
-                            <label class="tdr-label">Heure</label>
-                            <input type="text" id="heure_val" oninput="autoSave()" class="input-clean font-black text-[#005C7A]" placeholder="ex: 08h30">
-                        </div>
-                        <div class="tdr-cell border-l border-slate-200">
-                            <label class="tdr-label">Durée Prévue</label>
-                            <input type="text" id="duree_val" oninput="autoSave()" class="input-clean font-black text-[#00A3A6]" placeholder="ex: 15 min">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-4 w-full">
-                        <div class="col-span-2 tdr-cell">
-                            <label class="tdr-label">Unité / Centre / Dépot</label>
-                            <input type="text" id="service1_val" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean" placeholder="...">
-                        </div>
-                        <div id="lieu_cell" class="col-span-2 tdr-cell border-l border-slate-200">
-                            <label class="tdr-label">Lieu / Salle</label>
-                            <input type="text" id="lieu_val" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean" placeholder="...">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 border-t border-slate-200">
-                        <div class="tdr-cell border-r border-slate-200"><label class="tdr-label">Animateur</label><input type="text" id="animateur_val" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean" placeholder="..."></div>
-                        <div class="tdr-cell"><label class="tdr-label">Suppléant</label><input type="text" id="suppleant_val" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean" placeholder="..."></div>
-                        <div class="col-span-2 tdr-cell border-t border-slate-200 w-full"><label class="tdr-label">Participants</label><textarea id="participants_val" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean h-16 resize-none leading-relaxed italic text-slate-600 font-medium w-full block" placeholder="..."></textarea></div>
-                    </div>
-
-                    <div class="tdr-cell border-t border-slate-200">
-                        <div class="flex justify-between items-center mb-2"><label class="tdr-label text-[#00A3A6]">Objectifs</label><button onclick="addRow('objectivesContainer', 'circle-dot')" class="no-print text-[#00A3A6] font-bold text-[10px] uppercase">+ Ajouter</button></div>
-                        <div id="objectivesContainer" class="space-y-1"></div>
-                    </div>
-
-                    <div class="grid grid-cols-2 border-t border-slate-200">
-                        <div class="tdr-cell border-r border-slate-200">
-                            <div class="flex justify-between items-center mb-2"><label class="tdr-label">Entrées (Inputs)</label><button onclick="addColRow('inputsContainer', 'arrow-right', '', '', false)" class="no-print text-[#00A3A6] font-bold text-[10px] uppercase">+ Ajouter</button></div>
-                            <div class="flex text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-1 px-2">
-                                <span class="w-1/3">Fournisseur</span>
-                                <span class="w-2/3">Donnée / Entrée</span>
-                            </div>
-                            <div id="inputsContainer" class="space-y-1"></div>
-                        </div>
-                        <div class="tdr-cell">
-                            <div class="flex justify-between items-center mb-2"><label class="tdr-label">Sorties (Outputs)</label><button onclick="addColRow('outputsContainer', 'check', '', '', true)" class="no-print text-[#00A3A6] font-bold text-[10px] uppercase">+ Ajouter</button></div>
-                            <div class="flex text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-1 px-2">
-                                <span class="w-2/3">Livrable / Sortie</span>
-                                <span class="w-1/3 text-right">Client</span>
-                            </div>
-                            <div id="outputsContainer" class="space-y-1"></div>
-                        </div>
-                    </div>
-
-                    <div class="tdr-cell border-t border-slate-200">
-                        <div class="flex justify-between items-center mb-2"><label class="tdr-label">Agenda Type & Déroulé</label><button onclick="addAgendaRow()" class="no-print text-[#00A3A6] font-bold text-[10px] uppercase">+ Ajouter une ligne</button></div>
-                        <div class="bg-[#005C7A]/5 border border-[#005C7A]/10 p-3 mb-3 rounded flex items-center gap-3 text-[11px] font-black text-[#005C7A]">
-                            <i data-lucide="shield-check" class="w-4 h-4"></i> RITUEL DÉBUTANT PAR UN SAFETY MOMENT (5 MIN)
-                        </div>
-                        <table class="w-full text-xs border border-slate-200 border-collapse table-fixed">
-                            <thead class="bg-slate-100 uppercase text-[9px] font-black text-slate-500">
-                                <tr>
-                                    <th class="border border-slate-200 px-4 py-2 text-left w-[60%]">Sujet abordé</th>
-                                    <th class="border border-slate-200 px-4 py-2 text-left w-[25%]">Intervenant</th>
-                                    <th class="border border-slate-200 px-4 py-2 text-center w-[15%]">Durée</th>
-                                </tr>
-                            </thead>
-                            <tbody id="agendaRows"></tbody>
-                        </table>
-                    </div>
-
-                    <div class="tdr-cell border-t border-slate-200 bg-slate-50/30 w-full">
-                        <label class="tdr-label text-[#00A3A6]">Règles de fonctionnement (Règles d'Or)</label>
-                        <textarea id="regles_val" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean h-32 resize-none leading-relaxed italic text-slate-700 font-medium w-full block" placeholder="Listez ici les règles de vie du rituel..."></textarea>
-                    </div>
+            <!-- Carte login -->
+            <div style="background:#1e293b;border-radius:24px;padding:32px;border:1px solid #334155;">
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin-bottom:8px;">Identifiant</label>
+                    <input id="kiho-login-input" type="text" autocomplete="username"
+                        placeholder="Votre identifiant"
+                        style="width:100%;background:#0f172a;border:1.5px solid #334155;border-radius:12px;padding:12px 16px;font-size:14px;color:white;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#334155'"
+                        onkeydown="if(event.key==='Enter')document.getElementById('kiho-password-input').focus()">
                 </div>
-
-                <div class="p-6 bg-slate-50 text-[9px] text-slate-400 font-bold flex justify-between border-t border-slate-100 uppercase">
-                    <span>PROGRAMME KIHO - DOCUMENT DE RÉFÉRENCE RITUELS</span>
-                    <span>DATE D'ÉDITION : <span id="currentDate"></span></span>
+                <div style="margin-bottom:24px;">
+                    <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin-bottom:8px;">Mot de passe</label>
+                    <input id="kiho-password-input" type="password" autocomplete="current-password"
+                        placeholder="Votre mot de passe"
+                        style="width:100%;background:#0f172a;border:1.5px solid #334155;border-radius:12px;padding:12px 16px;font-size:14px;color:white;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#334155'"
+                        onkeydown="if(event.key==='Enter')kihoLogin()">
                 </div>
-            </main>
+                <!-- Message d'erreur -->
+                <div id="kiho-login-error" class="hidden" style="background:#450a0a;border:1px solid #7f1d1d;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#fca5a5;text-align:center;">
+                    Identifiant ou mot de passe incorrect.
+                </div>
+                <!-- Bouton -->
+                <button onclick="kihoLogin()"
+                    style="width:100%;background:#4f46e5;color:white;border:none;border-radius:12px;padding:14px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;transition:background 0.2s;box-sizing:border-box;"
+                    onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">
+                    Se connecter
+                </button>
+            </div>
+
+            <p style="text-align:center;color:#475569;font-size:11px;margin-top:20px;">KIHO — Keolis Excellence Opérationnelle</p>
         </div>
     </div>
 
-    <!-- CARTOGRAPHY VIEW -->
-    <div id="cartoView" class="hidden min-h-screen bg-slate-100 p-8 no-print:overflow-auto overflow-visible">
-        <div class="max-w-[297mm] mx-auto no-print mb-8 flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+    <!-- WRAPPER APPLICATION (Caché si non connecté) -->
+    <div id="kiho-app-wrapper" style="display:none;">
+
+        <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl z-[100] opacity-0 pointer-events-none flex items-center gap-3 font-bold text-sm">
+            <i data-lucide="info" class="text-[#00A3A6] w-5 h-5"></i>
+            <span id="toast-message">Action effectuée</span>
+        </div>
+
+        <!-- HEADER -->
+        <header id="mainHeader" class="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between sticky top-0 z-50 no-print">
             <div class="flex items-center gap-4">
-                <button onclick="hideCartography()" class="p-3 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all"><i data-lucide="arrow-left" class="w-6 h-6 text-slate-600"></i></button>
-                <h2 class="text-2xl font-black text-[#005C7A]">Cartographie des Rituels</h2>
-            </div>
-            <button onclick="triggerPrint()" class="bg-[#00A3A6] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-[#00A3A6]/20"><i data-lucide="printer" class="w-5 h-5"></i> Imprimer / PDF</button>
-        </div>
-
-        <div class="bg-white mx-auto p-12 shadow-2xl print:shadow-none print:p-0 print:m-0 landscape-print overflow-hidden rounded-xl print:rounded-none border-2 border-slate-800 text-left">
-            <div class="flex justify-between items-center border-b-4 border-[#005C7A] pb-6 mb-8 text-left">
-                <div>
-                    <h2 class="text-4xl font-black text-[#005C7A] uppercase tracking-tighter leading-none">KIHO CARTOGRAPHIE</h2>
-                    <div id="cartoFilialeTitle" class="text-2xl font-bold text-[#00A3A6] uppercase tracking-wide mt-2">FILIALE NON DÉFINIE</div>
+                <div class="flex items-center shrink-0">
+                    <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Keolis_2017_logo.svg" alt="Keolis" class="h-[22px] w-auto">
                 </div>
-                <img id="cartoLogo" src="channels4_profile.jpg" alt="Logo" class="h-14 w-auto object-contain">
+                <h1 class="font-black text-[#005C7A] text-[24px] tracking-tighter leading-none uppercase">
+                    KIHO <span class="text-[#00A3A6] font-bold">TERMES DE RÉFÉRENCE</span>
+                </h1>
             </div>
 
-            <table class="carto-table">
-                <thead>
-                    <tr>
-                        <th class="w-[20%] uppercase text-left pl-3">Unité / Centre / Dépot</th>
-                        <th class="w-[20%] uppercase text-center">quotidienne</th>
-                        <th class="w-[20%] uppercase text-center">hebdomadaire</th>
-                        <th class="w-[20%] uppercase text-center">mensuelle</th>
-                        <th class="w-[20%] uppercase text-center">annuelle</th>
-                    </tr>
-                </thead>
-                <tbody id="cartoTableBody"></tbody>
-            </table>
-
-            <div class="mt-8 text-[10px] text-slate-500 font-bold flex justify-between border-t border-slate-100 pt-6 uppercase text-center">
-                <span>PROGRAMME KIHO - CARTOGRAPHIE DES RITUELS OPÉRATIONNELS</span>
-                <span id="cartoDate"></span>
+            <div class="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 focus-within:bg-white focus-within:border-[#00A3A6] focus-within:ring-2 focus-within:ring-[#00A3A6]/10 transition-all w-64">
+                <i data-lucide="building-2" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <input type="text" id="filiale_name" oninput="saveFiliale()" class="bg-transparent border-none outline-none text-sm font-black text-[#005C7A] placeholder:text-slate-300 w-full text-center uppercase" placeholder="NOM DE LA FILIALE">
             </div>
-        </div>
-    </div>
 
-    <!-- MODAL DE BIENVENUE ET D'AVERTISSEMENT -->
-    <div id="welcomeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-[450px] relative overflow-hidden p-6 pt-8 pb-6 text-left">
-            <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
-            <div class="flex items-start gap-4">
-                <div class="bg-blue-50 text-blue-600 p-3 rounded-2xl shrink-0 flex items-center justify-center">
-                    <i data-lucide="shield-check" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <p class="text-[10px] uppercase text-slate-400 tracking-widest font-bold mb-1">Confidentialité & Sauvegarde</p>
-                    <h2 class="text-xl font-black text-slate-800 leading-tight uppercase">Bienvenue dans l'application KIHO GESTION TERMES DE REFERENCE</h2>
-                </div>
-            </div>
-            <div class="bg-orange-50 border border-orange-200 rounded-2xl p-5 mt-6 text-left">
-                <div class="flex items-center gap-2 text-orange-600 font-bold text-sm uppercase tracking-wider mb-3">
-                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-                    <span>Important</span>
-                </div>
-                <p class="font-bold text-slate-800 text-sm mb-3 leading-snug">
-                    Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues.
-                </p>
-                <p class="text-sm text-slate-600 font-medium mb-5 leading-relaxed">
-                    Pensez à sauvegarder régulièrement votre travail à l'aide du bouton Enregistrer présent dans le menu situé en haut à droite.
-                </p>
-                <div class="flex items-center justify-center gap-2 bg-white border border-orange-200 text-blue-600 rounded-xl px-4 py-2 font-bold text-xs shadow-sm w-fit mx-auto">
-                    <i data-lucide="save" class="w-4 h-4"></i>
-                    <span>Enregistrer (.json)</span>
-                </div>
-            </div>
-            <button onclick="closeWelcomeModal()" class="w-full bg-blue-600 text-white font-bold uppercase text-xs rounded-xl py-3.5 mt-6 flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
-                <i data-lucide="check" class="w-4 h-4"></i>
-                <span>J'ai compris</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Modals (Suppression, Nouveau, Exemple) -->
-    <div id="confirmDeleteModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] flex items-center justify-center p-6 no-print">
-        <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl border border-slate-200 text-center">
-            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 mx-auto"><i data-lucide="trash-2" class="w-8 h-8"></i></div>
-            <h2 class="text-2xl font-black text-slate-800 mb-2 uppercase">Supprimer ?</h2>
-            <p class="text-slate-500 mb-8 font-medium">Voulez-vous vraiment supprimer définitivement ce rituel ?</p>
-            <div class="flex gap-3">
-                <button onclick="closeDeleteModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-50 transition-all uppercase text-xs">Annuler</button>
-                <button id="confirmDeleteBtn" class="flex-1 bg-red-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-red-600 shadow-lg shadow-red-500/20 transition-all uppercase text-xs">Supprimer</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="newRitualModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-6 no-print">
-        <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl text-left border border-slate-200">
-            <h2 class="text-2xl font-black text-[#005C7A] mb-6 uppercase">Nouveau rituel</h2>
-            <div class="space-y-6">
-                <div>
-                    <label class="tdr-label">Modèle standard</label>
-                    <select id="modelSelect" onchange="toggleModelInfo()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none"></select>
-                    <div id="modelInfoMessage" class="hidden mt-3 flex items-start gap-3 bg-blue-50 text-blue-700 p-4 rounded-xl border border-blue-100">
-                        <i data-lucide="info" class="w-5 h-5 shrink-0"></i>
-                        <p class="text-xs font-medium leading-relaxed">Ce modèle standard est pré-rempli pour vous aider. Vous pourrez modifier tout son contenu une fois créé.</p>
+            <div class="relative flex items-center gap-4">
+                <!-- Badge Utilisateur & Déconnexion -->
+                <div class="hidden md:flex items-center gap-3 border-r border-slate-200 pr-5 mr-1">
+                    <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                        <i data-lucide="user" class="w-4 h-4 text-blue-500"></i>
+                        <span id="kiho-user-badge" class="text-xs font-black text-slate-600 uppercase tracking-wide"></span>
                     </div>
+                    <button onclick="kihoLogout()" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all" title="Se déconnecter">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
                 </div>
-                <div class="relative">
-                    <div class="absolute inset-0 flex items-center"><span class="w-full border-t border-slate-100"></span></div>
-                    <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-slate-300 font-bold tracking-widest">OU</span></div>
-                </div>
-                <div>
-                    <label class="tdr-label">Nouveau type (ex: CODIR)</label>
-                    <input type="text" id="customModelInput" oninput="hideModelInfo()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none focus:border-[#00A3A6]" placeholder="Ex: Point CODIR">
+
+                <!-- Menu Burger existant -->
+                <button onclick="toggleMenu(event)" class="p-3 bg-slate-100 rounded-xl text-slate-600 hover:bg-slate-200 transition-all focus:outline-none">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div id="menu" class="hidden absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 overflow-hidden z-[60]">
+                    <button onclick="confirmLoadExample()" class="w-full text-left px-5 py-3.5 bg-amber-50 hover:bg-amber-100 flex items-center gap-4 text-sm font-bold border-b border-amber-100 text-amber-700">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        <span>Charger l'exemple complet</span>
+                    </button>
+                    <button onclick="showCartography()" class="w-full text-left px-5 py-3.5 hover:bg-slate-50 flex items-center gap-4 text-sm font-bold border-b border-slate-50">
+                        <i data-lucide="map" class="w-5 h-5 text-[#00A3A6]"></i>
+                        <span>Cartographie des rituels</span>
+                    </button>
+                    <button onclick="triggerPrint()" class="w-full text-left px-5 py-3.5 hover:bg-slate-50 flex items-center gap-4 text-sm font-bold border-b border-slate-50">
+                        <i data-lucide="printer" class="w-5 h-5 text-slate-400"></i>
+                        <span>Imprimer / PDF</span>
+                    </button>
+                    <button onclick="triggerLogoImport()" class="w-full text-left px-5 py-3.5 hover:bg-slate-50 flex items-center gap-4 text-sm font-bold border-b border-slate-50">
+                        <i data-lucide="image" class="w-5 h-5 text-slate-400"></i>
+                        <span>Logo Filiale (.png, .jpg)</span>
+                    </button>
+                    <button onclick="exportToJson()" class="w-full text-left px-5 py-3.5 hover:bg-slate-50 flex items-center gap-4 text-sm font-bold border-b border-slate-50">
+                        <i data-lucide="save" class="w-5 h-5 text-slate-400"></i>
+                        <span>Enregistrer</span>
+                    </button>
+                    <button onclick="triggerImport()" class="w-full text-left px-5 py-3.5 hover:bg-slate-50 flex items-center gap-4 text-sm font-bold">
+                        <i data-lucide="folder-open" class="w-5 h-5 text-slate-400"></i>
+                        <span>Ouvrir</span>
+                    </button>
+                    <div class="h-px bg-slate-100 my-1"></div>
+                    <button onclick="showHelpModal()" class="w-full text-left px-5 py-3.5 hover:bg-blue-50 flex items-center gap-4 text-sm font-bold text-blue-600 transition-colors">
+                        <i data-lucide="help-circle" class="w-5 h-5"></i>
+                        <span>Mode d'emploi / Aide</span>
+                    </button>
+                    <input type="file" id="logoFile" class="hidden" accept="image/*" onchange="importFilialeLogo(event)">
+                    <input type="file" id="importFile" class="hidden" accept=".json" onchange="importFromJson(event)">
                 </div>
             </div>
-            <div class="flex gap-3 mt-8">
-                <button onclick="closeNewRitualModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-50 transition-all uppercase text-xs">Annuler</button>
-                <button onclick="createNewRitual()" class="flex-1 bg-[#005C7A] text-white px-4 py-3 rounded-xl font-bold hover:bg-[#004a63] shadow-lg shadow-[#005C7A]/20 transition-all uppercase text-xs">Créer</button>
+        </header>
+
+        <div id="appContainer" class="app-container">
+            <!-- SIDEBAR -->
+            <aside class="sidebar no-print">
+                <div class="p-6 border-b border-slate-50">
+                    <button onclick="showNewRitualModal()" class="w-full bg-[#00A3A6] text-white px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#008f91] transition-all shadow-lg shadow-[#00A3A6]/20">
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i> Nouveau Rituel
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4" id="ritualsList">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mb-3">Mes Termes de Référence</h3>
+                </div>
+            </aside>
+
+            <!-- MAIN CONTENT AREA -->
+            <div class="content">
+                <div id="welcomeMessage" class="flex-1 flex flex-col items-center justify-center text-slate-400 p-20 text-center min-h-full">
+                    <i data-lucide="file-text" class="w-20 h-20 mb-6 opacity-10"></i>
+                    <h2 class="text-3xl font-black text-slate-600 tracking-tight uppercase">KIHO TDR</h2>
+                    <p class="max-w-md mt-2 font-medium text-slate-500">Sélectionnez un rituel ou importez vos données.</p>
+                </div>
+
+                <!-- DOCUMENT TDR -->
+                <main id="tdrDocument" class="hidden max-w-[210mm] mx-auto my-8 bg-white shadow-2xl print:shadow-none print:m-0 overflow-hidden print-area border border-slate-200 text-left">
+                    <div class="p-8 border-b-4 border-[#005C7A] flex justify-between items-center">
+                        <div>
+                            <h2 class="text-4xl font-black text-[#005C7A] tracking-tighter leading-none uppercase">KIHO</h2>
+                            <h3 class="text-xl font-bold text-[#00A3A6] uppercase tracking-wide mt-1 text-nowrap">Termes de Référence</h3>
+                        </div>
+                        <div class="text-right flex flex-col items-end gap-2">
+                            <div class="h-12 w-auto flex items-center justify-end">
+                                <img id="tdrLogo" src="channels4_profile.jpg" alt="Logo" class="h-full w-auto object-contain">
+                            </div>
+                            <div id="docFilialeDisplay" class="text-[10px] font-black text-[#005C7A] uppercase tracking-widest">FILIALE NON DÉFINIE</div>
+                        </div>
+                    </div>
+
+                    <div class="p-0 border-x border-b border-slate-200">
+                        <div class="grid grid-cols-4 w-full border-b border-slate-200">
+                            <div class="tdr-cell bg-slate-50/50">
+                                <label class="tdr-label">Nom du Rituel</label>
+                                <textarea id="rituel_nom" rows="1" oninput="capitalizeFirstLetter(this); this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'; autoSave()" class="input-clean text-lg text-[#005C7A] font-black" placeholder="Nom du rituel"></textarea>
+                            </div>
+                            <div class="tdr-cell border-l border-slate-200">
+                                <label class="tdr-label">Fréquence</label>
+                                <div class="flex flex-col gap-0.5">
+                                    <select id="frequence_base" onchange="autoSave()" class="input-clean font-bold text-[#005C7A] bg-transparent appearance-none outline-none">
+                                        <option value="Quotidienne">Quotidienne</option>
+                                        <option value="Hebdomadaire">Hebdomadaire</option>
+                                        <option value="Mensuelle">Mensuelle</option>
+                                        <option value="Annuelle">Annuelle</option>
+                                    </select>
+                                    <input type="text" id="frequence_prec" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean text-[11px] italic font-normal text-slate-500" placeholder="Préciser la récurrence">
+                                </div>
+                            </div>
+                            <div class="tdr-cell border-l border-slate-200">
+                                <label class="tdr-label">Heure</label>
+                                <input type="text" id="heure_val" oninput="autoSave()" class="input-clean font-black text-[#005C7A]" placeholder="ex: 08h30">
+                            </div>
+                            <div class="tdr-cell border-l border-slate-200">
+                                <label class="tdr-label">Durée Prévue</label>
+                                <input type="text" id="duree_val" oninput="autoSave()" class="input-clean font-black text-[#00A3A6]" placeholder="ex: 15 min">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-4 w-full">
+                            <div class="col-span-2 tdr-cell">
+                                <label class="tdr-label">Unité / Centre / Dépot</label>
+                                <input type="text" id="service1_val" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean" placeholder="...">
+                            </div>
+                            <div id="lieu_cell" class="col-span-2 tdr-cell border-l border-slate-200">
+                                <label class="tdr-label">Lieu / Salle</label>
+                                <input type="text" id="lieu_val" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean" placeholder="...">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 border-t border-slate-200">
+                            <div class="tdr-cell border-r border-slate-200"><label class="tdr-label">Animateur</label><input type="text" id="animateur_val" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean" placeholder="..."></div>
+                            <div class="tdr-cell"><label class="tdr-label">Suppléant</label><input type="text" id="suppleant_val" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean" placeholder="..."></div>
+                            <div class="col-span-2 tdr-cell border-t border-slate-200 w-full"><label class="tdr-label">Participants</label><textarea id="participants_val" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean h-16 resize-none leading-relaxed italic text-slate-600 font-medium w-full block" placeholder="..."></textarea></div>
+                        </div>
+
+                        <div class="tdr-cell border-t border-slate-200">
+                            <div class="flex justify-between items-center mb-2"><label class="tdr-label text-[#00A3A6]">Objectifs</label><button onclick="addRow('objectivesContainer', 'circle-dot')" class="no-print text-[#00A3A6] font-bold text-[10px] uppercase">+ Ajouter</button></div>
+                            <div id="objectivesContainer" class="space-y-1"></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 border-t border-slate-200">
+                            <div class="tdr-cell border-r border-slate-200">
+                                <div class="flex justify-between items-center mb-2"><label class="tdr-label">Entrées (Inputs)</label><button onclick="addColRow('inputsContainer', 'arrow-right', '', '', false)" class="no-print text-[#00A3A6] font-bold text-[10px] uppercase">+ Ajouter</button></div>
+                                <div class="flex text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-1 px-2">
+                                    <span class="w-1/3">Fournisseur</span>
+                                    <span class="w-2/3">Donnée / Entrée</span>
+                                </div>
+                                <div id="inputsContainer" class="space-y-1"></div>
+                            </div>
+                            <div class="tdr-cell">
+                                <div class="flex justify-between items-center mb-2"><label class="tdr-label">Sorties (Outputs)</label><button onclick="addColRow('outputsContainer', 'check', '', '', true)" class="no-print text-[#00A3A6] font-bold text-[10px] uppercase">+ Ajouter</button></div>
+                                <div class="flex text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-1 px-2">
+                                    <span class="w-2/3">Livrable / Sortie</span>
+                                    <span class="w-1/3 text-right">Client</span>
+                                </div>
+                                <div id="outputsContainer" class="space-y-1"></div>
+                            </div>
+                        </div>
+
+                        <div class="tdr-cell border-t border-slate-200">
+                            <div class="flex justify-between items-center mb-2"><label class="tdr-label">Agenda Type & Déroulé</label><button onclick="addAgendaRow()" class="no-print text-[#00A3A6] font-bold text-[10px] uppercase">+ Ajouter une ligne</button></div>
+                            <div class="bg-[#005C7A]/5 border border-[#005C7A]/10 p-3 mb-3 rounded flex items-center gap-3 text-[11px] font-black text-[#005C7A]">
+                                <i data-lucide="shield-check" class="w-4 h-4"></i> RITUEL DÉBUTANT PAR UN SAFETY MOMENT (5 MIN)
+                            </div>
+                            <table class="w-full text-xs border border-slate-200 border-collapse table-fixed">
+                                <thead class="bg-slate-100 uppercase text-[9px] font-black text-slate-500">
+                                    <tr>
+                                        <th class="border border-slate-200 px-4 py-2 text-left w-[60%]">Sujet abordé</th>
+                                        <th class="border border-slate-200 px-4 py-2 text-left w-[25%]">Intervenant</th>
+                                        <th class="border border-slate-200 px-4 py-2 text-center w-[15%]">Durée</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="agendaRows"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="tdr-cell border-t border-slate-200 bg-slate-50/30 w-full">
+                            <label class="tdr-label text-[#00A3A6]">Règles de fonctionnement (Règles d'Or)</label>
+                            <textarea id="regles_val" oninput="capitalizeFirstLetter(this); autoSave()" class="input-clean h-32 resize-none leading-relaxed italic text-slate-700 font-medium w-full block" placeholder="Listez ici les règles de vie du rituel..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="p-6 bg-slate-50 text-[9px] text-slate-400 font-bold flex justify-between border-t border-slate-100 uppercase">
+                        <span>PROGRAMME KIHO - DOCUMENT DE RÉFÉRENCE RITUELS</span>
+                        <span>DATE D'ÉDITION : <span id="currentDate"></span></span>
+                    </div>
+                </main>
             </div>
         </div>
-    </div>
 
-    <div id="confirmExampleModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-6 no-print">
-        <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl border border-slate-200 text-center">
-            <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-6 mx-auto"><i data-lucide="sparkles" class="w-8 h-8"></i></div>
-            <h2 class="text-2xl font-black text-[#005C7A] mb-2 uppercase">Charger l'exemple ?</h2>
-            <p class="text-slate-500 mb-8 font-medium">Ceci va ajouter les rituels de l'exemple à votre liste actuelle.</p>
-            <div class="flex gap-3">
-                <button onclick="closeConfirmModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-50 transition-all uppercase text-xs">Annuler</button>
-                <button onclick="loadFullExample()" class="flex-1 bg-amber-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-amber-600 shadow-lg shadow-amber-500/20 transition-all uppercase text-xs">Charger</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL D'AIDE ET MODE D'EMPLOI -->
-    <div id="helpModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 no-print">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-[600px] max-h-[85vh] relative overflow-hidden flex flex-col text-left">
-            <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
-            <div class="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
+        <!-- CARTOGRAPHY VIEW -->
+        <div id="cartoView" class="hidden min-h-screen bg-slate-100 p-8 no-print:overflow-auto overflow-visible">
+            <div class="max-w-[297mm] mx-auto no-print mb-8 flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                 <div class="flex items-center gap-4">
-                    <div class="bg-blue-100 text-blue-600 p-2.5 rounded-xl shrink-0">
-                        <i data-lucide="book-open" class="w-6 h-6"></i>
+                    <button onclick="hideCartography()" class="p-3 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all"><i data-lucide="arrow-left" class="w-6 h-6 text-slate-600"></i></button>
+                    <h2 class="text-2xl font-black text-[#005C7A]">Cartographie des Rituels</h2>
+                </div>
+                <button onclick="triggerPrint()" class="bg-[#00A3A6] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-[#00A3A6]/20"><i data-lucide="printer" class="w-5 h-5"></i> Imprimer / PDF</button>
+            </div>
+
+            <div class="bg-white mx-auto p-12 shadow-2xl print:shadow-none print:p-0 print:m-0 landscape-print overflow-hidden rounded-xl print:rounded-none border-2 border-slate-800 text-left">
+                <div class="flex justify-between items-center border-b-4 border-[#005C7A] pb-6 mb-8 text-left">
+                    <div>
+                        <h2 class="text-4xl font-black text-[#005C7A] uppercase tracking-tighter leading-none">KIHO CARTOGRAPHIE</h2>
+                        <div id="cartoFilialeTitle" class="text-2xl font-bold text-[#00A3A6] uppercase tracking-wide mt-2">FILIALE NON DÉFINIE</div>
+                    </div>
+                    <img id="cartoLogo" src="channels4_profile.jpg" alt="Logo" class="h-14 w-auto object-contain">
+                </div>
+
+                <table class="carto-table">
+                    <thead>
+                        <tr>
+                            <th class="w-[20%] uppercase text-left pl-3">Unité / Centre / Dépot</th>
+                            <th class="w-[20%] uppercase text-center">quotidienne</th>
+                            <th class="w-[20%] uppercase text-center">hebdomadaire</th>
+                            <th class="w-[20%] uppercase text-center">mensuelle</th>
+                            <th class="w-[20%] uppercase text-center">annuelle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartoTableBody"></tbody>
+                </table>
+
+                <div class="mt-8 text-[10px] text-slate-500 font-bold flex justify-between border-t border-slate-100 pt-6 uppercase text-center">
+                    <span>PROGRAMME KIHO - CARTOGRAPHIE DES RITUELS OPÉRATIONNELS</span>
+                    <span id="cartoDate"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL DE BIENVENUE ET D'AVERTISSEMENT -->
+        <div id="welcomeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-[450px] relative overflow-hidden p-6 pt-8 pb-6 text-left">
+                <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+                <div class="flex items-start gap-4">
+                    <div class="bg-blue-50 text-blue-600 p-3 rounded-2xl shrink-0 flex items-center justify-center">
+                        <i data-lucide="shield-check" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h2 class="text-xl font-black text-slate-800 leading-tight uppercase">Guide d'utilisation</h2>
-                        <p class="text-[10px] uppercase text-slate-500 tracking-widest font-bold mt-0.5">Comment utiliser l'application KIHO</p>
+                        <p class="text-[10px] uppercase text-slate-400 tracking-widest font-bold mb-1">Confidentialité & Sauvegarde</p>
+                        <h2 class="text-xl font-black text-slate-800 leading-tight uppercase">Bienvenue dans l'application KIHO GESTION TERMES DE REFERENCE</h2>
                     </div>
                 </div>
-                <button onclick="closeHelpModal()" class="p-2 rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-600 flex-1">
-                <div class="space-y-2">
-                    <h3 class="font-black text-[#005C7A] uppercase text-xs flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4"></i> 1. Filiale et Logo</h3>
-                    <p class="leading-relaxed">Pour personnaliser vos documents, cliquez sur "NOM DE LA FILIALE" en haut pour taper le nom. Utilisez ensuite le menu pour charger un logo.</p>
-                </div>
-                <div class="space-y-2">
-                    <h3 class="font-black text-[#005C7A] uppercase text-xs flex items-center gap-2"><i data-lucide="plus-circle" class="w-4 h-4"></i> 2. Créer et Gérer</h3>
-                    <p class="leading-relaxed">Cliquez sur "Nouveau Rituel" pour partir d'un modèle standard pré-rempli ou créer un modèle vierge.</p>
-                </div>
-                <div class="space-y-2">
-                    <h3 class="font-black text-[#005C7A] uppercase text-xs flex items-center gap-2"><i data-lucide="edit-3" class="w-4 h-4"></i> 3. Édition du Document</h3>
-                    <ul class="list-disc pl-5 space-y-1">
-                        <li>Cliquez dans n'importe quelle case pour écrire.</li>
-                        <li>Les majuscules se mettent automatiquement.</li>
-                        <li>Utilisez les boutons "+ Ajouter" pour insérer des lignes.</li>
-                        <li>Survolez une ligne pour faire apparaître la corbeille de suppression.</li>
-                        <li>Sauvegarde automatique dans votre navigateur.</li>
-                    </ul>
-                </div>
-                <div class="space-y-2">
-                    <h3 class="font-black text-[#005C7A] uppercase text-xs flex items-center gap-2"><i data-lucide="map" class="w-4 h-4"></i> 4. Cartographie</h3>
-                    <p class="leading-relaxed">Ouvrez le menu et cliquez sur "Cartographie". L'application génère un tableau récapitulatif par fréquence.</p>
-                </div>
-                <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-left">
-                    <div class="flex items-center gap-2 text-orange-600 font-bold text-xs uppercase tracking-wider mb-2">
-                        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                        <span>Très Important : Sauvegarde</span>
+                <div class="bg-orange-50 border border-orange-200 rounded-2xl p-5 mt-6 text-left">
+                    <div class="flex items-center gap-2 text-orange-600 font-bold text-sm uppercase tracking-wider mb-3">
+                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                        <span>Important</span>
                     </div>
-                    <p class="text-xs text-slate-700 leading-relaxed mb-2">L'application fonctionne localement. Si vous videz le cache, vous perdrez vos données.</p>
-                    <p class="text-xs font-bold text-slate-800">Solution : Utilisez le bouton "Enregistrer" pour sauvegarder un fichier JSON sur votre ordinateur.</p>
+                    <p class="font-bold text-slate-800 text-sm mb-3 leading-snug">
+                        Si vous actualisez la page, changez de navigateur ou fermez cet onglet, vos données seront perdues.
+                    </p>
+                    <p class="text-sm text-slate-600 font-medium mb-5 leading-relaxed">
+                        Pensez à sauvegarder régulièrement votre travail à l'aide du bouton Enregistrer présent dans le menu situé en haut à droite.
+                    </p>
+                    <div class="flex items-center justify-center gap-2 bg-white border border-orange-200 text-blue-600 rounded-xl px-4 py-2 font-bold text-xs shadow-sm w-fit mx-auto">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>Enregistrer (.json)</span>
+                    </div>
                 </div>
-            </div>
-            <div class="p-4 border-t border-slate-100 bg-slate-50">
-                <button onclick="closeHelpModal()" class="w-full bg-blue-600 text-white font-bold uppercase text-xs rounded-xl py-3.5 flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
-                    J'ai compris
+                <button onclick="closeWelcomeModal()" class="w-full bg-blue-600 text-white font-bold uppercase text-xs rounded-xl py-3.5 mt-6 flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>J'ai compris</span>
                 </button>
             </div>
         </div>
+
+        <!-- Modals (Suppression, Nouveau, Exemple) -->
+        <div id="confirmDeleteModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] flex items-center justify-center p-6 no-print">
+            <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl border border-slate-200 text-center">
+                <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 mx-auto"><i data-lucide="trash-2" class="w-8 h-8"></i></div>
+                <h2 class="text-2xl font-black text-slate-800 mb-2 uppercase">Supprimer ?</h2>
+                <p class="text-slate-500 mb-8 font-medium">Voulez-vous vraiment supprimer définitivement ce rituel ?</p>
+                <div class="flex gap-3">
+                    <button onclick="closeDeleteModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-50 transition-all uppercase text-xs">Annuler</button>
+                    <button id="confirmDeleteBtn" class="flex-1 bg-red-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-red-600 shadow-lg shadow-red-500/20 transition-all uppercase text-xs">Supprimer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="newRitualModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-6 no-print">
+            <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl text-left border border-slate-200">
+                <h2 class="text-2xl font-black text-[#005C7A] mb-6 uppercase">Nouveau rituel</h2>
+                <div class="space-y-6">
+                    <div>
+                        <label class="tdr-label">Modèle standard</label>
+                        <select id="modelSelect" onchange="toggleModelInfo()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none"></select>
+                        <div id="modelInfoMessage" class="hidden mt-3 flex items-start gap-3 bg-blue-50 text-blue-700 p-4 rounded-xl border border-blue-100">
+                            <i data-lucide="info" class="w-5 h-5 shrink-0"></i>
+                            <p class="text-xs font-medium leading-relaxed">Ce modèle standard est pré-rempli pour vous aider. Vous pourrez modifier tout son contenu une fois créé.</p>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center"><span class="w-full border-t border-slate-100"></span></div>
+                        <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-slate-300 font-bold tracking-widest">OU</span></div>
+                    </div>
+                    <div>
+                        <label class="tdr-label">Nouveau type (ex: CODIR)</label>
+                        <input type="text" id="customModelInput" oninput="hideModelInfo()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none focus:border-[#00A3A6]" placeholder="Ex: Point CODIR">
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-8">
+                    <button onclick="closeNewRitualModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-50 transition-all uppercase text-xs">Annuler</button>
+                    <button onclick="createNewRitual()" class="flex-1 bg-[#005C7A] text-white px-4 py-3 rounded-xl font-bold hover:bg-[#004a63] shadow-lg shadow-[#005C7A]/20 transition-all uppercase text-xs">Créer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="confirmExampleModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-6 no-print">
+            <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl border border-slate-200 text-center">
+                <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-6 mx-auto"><i data-lucide="sparkles" class="w-8 h-8"></i></div>
+                <h2 class="text-2xl font-black text-[#005C7A] mb-2 uppercase">Charger l'exemple ?</h2>
+                <p class="text-slate-500 mb-8 font-medium">Ceci va ajouter les rituels de l'exemple à votre liste actuelle.</p>
+                <div class="flex gap-3">
+                    <button onclick="closeConfirmModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-50 transition-all uppercase text-xs">Annuler</button>
+                    <button onclick="loadFullExample()" class="flex-1 bg-amber-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-amber-600 shadow-lg shadow-amber-500/20 transition-all uppercase text-xs">Charger</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL D'AIDE ET MODE D'EMPLOI -->
+        <div id="helpModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 no-print">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-[600px] max-h-[85vh] relative overflow-hidden flex flex-col text-left">
+                <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+                <div class="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-blue-100 text-blue-600 p-2.5 rounded-xl shrink-0">
+                            <i data-lucide="book-open" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-black text-slate-800 leading-tight uppercase">Guide d'utilisation</h2>
+                            <p class="text-[10px] uppercase text-slate-500 tracking-widest font-bold mt-0.5">Comment utiliser l'application KIHO</p>
+                        </div>
+                    </div>
+                    <button onclick="closeHelpModal()" class="p-2 rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-600 flex-1">
+                    <div class="space-y-2">
+                        <h3 class="font-black text-[#005C7A] uppercase text-xs flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4"></i> 1. Filiale et Logo</h3>
+                        <p class="leading-relaxed">Pour personnaliser vos documents, cliquez sur "NOM DE LA FILIALE" en haut pour taper le nom. Utilisez ensuite le menu pour charger un logo.</p>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="font-black text-[#005C7A] uppercase text-xs flex items-center gap-2"><i data-lucide="plus-circle" class="w-4 h-4"></i> 2. Créer et Gérer</h3>
+                        <p class="leading-relaxed">Cliquez sur "Nouveau Rituel" pour partir d'un modèle standard pré-rempli ou créer un modèle vierge.</p>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="font-black text-[#005C7A] uppercase text-xs flex items-center gap-2"><i data-lucide="edit-3" class="w-4 h-4"></i> 3. Édition du Document</h3>
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li>Cliquez dans n'importe quelle case pour écrire.</li>
+                            <li>Les majuscules se mettent automatiquement.</li>
+                            <li>Utilisez les boutons "+ Ajouter" pour insérer des lignes.</li>
+                            <li>Survolez une ligne pour faire apparaître la corbeille de suppression.</li>
+                            <li>Sauvegarde automatique dans votre navigateur.</li>
+                        </ul>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="font-black text-[#005C7A] uppercase text-xs flex items-center gap-2"><i data-lucide="map" class="w-4 h-4"></i> 4. Cartographie</h3>
+                        <p class="leading-relaxed">Ouvrez le menu et cliquez sur "Cartographie". L'application génère un tableau récapitulatif par fréquence.</p>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-left">
+                        <div class="flex items-center gap-2 text-orange-600 font-bold text-xs uppercase tracking-wider mb-2">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                            <span>Très Important : Sauvegarde</span>
+                        </div>
+                        <p class="text-xs text-slate-700 leading-relaxed mb-2">L'application fonctionne localement. Si vous videz le cache, vous perdrez vos données.</p>
+                        <p class="text-xs font-bold text-slate-800">Solution : Utilisez le bouton "Enregistrer" pour sauvegarder un fichier JSON sur votre ordinateur.</p>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-slate-100 bg-slate-50">
+                    <button onclick="closeHelpModal()" class="w-full bg-blue-600 text-white font-bold uppercase text-xs rounded-xl py-3.5 flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
+                        J'ai compris
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // --- CONFIGURATION & CONSTANTES ---
+        // ============================================================
+        // GESTION DES UTILISATEURS — KIHO LOGIN
+        // ============================================================
+        const KIHO_USERS = [
+            { login: "Cptkavern",    password: "Alana2009",  name: "David" },
+            { login: "Axelle-KIHO",  password: "Axelle-KIHO", name: "Axelle" },
+            { login: "Karim-KIHO",  password: "Karim-KIHO", name: "Karim" },
+            { login: "Nicolas-KIHO",  password: "Nicolas-KIHO", name: "Nicolas" },
+            { login: "Christophe-KIHO",  password: "Christophe-KIHO", name: "Christophe" },
+            { login: "Mathieu-KIHO",  password: "Mathieu-KIHO", name: "Mathieu" },
+            { login: "Gerald-KIHO",  password: "Gerald-KIHO", name: "Gerald" }
+            { login: "Gerald-KIHO",  password: "Gerald-KIHO", name: "Gerald" }
+        { login: "cedric.ravillard@keolisbuslyon.fr",  password: "Oullins001", name: "Cédric" }
+        { login: "thierry.deschamp@keolisbuslyon.fr",  password: "Perrache001", name: "Thierry" }
+        ];
+
+        const SESSION_KEY = "kiho_session";
+
+        function kihoLogin() {
+            const login = document.getElementById('kiho-login-input').value.trim();
+            const password = document.getElementById('kiho-password-input').value;
+            const errorEl = document.getElementById('kiho-login-error');
+            const user = KIHO_USERS.find(u => u.login === login && u.password === password);
+            
+            if (user) {
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify({ login: user.login, name: user.name }));
+                document.getElementById('kiho-login-screen').style.display = 'none';
+                document.getElementById('kiho-app-wrapper').style.display = 'block';
+                const badge = document.getElementById('kiho-user-badge');
+                if(badge) badge.textContent = user.name;
+                
+                // Afficher la modale de bienvenue à la première connexion de la session
+                if(!document.getElementById('welcomeModal').classList.contains('hidden') === false) {
+                    document.getElementById('welcomeModal').classList.remove('hidden');
+                }
+            } else {
+                errorEl.classList.remove('hidden');
+                document.getElementById('kiho-password-input').value = '';
+                document.getElementById('kiho-password-input').focus();
+            }
+        }
+
+        function kihoLogout() {
+            sessionStorage.removeItem(SESSION_KEY);
+            document.getElementById('kiho-login-screen').style.display = 'flex';
+            document.getElementById('kiho-app-wrapper').style.display = 'none';
+            document.getElementById('kiho-login-input').value = '';
+            document.getElementById('kiho-password-input').value = '';
+            document.getElementById('kiho-login-error').classList.add('hidden');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const session = sessionStorage.getItem(SESSION_KEY);
+            if (session) {
+                const user = JSON.parse(session);
+                document.getElementById('kiho-login-screen').style.display = 'none';
+                document.getElementById('kiho-app-wrapper').style.display = 'block';
+                const badge = document.getElementById('kiho-user-badge');
+                if(badge) badge.textContent = user.name;
+            } else {
+                document.getElementById('kiho-login-screen').style.display = 'flex';
+                document.getElementById('kiho-app-wrapper').style.display = 'none';
+            }
+        });
+
+
+        // --- CONFIGURATION & CONSTANTES (APPLICATION) ---
         const safetyItem = ["🛡️ Safety Moment", "Animateur", "5 min"];
         const standardModels = {
             quotidien: { type: "quotidien", nom: "Point quotidien", s1: "Exploitation", freq_base: "Quotidienne", freq_prec: "Briefing matinal", heure: "08h00", dur: "15 min", animateur: "Responsable d'Exploitation", suppleant: "Adjoint Exploitation", participants: "Managers de proximité (Chefs de secteur)", lieu: "Bureau exploitation", regles: "Ponctualité, aller à l'essentiel, remonter les points bloquants pour arbitrage.", obj: ["Partager les événements marquants de J-1", "Aligner les priorités de la journée", "Alerter sur les effectifs et le matériel"], entrees: [["Régulation", "Rapport journalier J-1 (incidents, retards)"], ["Planning", "État des présences et absences du jour"], ["Maintenance", "État de parc des bus (immobilités)"]], sorties: [["Plan d'actions priorisé du jour", "Managers de proximité"], ["Remontée des urgences matérielles", "Maintenance"]], agenda: [safetyItem, ["Retour sur la production J-1", "Responsable d'Exploitation", "4 min"], ["Point effectifs et ajustements", "Managers de proximité", "4 min"], ["État de parc et affectations", "Responsable d'Exploitation", "2 min"], ["Priorités du jour et tour de table", "Tous", "3 min"]] },
@@ -466,7 +595,7 @@
 
         // --- INITIALISATION ---
         function init() {
-            // Effacement forcé au démarrage (Session Vierge)
+            // Effacement forcé au démarrage (Session Vierge comme demandé précédemment)
             localStorage.removeItem('kiho_tdr_app_data');
             localStorage.removeItem('kiho_tdr_custom_types');
             localStorage.removeItem('kiho_tdr_filiale');
@@ -487,9 +616,8 @@
             document.getElementById('currentDate').textContent = new Date().toLocaleDateString('fr-FR');
             document.getElementById('cartoDate').textContent = "édité le " + new Date().toLocaleDateString('fr-FR');
             lucide.createIcons();
-
-            // Affiche la modale de bienvenue à l'ouverture
-            document.getElementById('welcomeModal').classList.remove('hidden');
+            
+            // La modale de bienvenue est affichée via kihoLogin pour éviter de la montrer au dessus du login.
         }
 
         // --- GESTION DES MODALES ---
@@ -655,36 +783,15 @@
             const content = JSON.stringify(exportObj, null, 2);
             const fileName = `TDR_KIHO_${filialeName.replace(/\s+/g, '_')}.json`;
             
-            try {
-                // Utilisation de l'API File System Access pour choisir l'emplacement (Chrome, Edge, Safari, Opera)
-                if (window.showSaveFilePicker) {
-                    const handle = await window.showSaveFilePicker({
-                        suggestedName: fileName,
-                        types: [{
-                            description: 'Fichier JSON KIHO',
-                            accept: {'application/json': ['.json']}
-                        }]
-                    });
-                    const writable = await handle.createWritable();
-                    await writable.write(content);
-                    await writable.close();
-                    showToast("Sauvegarde enregistrée");
-                } else {
-                    // Solution de repli (ex: Firefox)
-                    const blob = new Blob([content], { type: 'application/json' }); 
-                    const link = document.createElement('a'); 
-                    link.href = URL.createObjectURL(blob); 
-                    link.download = fileName; 
-                    link.click(); 
-                    showToast("Sauvegarde enregistrée");
-                }
-            } catch (err) {
-                // Ne rien faire si l'utilisateur annule (AbortError), sinon on peut afficher une erreur
-                if (err.name !== 'AbortError') {
-                    console.error(err);
-                    showToast("Erreur lors de l'enregistrement");
-                }
-            }
+            // Téléchargement direct pour éviter le blocage de sécurité des iframes
+            const blob = new Blob([content], { type: 'application/json' }); 
+            const link = document.createElement('a'); 
+            link.href = URL.createObjectURL(blob); 
+            link.download = fileName; 
+            link.click(); 
+            
+            showToast("Sauvegarde téléchargée");
+            document.getElementById('menu').classList.add('hidden');
         }
 
         function triggerImport() { document.getElementById('importFile').click(); document.getElementById('menu').classList.add('hidden'); }
