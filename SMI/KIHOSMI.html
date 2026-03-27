@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-     <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#4f46e5">
@@ -152,6 +152,131 @@
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-900">
+
+    <!-- ========================================================== -->
+    <!-- ÉCRAN DE CONNEXION KIHO                                     -->
+    <!-- Pour ajouter/modifier des utilisateurs, éditez KIHO_USERS  -->
+    <!-- ========================================================== -->
+    <script>
+        // ============================================================
+        // GESTION DES UTILISATEURS — À PERSONNALISER
+        // Ajoutez, modifiez ou supprimez des entrées selon vos besoins
+        // Format : { login: "identifiant", password: "motdepasse", name: "Prénom Nom" }
+        // ============================================================
+        const KIHO_USERS = [
+                { login: "Cptkavern",    password: "Alana2009",  name: "David" },
+            { login: "Axelle-KIHO",  password: "Axelle-KIHO", name: "Axelle " },
+			{ login: "Karim-KIHO",  password: "Karim-KIHO", name: "Karim" },
+			{ login: "Nicolas-KIHO",  password: "Nicolas-KIHO", name: "Nicolas" },
+			{ login: "Christophe-KIHO",  password: "Christophe-KIHO", name: "Christophe" },
+			{ login: "Mathieu-KIHO",  password: "Mathieu-KIHO", name: "Matrhieu" },
+			{ login: "Gerald-KIHO",  password: "Gerald-KIHO", name: "Gerald" },					
+            // Ajoutez vos utilisateurs ici...
+        ];
+
+        const SESSION_KEY = "kiho_session";
+
+        function kihoLogin() {
+            const login = document.getElementById('kiho-login-input').value.trim();
+            const password = document.getElementById('kiho-password-input').value;
+            const errorEl = document.getElementById('kiho-login-error');
+            const user = KIHO_USERS.find(u => u.login === login && u.password === password);
+            if (user) {
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify({ login: user.login, name: user.name }));
+                document.getElementById('kiho-login-screen').style.display = 'none';
+                document.getElementById('kiho-app-wrapper').style.display = 'block';
+                document.getElementById('kiho-user-badge').textContent = user.name;
+            } else {
+                errorEl.classList.remove('hidden');
+                document.getElementById('kiho-password-input').value = '';
+                document.getElementById('kiho-password-input').focus();
+            }
+        }
+
+        function kihoLogout() {
+            sessionStorage.removeItem(SESSION_KEY);
+            document.getElementById('kiho-login-screen').style.display = 'flex';
+            document.getElementById('kiho-app-wrapper').style.display = 'none';
+            document.getElementById('kiho-login-input').value = '';
+            document.getElementById('kiho-password-input').value = '';
+            document.getElementById('kiho-login-error').classList.add('hidden');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const session = sessionStorage.getItem(SESSION_KEY);
+            if (session) {
+                const user = JSON.parse(session);
+                document.getElementById('kiho-login-screen').style.display = 'none';
+                document.getElementById('kiho-app-wrapper').style.display = 'block';
+                document.getElementById('kiho-user-badge').textContent = user.name;
+            } else {
+                document.getElementById('kiho-login-screen').style.display = 'flex';
+                document.getElementById('kiho-app-wrapper').style.display = 'none';
+            }
+        });
+    </script>
+
+    <!-- ÉCRAN DE LOGIN -->
+    <div id="kiho-login-screen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900 no-print" style="display:flex;">
+        <div class="w-full max-w-sm mx-4">
+            <!-- Logo / titre -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-indigo-600 shadow-2xl shadow-indigo-900/50 mb-5">
+                    <span style="font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:white;letter-spacing:-1px;">KIHO</span>
+                </div>
+                <h1 style="font-family:'Inter',sans-serif;font-weight:800;font-size:24px;color:white;letter-spacing:-0.5px;">Système de Management</h1>
+                <p style="color:#94a3b8;font-size:13px;margin-top:4px;">Accès réservé aux utilisateurs autorisés</p>
+            </div>
+
+            <!-- Carte login -->
+            <div style="background:#1e293b;border-radius:24px;padding:32px;border:1px solid #334155;">
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin-bottom:8px;">Identifiant</label>
+                    <input id="kiho-login-input" type="text" autocomplete="username"
+                        placeholder="Votre identifiant"
+                        style="width:100%;background:#0f172a;border:1.5px solid #334155;border-radius:12px;padding:12px 16px;font-size:14px;color:white;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#334155'"
+                        onkeydown="if(event.key==='Enter')document.getElementById('kiho-password-input').focus()">
+                </div>
+                <div style="margin-bottom:24px;">
+                    <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin-bottom:8px;">Mot de passe</label>
+                    <input id="kiho-password-input" type="password" autocomplete="current-password"
+                        placeholder="Votre mot de passe"
+                        style="width:100%;background:#0f172a;border:1.5px solid #334155;border-radius:12px;padding:12px 16px;font-size:14px;color:white;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#334155'"
+                        onkeydown="if(event.key==='Enter')kihoLogin()">
+                </div>
+                <!-- Message d'erreur -->
+                <div id="kiho-login-error" class="hidden" style="background:#450a0a;border:1px solid #7f1d1d;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#fca5a5;text-align:center;">
+                    Identifiant ou mot de passe incorrect.
+                </div>
+                <!-- Bouton -->
+                <button onclick="kihoLogin()"
+                    style="width:100%;background:#4f46e5;color:white;border:none;border-radius:12px;padding:14px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;transition:background 0.2s;box-sizing:border-box;"
+                    onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">
+                    Se connecter
+                </button>
+            </div>
+
+            <p style="text-align:center;color:#475569;font-size:11px;margin-top:20px;">KIHO — Keolis Excellence Opérationnelle</p>
+        </div>
+    </div>
+
+    <!-- BADGE UTILISATEUR CONNECTÉ (affiché dans l'app) -->
+    <div id="kiho-user-bar" class="no-print" style="position:fixed;top:12px;right:12px;z-index:8000;display:flex;align-items:center;gap:10px;background:white;border:1px solid #e2e8f0;border-radius:100px;padding:6px 14px 6px 8px;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <div style="width:28px;height:28px;background:#4f46e5;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+        <span id="kiho-user-badge" style="font-size:12px;font-weight:700;color:#1e293b;"></span>
+        <button onclick="kihoLogout()"
+            style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:2px;display:flex;align-items:center;margin-left:4px;"
+            title="Se déconnecter" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+    </div>
+
+    <!-- WRAPPER DE L'APPLICATION (masqué jusqu'à connexion) -->
+    <div id="kiho-app-wrapper" style="display:none;">
 
     <!-- SYSTÈME MODAL GLOBAL PERSONNALISÉ -->
     <div id="custom-modal" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm no-print">
@@ -3401,5 +3526,7 @@
             if (welcomeModal) welcomeModal.classList.remove('hidden');
         };
     </script>
+
+    </div><!-- /kiho-app-wrapper -->
 </body>
 </html>
